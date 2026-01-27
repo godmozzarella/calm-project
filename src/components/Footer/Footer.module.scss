@@ -1,0 +1,99 @@
+@use '../../styles/globals.scss' as *;
+
+
+footer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+
+	margin: 7.5rem auto 0.625rem auto;
+	width: 70%;
+}
+
+ul {
+    list-style-type: none;
+}
+
+li{
+	a{
+		font-weight: $fw-medium;
+		font-family: 'Roboto', Arial, sans-serif;
+		color: $fc-main;
+		font-size: 1rem;
+
+		transition: all 0.3s ease;
+
+		&:hover {
+			color: $fc-contrast;
+		}
+	}
+}
+
+hr {
+	width: 100%;
+	border: 0;
+	height: 1px;
+	background-color: #555;
+	margin: 0.625rem 0;
+}
+
+.logo{
+		font-family: 'LilyScriptOne', cursive;
+    font-size: $fs-h1;
+    color: $fc-logo;
+}
+
+.item1,
+.item2 {
+	display: flex;
+	gap: 2.5rem;
+
+	width: 100%;
+}
+
+.item1 .logoBlock {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3125rem;
+
+	flex-basis: 25%;
+}
+
+.item1 ul {
+	display: flex;
+	justify-content: space-between;
+
+	flex-basis: 75%;
+}
+
+.slogan {
+	font-family: 'Roboto', Arial, sans-serif;
+	color: $fc-main;
+	font-weight: $fw-medium;
+	font-size: $fs-h2;
+}
+
+.item2 {
+	align-items: center;
+	justify-content: space-between;
+}
+
+.bottomLeft {
+	display: flex;
+	align-items: center;
+	gap: 1.25rem;
+}
+
+.item2 ul {
+	display: flex;
+	justify-content: space-between;
+	gap: 1.25rem;
+}
+
+.copyright {
+	font-family: 'Roboto', Arial, sans-serif;
+	font-size: 0.75rem;
+	color: $fc-secondary;
+}
+
+

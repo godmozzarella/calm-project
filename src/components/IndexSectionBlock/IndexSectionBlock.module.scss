@@ -1,0 +1,43 @@
+@use '../../styles/globals.scss' as *;
+
+.block,
+.coloredBlock{
+    display: flex;
+    flex-direction: column;
+
+    padding: 1.25rem;
+    gap: 0.625rem;
+}
+
+
+.block{
+    align-items: center;
+    text-align: center;
+    width: 50%;
+
+    border-radius: 2rem;
+    background-color: $block-color;
+}
+
+.coloredBlock{
+    width: 70%;
+		.desc{
+    	color: $fc-contrast;
+	}
+}
+
+.title{
+    font-size: $fs-h2;
+    font-weight: $fw-semibold;
+}
+
+.description{
+    font-size: $fs-main;
+    font-weight: $fw-light;
+}
+
+.coloredDescription{
+    font-size: $fs-main;
+    font-weight: $fw-light;
+    color: $fc-contrast;
+}

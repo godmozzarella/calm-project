@@ -1,0 +1,64 @@
+@use '../../styles/globals.scss' as *;
+
+.indexBody {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: $margin-top-body auto 0 auto;
+}
+
+.rowContent{
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.containerItem{
+  display: flex;
+  flex-direction: column;    
+	justify-content: center;
+  gap: 1.25rem;
+  max-width: 40%;
+
+	h1{
+    font-size: $fs-h1;
+    font-weight: $fw-semibold;
+	}
+
+	.description{
+    font-size: $fs-main;
+    font-weight: $fw-light;
+    color: $fc-contrast;
+    text-wrap: warp;
+	}
+
+	.buttons{
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+	}
+
+}
+
+.bigLogo{
+    font-size: 8rem;
+    font-family: 'LilyScriptOne', cursive;
+    color: $fc-logo;
+}
+
+.containerItem:last-child{
+    align-items: center;
+}
+
+.buttonText{
+    font-size: 1rem;
+    font-family: 'Roboto', Arial, sans-serif;
+    font-weight: $fw-semibold;
+}
+
+.inTextLogo {
+		font-weight: $fw-medium;
+    font-family: 'LilyScriptOne', cursive;
+}
+
+
