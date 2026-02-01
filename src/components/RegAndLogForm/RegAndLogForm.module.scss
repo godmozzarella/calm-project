@@ -1,0 +1,56 @@
+@use '../../styles/globals.scss' as *;
+
+
+form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+}
+
+.authWrapper {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+
+    padding: 20px 60px;
+    border-radius: 32px;
+    background-color: $block-color;
+    position: relative;
+}
+
+.tabSwitcher {
+    display: flex;
+    position: relative;
+    background-color: $main-color;
+    border-radius: 32px;
+    margin-bottom: 10px;
+    
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 20px;
+    z-index: 2;
+    transition: color 0.3s ease;
+}
+
+.tabSlider {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    background-color: $secondary-color; 
+    border-radius: 32px;
+    transition: left 0.3s ease;
+    z-index: 1;
+}
+
+.buttonText{
+    font-size: 1rem;
+    font-family: 'Roboto', Arial, sans-serif;
+    font-weight: $fw-semibold;
+}

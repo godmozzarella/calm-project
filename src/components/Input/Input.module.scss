@@ -1,3 +1,25 @@
-.inputB{
-	background-color: #c90000;
+@use '../../styles/globals.scss' as *;
+
+input{
+
+    padding: 10px 20px;
+    border-radius: 32px;
+
+    font-size: 1rem;
+    font-family: 'Roboto', Arial, sans-serif;
+    font-weight: $fw-semibold;
+    
+    background-color: $main-color;
+    color: $fc-main;
+    border: none;
+    outline: none;
+}
+
+input[type="email"] {
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+input[type="email"] {
+    -moz-appearance: textfield;
 }
