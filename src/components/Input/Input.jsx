@@ -1,20 +1,23 @@
-// import s from './IndexPage.module.scss'
+import s from './Input.module.scss'
 
 const Input = (props) =>{
 
 	const {
 		id,
-		className = '',
-		placeholder
-
+		type,
+		placeholder,
+		value,
+		onChange,
 	} = props;
 
 	return(
 		<input 
+			classname={s.input}
 			id={id} 
-			className={`${className}`} 
-			action=""
 			placeholder={placeholder}
+			type={type}
+			value={value}
+			onChange={onChange}
 		/>
 	);
 }

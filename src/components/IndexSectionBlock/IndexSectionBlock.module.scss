@@ -27,17 +27,29 @@
 }
 
 .title{
-    font-size: $fs-h2;
+    @include fluid-text(24, 20);
     font-weight: $fw-semibold;
 }
 
 .description{
-    font-size: $fs-main;
+    @include fluid-text(20, 16);
     font-weight: $fw-light;
 }
 
 .coloredDescription{
-    font-size: $fs-main;
+    @include fluid-text(20, 16);
     font-weight: $fw-light;
     color: $fc-contrast;
+}
+
+@media (max-width: 52rem) {
+	.block {
+        width: 70%;
+    }
+}	
+
+@media (max-width: 39.5rem) {
+	.block {
+        width: 100%;
+    }
 }

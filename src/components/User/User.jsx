@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { DeleteIcon, EditIcon } from '../../assets/icons'
 import EditUser from '../EditUser/EditUser'
+import s from './User.module.scss'
 
 const User = props => {
 	const { user, editUser, deleteUser } = props
@@ -15,20 +16,18 @@ const User = props => {
 	console.log(user)
 	return (
 		<div>
-			<div className="user">
+			<div className={s.user}>
 				<div>
 					<h3>{user.email}</h3>
 					<p>{user.password}</p>
 				</div>
 				<span>
 					<EditIcon
-						className="icon"
 						onClick={() => {
 							setEditForm(!editForm)
 						}}
 					/>
 					<DeleteIcon
-						className="icon"
 						onClick={handleDelete}
 					/>
 				</span>

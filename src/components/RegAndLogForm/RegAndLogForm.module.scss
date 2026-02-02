@@ -1,0 +1,69 @@
+@use '../../styles/globals.scss' as *;
+
+
+form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.625rem;
+}
+
+.authWrapper {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+
+    padding: 1.25rem 3.75rem;
+    border-radius: 2rem;
+    background-color: $block-color;
+    position: relative;
+}
+
+.tabSwitcher {
+    display: flex;
+    position: relative;
+    background-color: $main-color;
+    border-radius: 2rem;
+    margin-bottom: 0.625rem;
+    
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.tab {
+    flex: 1;
+    text-align: center;
+    @include fluid-text(16, 12);
+    padding: 0.625rem 1.25rem;
+    z-index: 2;
+    transition: color 0.3s ease;
+}
+
+.tabSlider {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    background-color: $secondary-color; 
+    border-radius: 2rem;
+    transition: left 0.3s ease;
+    z-index: 1;
+}
+
+.buttonText{
+    @include fluid-text(16, 12);
+    font-family: 'Roboto', Arial, sans-serif;
+    font-weight: $fw-semibold;
+}
+
+@media (max-width: 52rem) {
+	.authWrapper {
+        width: 70%;
+    }
+}
+
+@media (max-width: 39.5rem) {
+	.authWrapper {
+        width: 100%;
+    }
+}

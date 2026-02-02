@@ -1,0 +1,23 @@
+@use '../../styles/globals.scss' as *;
+
+.block {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 0.625rem;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    margin: 0 auto;
+
+    .user {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.625rem;
+    }
+}
