@@ -20,6 +20,13 @@ section{
 }
 
 .title{
-    font-size: $fs-h1;
+    @include fluid-text(32, 24);
 }
+
+
+@media (max-width: 90rem) {
+	.container {
+        width: 90%;
+    }
+}	
 

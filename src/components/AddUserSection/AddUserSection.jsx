@@ -21,14 +21,14 @@ const AddUserSection = () => {
 	}
 
 	return (
-		<div>
+		<>
 			<AddUser addUser={addUser} />
 			<Users
 				users={users}
 				editUser={editUser}
 				deleteUser={deleteUser}
 			/>
-		</div>
+		</>
 	)
 }
 

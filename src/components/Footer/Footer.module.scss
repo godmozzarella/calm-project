@@ -19,7 +19,7 @@ li{
 		font-weight: $fw-medium;
 		font-family: 'Roboto', Arial, sans-serif;
 		color: $fc-main;
-		font-size: 1rem;
+		@include fluid-text(16, 12);
 
 		transition: all 0.3s ease;
 
@@ -39,7 +39,7 @@ hr {
 
 .logo{
 		font-family: 'LilyScriptOne', cursive;
-    font-size: $fs-h1;
+    @include fluid-text(32, 24);
     color: $fc-logo;
 }
 
@@ -70,7 +70,7 @@ hr {
 	font-family: 'Roboto', Arial, sans-serif;
 	color: $fc-main;
 	font-weight: $fw-medium;
-	font-size: $fs-h2;
+	@include fluid-text(24, 20);
 }
 
 .item2 {
@@ -92,7 +92,7 @@ hr {
 
 .copyright {
 	font-family: 'Roboto', Arial, sans-serif;
-	font-size: 0.75rem;
+	@include fluid-text(12, 9);
 	color: $fc-secondary;
 }
 
