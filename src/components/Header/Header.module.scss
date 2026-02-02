@@ -28,7 +28,7 @@ nav {
 
 .logo{
 		font-family: 'LilyScriptOne', cursive;
-    font-size: $fs-h1;
+    @include fluid-text(32, 24);
     color: $fc-logo;
 }
 
@@ -46,7 +46,7 @@ a {
 	a{
 		font-weight: $fw-semibold;
 		font-family: 'Roboto', Arial, sans-serif;
-		font-size: 1rem;
+		@include fluid-text(16, 12);
 		transition: all 0.3s ease;
 
 		&:hover {
@@ -56,7 +56,7 @@ a {
 }
 
 .buttonText{
-    font-size: 1rem;
+    @include fluid-text(16, 12);
     font-family: 'Roboto', Arial, sans-serif;
     font-weight: $fw-semibold;
 }
@@ -64,6 +64,27 @@ a {
 .inTextLogo {
 		font-weight: $fw-medium;
     font-family: 'LilyScriptOne', cursive;
+}
+
+@media (max-width: 70.75rem) {
+	header {
+		padding: 0.625rem;
+		margin: 1.25rem auto 1.25rem auto; 
+		width: 90%;
+	}
+}	
+
+@media (max-width: 52rem) {
+	header {
+		padding: 0.625rem;
+		margin: 1.25rem auto 1.25rem auto;
+		nav{
+			justify-content: right;
+			.tagline:first-child{
+				display: none;
+			}
+		}
+	} 
 }
 
 

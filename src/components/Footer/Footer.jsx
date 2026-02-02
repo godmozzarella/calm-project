@@ -13,7 +13,7 @@ import {
 
 const Footer = () =>{
 	return (
-		<footer id={s.contacts}>
+		<footer id="contacts">
 			<div className={s.item1}>
 				<div className={s.logoBlock}>
 					<a className= {s.logo} href="#">Calm</a>

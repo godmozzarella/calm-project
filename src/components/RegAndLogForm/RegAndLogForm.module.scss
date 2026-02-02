@@ -5,7 +5,7 @@ form {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 10px;
+    gap: 0.625rem;
 }
 
 .authWrapper {
@@ -13,8 +13,8 @@ form {
     flex-direction: column;
     width: 50%;
 
-    padding: 20px 60px;
-    border-radius: 32px;
+    padding: 1.25rem 3.75rem;
+    border-radius: 2rem;
     background-color: $block-color;
     position: relative;
 }
@@ -23,8 +23,8 @@ form {
     display: flex;
     position: relative;
     background-color: $main-color;
-    border-radius: 32px;
-    margin-bottom: 10px;
+    border-radius: 2rem;
+    margin-bottom: 0.625rem;
     
     overflow: hidden;
     cursor: pointer;
@@ -33,7 +33,8 @@ form {
 .tab {
     flex: 1;
     text-align: center;
-    padding: 10px 20px;
+    @include fluid-text(16, 12);
+    padding: 0.625rem 1.25rem;
     z-index: 2;
     transition: color 0.3s ease;
 }
@@ -44,13 +45,25 @@ form {
     bottom: 0;
     width: 50%;
     background-color: $secondary-color; 
-    border-radius: 32px;
+    border-radius: 2rem;
     transition: left 0.3s ease;
     z-index: 1;
 }
 
 .buttonText{
-    font-size: 1rem;
+    @include fluid-text(16, 12);
     font-family: 'Roboto', Arial, sans-serif;
     font-weight: $fw-semibold;
+}
+
+@media (max-width: 52rem) {
+	.authWrapper {
+        width: 70%;
+    }
+}
+
+@media (max-width: 39.5rem) {
+	.authWrapper {
+        width: 100%;
+    }
 }

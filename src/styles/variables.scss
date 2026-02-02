@@ -1,3 +1,5 @@
+@use './functions.scss';
+
 $fw-light: 300;
 $fw-medium: 500;
 $fw-semibold: 600;
@@ -8,10 +10,6 @@ $fc-secondary: rgba(190, 190, 190, 1);
 $fc-contrast: rgba(92, 173, 228, 1);
 $fc-dark: rgba(23, 25, 29, 1);
 
-$fs-h1: 2rem;
-$fs-h2: 1.5rem;
-$fs-main: 1.25rem;
-
  /* ОБЩИЕ */
 $main-color: rgba(34, 39, 51, 1);
 $secondary-color: rgba(23, 25, 29, 1);
@@ -20,3 +18,4 @@ $block-color: rgba(68, 77, 102, 1);
 
 /* РАЗМЕРЫ */
 $margin-top-body: 6.75rem; //108px
+
