@@ -19,7 +19,7 @@ const Footer = () =>{
 					<a className= {s.logo} href="#">Calm</a>
 					<p className={s.slogan}>Отслеживай. Понимай. Живи легче!</p>
 				</div>
-				<ul>
+				<ul className={s.links}>
 					<li><a href="">Для кого</a></li>
 					<li><a href="">О проекте</a></li>
 					<li><a href="">Политика</a></li>
@@ -36,11 +36,11 @@ const Footer = () =>{
 						2026 &copy; Calm — сервис отслеживания и анализа головной боли{' '}
 					</p>
 				</div>
-				<ul>
-					<li><a href="#"><TelegramIcon /></a></li>
-					<li><a href="#"><XIcon /></a></li>
-					<li><a href="#"><YouTubeIcon /></a></li>
-					<li><Link to="/main"><InstagramIcon /></Link></li>
+				<ul	className={s.links}>
+					<li><a className={s.socialLink} href="#"><TelegramIcon /></a></li>
+					<li><a className={s.socialLink} href="#"><XIcon /></a></li>
+					<li><a className={s.socialLink} href="#"><YouTubeIcon /></a></li>
+					<li><a className={s.socialLink} href="#"><InstagramIcon /></a></li>
 				</ul>
 			</div>
 		</footer>

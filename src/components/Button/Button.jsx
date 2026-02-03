@@ -13,7 +13,7 @@ const {
 			onClick={onClick} 
 			className={colored ? `${s.colored}` : `${s.default}`}>			
 			{children}
-			{icon}
+			<span className={s.icon}>{icon}</span>
 		</button>
 	);
 }

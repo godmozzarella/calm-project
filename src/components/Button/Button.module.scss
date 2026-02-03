@@ -69,3 +69,9 @@ button {
 
 	transition: all 0.3s ease;
 }
+
+.icon {
+	svg {
+		@include fluid-text(24, 20);
+	}
+}

@@ -61,10 +61,48 @@
     font-family: 'LilyScriptOne', cursive;
 }
 
-@media (max-width: 70.75rem) {
+@media (max-width: 64rem) {
 	.buttons{
         flex-direction: column;
     }
 }	
+
+@media (max-width: 48rem) {
+	.rowContent{
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .containerItem:nth-child(1) {
+        order: 2;
+    }
+    
+    .containerItem:nth-child(2) {
+        order: 1;
+        flex-direction: row;
+    }
+
+    .containerItem{
+        max-width: 70%;
+    }
+
+    h1,
+    .description{
+        text-align: center;
+    }
+
+
+}	
+
+@media (max-width: 27rem) {
+	.containerItem:last-child{
+        flex-direction: column;
+    }
+
+    .containerItem{
+        max-width: 100%;
+    }
+}
+
 
 
