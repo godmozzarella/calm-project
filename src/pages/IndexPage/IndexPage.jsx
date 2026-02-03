@@ -1,9 +1,10 @@
-import AddUserSection from '../../components/AddUserSection/AddUserSection'
+
 import Footer from '../../components/Footer/Footer'
 import Header from '../../components/Header/Header'
 import Section from '../../components/IndexSection/IndexSection'
 import SectionBlock from '../../components/IndexSectionBlock/IndexSectionBlock'
 import Button from '../../components/Button/Button'
+import AddUser from '../../components/AddUser/AddUser'
 
 import s from './IndexPage.module.scss'
 
@@ -231,7 +232,7 @@ function IndexPage() {
 				colored
 				children={
 					<>
-						<AddUserSection />
+						<AddUser />
 					</>
 				}
 			/>

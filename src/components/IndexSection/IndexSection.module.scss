@@ -20,6 +20,7 @@ section{
 }
 
 .title{
+    text-align: center;
     @include fluid-text(32, 24);
 }
 

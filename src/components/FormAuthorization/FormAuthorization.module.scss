@@ -50,20 +50,23 @@ form {
     z-index: 1;
 }
 
-.buttonText{
-    @include fluid-text(16, 12);
-    font-family: 'Roboto', Arial, sans-serif;
-    font-weight: $fw-semibold;
-}
-
-@media (max-width: 52rem) {
+@media (max-width: 64rem) {
 	.authWrapper {
-        width: 70%;
+        width: 60%;
     }
 }
 
-@media (max-width: 39.5rem) {
+@media (max-width: 48rem) {
+	.authWrapper {
+        width: 80%;
+        padding: 1.25rem 2.5rem;
+    }
+}
+
+@media (max-width: 27rem) {
 	.authWrapper {
         width: 100%;
+        padding: 1.25rem;
     }
+    
 }

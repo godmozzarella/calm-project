@@ -42,14 +42,29 @@
     color: $fc-contrast;
 }
 
-@media (max-width: 52rem) {
+.icon{
+    svg{
+        color: $fc-contrast;
+        @include fluid-text(48, 32);
+    }
+}
+
+@media (max-width: 64rem) {
 	.block {
-        width: 70%;
+        width: 60%;
+    }
+}
+
+@media (max-width: 48rem) {
+	.block,
+    .coloredBlock {
+        width: 80%;
     }
 }	
 
-@media (max-width: 39.5rem) {
-	.block {
+@media (max-width: 27rem) {
+	.block,
+    .coloredBlock {
         width: 100%;
     }
 }

@@ -5,6 +5,7 @@ const {
 	onClick,
 	colored = false,
 	children,
+	sText = false,
 	icon
 } = props;
 
@@ -12,8 +13,8 @@ const {
 		<button 
 			onClick={onClick} 
 			className={colored ? `${s.colored}` : `${s.default}`}>			
-			{children}
-			{icon}
+			{children && <span className={sText ? s.sText : s.mText}>{children}</span>}
+			<span className={s.icon}>{icon}</span>
 		</button>
 	);
 }
