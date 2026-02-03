@@ -6,6 +6,7 @@
     box-sizing: border-box;
     font-family: 'Roboto', Arial, sans-serif;
     font-weight: $fw-medium;
+    -webkit-tap-highlight-color: transparent;
 }
 
 html { 

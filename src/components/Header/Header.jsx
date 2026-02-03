@@ -23,7 +23,7 @@ const Header = () =>{
 					}
 					colored
 					children={
-						<p className={s.buttonText}>Используй <span className={s.inTextLogo}>Calm</span> уже сейчас!</p>
+						<>Используй <span className={s.inTextLogo}>Calm</span> уже сейчас!</>
 					}
 				/>
 			</nav>

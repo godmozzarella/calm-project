@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { DeleteIcon, EditIcon } from '../../assets/icons'
-import EditUser from '../EditUser/EditUser'
 import s from './User.module.scss'
 
 const User = props => {
-	const { user, editUser, deleteUser } = props
+	const { user, deleteUser } = props
 
 	const [editForm, setEditForm] = useState(false)
 
@@ -32,13 +31,6 @@ const User = props => {
 					/>
 				</span>
 			</div>
-			{editForm && (
-				<EditUser
-					user={user}
-					editUser={editUser}
-					onClose={() => setEditForm(false)}
-				/>
-			)}
 		</div>
 	)
 }

@@ -14,11 +14,7 @@ const IndexSectionBlock = (props)=>{
 
     return (
             <div className={colored ? `${s.coloredBlock}` : `${s.block}`}>
-                {icon && React.cloneElement(icon, {
-                    sx: {
-                        fontSize: 48,
-                    }
-                })}
+                {icon && <span className={s.icon}>{icon}</span>}
                 {title && <h2 className={s.title}>{title}</h2>}
                 {description && <p className={colored ? `${s.coloredDescription}` : `${s.description}`}>{description}</p>}
             </div>

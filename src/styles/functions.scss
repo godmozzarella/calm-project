@@ -3,7 +3,7 @@
 @mixin fluid-text($max: 128, $min: 9) {
 	$maxViewportWidth: 1920;
 	$minViewportWidth: 320;
-	
+
 	$maxSize: math.div($max, 16);
 	$minSize: math.div($min, 16);
 	$maxWidth: math.div($maxViewportWidth, 16);
@@ -16,5 +16,5 @@
 		#{$minSize * 1rem},
 		#{$intercept * 1rem} + #{$slope * 100vw},
 		#{$maxSize * 1rem}
-	)
+	);
 }
