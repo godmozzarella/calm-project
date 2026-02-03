@@ -29,7 +29,8 @@ const Footer = () =>{
 			<div className={s.item2}>
 				<div className={s.bottomLeft}>
 					<Button 
-						children={<>Русский	</>}
+						children={<>Русский</>}
+						sText
 						icon={<LanguageIcon />}
 					/>
 					<p className={s.copyright}>

@@ -3,7 +3,7 @@ import User from '../User/User'
 import s from './Users.module.scss'
 
 const Users = props => {
-	const { users, editUser, deleteUser } = props
+	const { users, deleteUser } = props
 
 	if (users.length === 0) {
 		return (
@@ -21,7 +21,6 @@ const Users = props => {
 						<User
 							user={user}
 							deleteUser={deleteUser}
-							editUser={editUser}
 						/>
 					</li>
 				))}

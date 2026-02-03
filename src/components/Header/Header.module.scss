@@ -55,12 +55,6 @@ a {
 	}
 }
 
-.buttonText{
-    @include fluid-text(16, 12);
-    font-family: 'Roboto', Arial, sans-serif;
-    font-weight: $fw-semibold;
-}
-
 .inTextLogo {
 		font-weight: $fw-medium;
     font-family: 'LilyScriptOne', cursive;
