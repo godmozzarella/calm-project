@@ -2,6 +2,7 @@
 
 html:has(.indexBody) {
 	scroll-padding-top: $margin-top-body;
+	scroll-behavior: smooth;
 }
 
 .indexBody {
