@@ -1,19 +1,37 @@
 import Footer from '../../components/Footer/Footer'
-import s from './MainPage.module.scss'
 
 import { Link } from 'react-router-dom'
 import { CalendarMonthIcon, MenuIcon } from '../../assets/icons'
+import { useState } from 'react'
+
+import s from './MainPage.module.scss'
 
 const MainPage = () => {
+
+	const [open, setOpen] = useState(false)
+
 	return (
 		<div className={s.mainPage}>
 			<>
-				<span className={`${s.icon} ${s.menu}`}>
+				<button className={`${s.icon} ${s.menu}`} onClick={() => setOpen(!open)}>
 					<MenuIcon />
-				</span>
-				<span className={`${s.icon} ${s.calendar}`}>
+				</button>
+
+				{/* боковое меню */}
+				<div className={`${s.sidebar} ${open ? s.active : ""}`}>
+					<h1 onClick={() => setOpen(false)} className={s.logo}>Calm</h1>
+					<div className={s.list}>
+						<a href="#">Профиль</a>  {/* // TODO: заменить на Link 		*/}		
+						<a href="#">Настройки</a>   {/*// TODO: заменить на всплывающее окно настроек */}	
+					</div>
+						
+				</div>
+
+      {open && <div className={s.overlay} onClick={() => setOpen(false)} />}
+
+				<button className={`${s.icon} ${s.calendar}`}>
 					<CalendarMonthIcon />
-				</span>
+				</button>
 			</>
 
 			<main>
@@ -23,6 +41,7 @@ const MainPage = () => {
 				<div className={s.dayBar}>Понедельник, 4 февраля</div>
 				<section>
 					<div className={`${s.parametersContent} ${s.flexItem}`}>
+
 						{/* приступы */}
 						<div className={s.item}>
 							<h2>Приступы</h2>
@@ -43,6 +62,7 @@ const MainPage = () => {
 								<div className={s.back}></div>
 							</div>
 						</div>
+						
 					</div>
 					<div className={`${s.chartContent} ${s.flexItem}`}>
 						<h2>График</h2>
@@ -51,119 +71,6 @@ const MainPage = () => {
 					</div>
 				</section>
 
-				<section>
-					<div className={`${s.parametersContent} ${s.flexItem}`}>
-						{/* приступы */}
-						<div className={s.item}>
-							<h2>Приступы</h2>
-							<button className={s.add}>+</button>
-						</div>
-
-						{/* принятые препараты */}
-						<div className={s.item}>
-							<h2>Принятые препараты</h2>
-							<button className={s.add}>+</button>
-						</div>
-
-						{/* зоны головной боли */}
-						<div className={s.item}>
-							<h2>Зоны головной боли</h2>
-							<div className={s.headachesChart}>
-								<div className={s.front}></div>
-								<div className={s.back}></div>
-							</div>
-						</div>
-					</div>
-					<div className={`${s.chartContent} ${s.flexItem}`}>
-						<h2>График</h2>
-						<div className={s.chart}></div>
-						<p className={s.chartDescription}></p>
-					</div>
-				</section><section>
-					<div className={`${s.parametersContent} ${s.flexItem}`}>
-						{/* приступы */}
-						<div className={s.item}>
-							<h2>Приступы</h2>
-							<button className={s.add}>+</button>
-						</div>
-
-						{/* принятые препараты */}
-						<div className={s.item}>
-							<h2>Принятые препараты</h2>
-							<button className={s.add}>+</button>
-						</div>
-
-						{/* зоны головной боли */}
-						<div className={s.item}>
-							<h2>Зоны головной боли</h2>
-							<div className={s.headachesChart}>
-								<div className={s.front}></div>
-								<div className={s.back}></div>
-							</div>
-						</div>
-					</div>
-					<div className={`${s.chartContent} ${s.flexItem}`}>
-						<h2>График</h2>
-						<div className={s.chart}></div>
-						<p className={s.chartDescription}></p>
-					</div>
-				</section><section>
-					<div className={`${s.parametersContent} ${s.flexItem}`}>
-						{/* приступы */}
-						<div className={s.item}>
-							<h2>Приступы</h2>
-							<button className={s.add}>+</button>
-						</div>
-
-						{/* принятые препараты */}
-						<div className={s.item}>
-							<h2>Принятые препараты</h2>
-							<button className={s.add}>+</button>
-						</div>
-
-						{/* зоны головной боли */}
-						<div className={s.item}>
-							<h2>Зоны головной боли</h2>
-							<div className={s.headachesChart}>
-								<div className={s.front}></div>
-								<div className={s.back}></div>
-							</div>
-						</div>
-					</div>
-					<div className={`${s.chartContent} ${s.flexItem}`}>
-						<h2>График</h2>
-						<div className={s.chart}></div>
-						<p className={s.chartDescription}></p>
-					</div>
-				</section><section>
-					<div className={`${s.parametersContent} ${s.flexItem}`}>
-						{/* приступы */}
-						<div className={s.item}>
-							<h2>Приступы</h2>
-							<button className={s.add}>+</button>
-						</div>
-
-						{/* принятые препараты */}
-						<div className={s.item}>
-							<h2>Принятые препараты</h2>
-							<button className={s.add}>+</button>
-						</div>
-
-						{/* зоны головной боли */}
-						<div className={s.item}>
-							<h2>Зоны головной боли</h2>
-							<div className={s.headachesChart}>
-								<div className={s.front}></div>
-								<div className={s.back}></div>
-							</div>
-						</div>
-					</div>
-					<div className={`${s.chartContent} ${s.flexItem}`}>
-						<h2>График</h2>
-						<div className={s.chart}></div>
-						<p className={s.chartDescription}></p>
-					</div>
-				</section>
 			</main>
 			
 

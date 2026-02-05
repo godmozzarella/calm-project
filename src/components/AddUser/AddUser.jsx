@@ -11,10 +11,7 @@ const AddUser = () =>{
     const [users, setUsers] = useState([])
     const navigate = useNavigate();
 
-
-
-    // TODO: Добавить в localStorage
-
+     {/* // TODO: Добавить в localStorage */}
 	const addUser = user => {
 		setUsers(prev => [...prev, user])
 	}
