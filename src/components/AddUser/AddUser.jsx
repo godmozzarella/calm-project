@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import Form from '../FormAuthorization/FormAuthorization'
-import Users from '../Users/Users'
 
 const AddUser = () =>{
 
@@ -12,10 +11,12 @@ const AddUser = () =>{
     const [users, setUsers] = useState([])
     const navigate = useNavigate();
 
-
+     {/* // TODO: Добавить в localStorage */}
 	const addUser = user => {
 		setUsers(prev => [...prev, user])
 	}
+
+    users
 
     const handleRegistration = (e) => {
         e.preventDefault();
@@ -61,9 +62,6 @@ const AddUser = () =>{
                 setPassword={(e) => setPassword(e.target.value)}
                 confirmPassword={confirmPassword}
                 setConfirmPassword={(e) => setConfirmPassword(e.target.value)}
-            />
-            <Users
-                users={users}
             />
         </>
         

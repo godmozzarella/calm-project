@@ -19,7 +19,7 @@ const Form = (props) => {
         setConfirmPassword,
     } = props
 
-    const [activeTab, setActiveTab] = useState('register'); 
+    const [activeTab, setActiveTab] = useState('login'); 
     
     return (
         <div className={s.authWrapper}>
@@ -39,6 +39,14 @@ const Form = (props) => {
                 <div className={s.tabSlider} style={{ left: activeTab === 'register' ? '50%' : '0%' }}></div>
             </div>
 
+            {activeTab === 'login' && ( <FormLogin 
+                onSubmit={handleLogin}
+                email={email}
+                setEmail={setEmail}
+                password={password}
+                setPassword={setPassword}
+            /> )}
+
             {activeTab === 'register' && ( <FormRegistration 
                 onSubmit={handleRegistration}
                 email={email}
@@ -47,13 +55,6 @@ const Form = (props) => {
                 setPassword={setPassword}
                 confirmPassword={confirmPassword}
                 setConfirmPassword={setConfirmPassword}
-            /> )}
-            {activeTab === 'login' && ( <FormLogin 
-                onSubmit={handleLogin}
-                email={email}
-                setEmail={setEmail}
-                password={password}
-                setPassword={setPassword}
             /> )}
 
         </div>

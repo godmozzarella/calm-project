@@ -20,11 +20,12 @@ const FormRegistration = (props) => {
             <Input  type="password" 
                     placeholder="Пароль" 
                     value={password}
-                    onChange={setPassword}/>   
+                    onChange={setPassword}
+                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"/>   
             <Input  type="password" 
                     placeholder="Повторите пароль" 
                     value={confirmPassword} 
-                    onChange={setConfirmPassword}/>  
+                    onChange={setConfirmPassword} />  
             <Button
                     colored
                     children={

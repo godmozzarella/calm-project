@@ -1,108 +1,107 @@
 @use '../../styles/globals.scss' as *;
 
+html:has(.indexBody) {
+	scroll-padding-top: $margin-top-body;
+	scroll-behavior: smooth;
+}
+
 .indexBody {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: $margin-top-body auto 0 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin: $margin-top-body auto 0 auto;
 }
 
-.rowContent{
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
+.rowContent {
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
 }
 
-.containerItem{
-  display: flex;
-  flex-direction: column;    
+.containerItem {
+	display: flex;
+	flex-direction: column;
 	justify-content: center;
-  gap: 1.25rem;
-  max-width: 40%;
+	gap: 1.25rem;
+	max-width: 40%;
 
-	h1{
-    @include fluid-text(32, 24);
-    font-weight: $fw-semibold;
+	h1 {
+		@include fluid-text(32, 24);
+		font-weight: $fw-semibold;
 	}
 
-	.description{
-    @include fluid-text(20, 16);
-    font-weight: $fw-light;
-    color: $fc-contrast;
-    text-wrap: warp;
+	.description {
+		@include fluid-text(20, 16);
+		font-weight: $fw-light;
+		color: $fc-contrast;
+		text-wrap: warp;
 	}
 
-	.buttons{
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
+	.buttons {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
 	}
-
 }
 
-.bigLogo{
-    @include fluid-text(128, 64);
-    font-family: 'LilyScriptOne', cursive;
-    color: $fc-logo;
+.bigLogo {
+	@include fluid-text(128, 64);
+	font-family: 'LilyScriptOne', cursive;
+	color: $fc-logo;
 }
 
-.containerItem:last-child{
-    align-items: center;
+.containerItem:last-child {
+	align-items: center;
 }
 
-.buttonText{
-    @include fluid-text(16, 12);
-    font-family: 'Roboto', Arial, sans-serif;
-    font-weight: $fw-semibold;
+.buttonText {
+	@include fluid-text(16, 12);
+	font-family: 'Roboto', Arial, sans-serif;
+	font-weight: $fw-semibold;
 }
 
 .inTextLogo {
-		font-weight: $fw-medium;
-    font-family: 'LilyScriptOne', cursive;
+	font-weight: $fw-medium;
+	font-family: 'LilyScriptOne', cursive;
 }
 
 @media (max-width: 64rem) {
-	.buttons{
-        flex-direction: column;
-    }
-}	
-
-@media (max-width: 48rem) {
-	.rowContent{
-        flex-direction: column;
-        gap: 2rem;
-    }
-
-    .containerItem:nth-child(1) {
-        order: 2;
-    }
-    
-    .containerItem:nth-child(2) {
-        order: 1;
-        flex-direction: row;
-    }
-
-    .containerItem{
-        max-width: 70%;
-    }
-
-    h1,
-    .description{
-        text-align: center;
-    }
-
-
-}	
-
-@media (max-width: 27rem) {
-	.containerItem:last-child{
-        flex-direction: column;
-    }
-
-    .containerItem{
-        max-width: 100%;
-    }
+	.buttons {
+		flex-direction: column;
+	}
 }
 
+@media (max-width: 48rem) {
+	.rowContent {
+		flex-direction: column;
+		gap: 2rem;
+	}
 
+	.containerItem:nth-child(1) {
+		order: 2;
+	}
 
+	.containerItem:nth-child(2) {
+		order: 1;
+		flex-direction: row;
+	}
+
+	.containerItem {
+		max-width: 70%;
+	}
+
+	h1,
+	.description {
+		text-align: center;
+	}
+}
+
+@media (max-width: 27rem) {
+	.containerItem:last-child {
+		flex-direction: column;
+	}
+
+	.containerItem {
+		max-width: 100%;
+	}
+}

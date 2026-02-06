@@ -6,12 +6,12 @@ button {
     justify-content: center;
 
     text-wrap: nowrap;
-    text-align: center;
     font-family: 'Roboto', Arial, sans-serif;
 
     gap: 0.625rem;
     background-color: transparent;
     padding: 0.625rem;
+    box-sizing: border-box;
 
     border-radius: 2rem;
     border: none;
@@ -71,15 +71,6 @@ button {
     @include fluid-text(12, 9);
     font-family: 'Roboto', Arial, sans-serif;
     font-weight: $fw-semibold;
-}
-
-.default{
-  background-color: $fc-main;
-	color: rgb(22, 22, 22);
-	padding: 0.3125rem 0.625rem;
-  @include fluid-text(12, 9);
-
-	transition: all 0.3s ease;
 }
 
 .icon {

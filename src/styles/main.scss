@@ -1,21 +1,16 @@
 @use './globals.scss' as *;
 
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Roboto', Arial, sans-serif;
-    font-weight: $fw-medium;
-    -webkit-tap-highlight-color: transparent;
-}
-
-html { 
-    scroll-behavior: smooth; 
-    scroll-padding-top: $margin-top-body;
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	font-family: 'Roboto', Arial, sans-serif;
+	font-weight: $fw-medium;
+	-webkit-tap-highlight-color: transparent;
 }
 
 body {
-    background-color: $main-color;
-    color: $fc-main;
-    margin: 0;
+	background-color: $main-color;
+	color: $fc-main;
+	margin: 0;
 }

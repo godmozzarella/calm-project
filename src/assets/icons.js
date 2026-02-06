@@ -16,6 +16,7 @@ import SecurityIcon from '@mui/icons-material/Security';
 import ConnectIcon from '@mui/icons-material/ConnectWithoutContact';
 import AnalyticsIcon from '@mui/icons-material/AnalyticsOutlined';
 import MenuIcon from '@mui/icons-material/MenuOutlined';
+import CloseIcon from '@mui/icons-material/Close';
 
 export {
     InstallDesktopIcon,
@@ -36,4 +37,5 @@ export {
     ConnectIcon,
     AnalyticsIcon,
     MenuIcon,
+    CloseIcon,
 };
