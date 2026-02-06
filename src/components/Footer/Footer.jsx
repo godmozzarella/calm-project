@@ -32,6 +32,7 @@ const Footer = () =>{
 						children={<>Русский</>}
 						sText
 						icon={<LanguageIcon />}
+						className={s.languageButton}
 					/>
 					<p className={s.copyright}>
 						2026 &copy; Calm — сервис отслеживания и анализа головной боли{' '}

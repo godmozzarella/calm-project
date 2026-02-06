@@ -1,0 +1,48 @@
+@use '../../styles/globals.scss' as *;
+
+
+.mainPage {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-height: 100vh;
+}
+
+.icon {
+	background-color: $secondary-color;
+	top: 1.25rem;
+	width: 2.75rem;
+	height: 2.75rem;
+	color: $fc-main;
+
+	cursor: pointer;
+
+	filter: drop-shadow(0px 0px 0.625rem rgba(0, 0, 0, 0.25));
+
+	z-index: 100;
+	position: fixed;
+
+	transition: transform 0.1s ease-in-out;
+
+}
+
+.menu {
+	left: 1.25rem;
+	&:active{
+		transform: scale(0.9);
+	}
+}
+
+.calendar {
+	right: 1.25rem;
+	&:active{
+		transform: scale(0.9);
+	}
+}
+
+
+@media (max-width: 768px) {
+	section {
+		flex-direction: column;
+	}
+}

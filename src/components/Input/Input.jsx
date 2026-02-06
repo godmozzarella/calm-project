@@ -8,6 +8,7 @@ const Input = (props) =>{
 		placeholder,
 		value,
 		onChange,
+		pattern
 	} = props;
 
 	return(
@@ -18,6 +19,7 @@ const Input = (props) =>{
 			type={type}
 			value={value}
 			onChange={onChange}
+			pattern={pattern}
 		/>
 	);
 }

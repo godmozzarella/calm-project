@@ -2,6 +2,7 @@ import s from './Button.module.scss'
 
 const Button = (props) =>{
 const {
+	className,
 	onClick,
 	colored = false,
 	children,
@@ -12,7 +13,7 @@ const {
 	return(
 		<button 
 			onClick={onClick} 
-			className={colored ? `${s.colored}` : `${s.default}`}>			
+			className={`${colored ? s.colored : className}`}>			
 			{children && <span className={sText ? s.sText : s.mText}>{children}</span>}
 			<span className={s.icon}>{icon}</span>
 		</button>
