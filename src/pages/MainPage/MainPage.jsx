@@ -1,79 +1,46 @@
 import Footer from '../../components/Footer/Footer'
 
 import { Link } from 'react-router-dom'
-import { CalendarMonthIcon, MenuIcon } from '../../assets/icons'
+import { CalendarMonthIcon, MenuIcon, CloseIcon } from '../../assets/icons'
 import { useState } from 'react'
+
+import SidebarMenu from '../../components/SidebarMenu/SidebarMenu'
+import SidebarCalendar from '../../components/SidebarCalendar/SidebarCalendar'
+import MainSection from '../../components/MainSection/MainSection'
+import Button from '../../components/Button/Button'
 
 import s from './MainPage.module.scss'
 
 const MainPage = () => {
 
-	const [open, setOpen] = useState(false)
+	const [openMenu, setOpenMenu] = useState(false);
+	const [openCalendar, setOpenCalendar] = useState(false)
 
 	return (
 		<div className={s.mainPage}>
-			<>
-				<button className={`${s.icon} ${s.menu}`} onClick={() => setOpen(!open)}>
-					<MenuIcon />
-				</button>
 
-				{/* боковое меню */}
-				<div className={`${s.sidebar} ${open ? s.active : ""}`}>
-					<h1 onClick={() => setOpen(false)} className={s.logo}>Calm</h1>
-					<div className={s.list}>
-						<a href="#">Профиль</a>  {/* // TODO: заменить на Link 		*/}		
-						<a href="#">Настройки</a>   {/*// TODO: заменить на всплывающее окно настроек */}	
-					</div>
-						
-				</div>
+			<Button
+				className={`${s.icon} ${s.menu}`}
+				icon={<MenuIcon />}
+				onClick={() => setOpenMenu(!openMenu)}
+			/>
 
-      {open && <div className={s.overlay} onClick={() => setOpen(false)} />}
+			<Button
+				className={`${s.icon} ${s.calendar}`}
+				icon={<CalendarMonthIcon />}
+				onClick={() => setOpenCalendar(!openCalendar)}
+			/>
+			
+			{/* боковое меню */}
+			<SidebarMenu openMenu={openMenu} setOpenMenu={setOpenMenu} closeIcon={<CloseIcon />} />
 
-				<button className={`${s.icon} ${s.calendar}`}>
-					<CalendarMonthIcon />
-				</button>
-			</>
-
-			<main>
-				<Link to={'/'}>
-					<h1 className={s.logo}>Calm</h1>
-				</Link>
-				<div className={s.dayBar}>Понедельник, 4 февраля</div>
-				<section>
-					<div className={`${s.parametersContent} ${s.flexItem}`}>
-
-						{/* приступы */}
-						<div className={s.item}>
-							<h2>Приступы</h2>
-							<button className={s.add}>+</button>
-						</div>
-
-						{/* принятые препараты */}
-						<div className={s.item}>
-							<h2>Принятые препараты</h2>
-							<button className={s.add}>+</button>
-						</div>
-
-						{/* зоны головной боли */}
-						<div className={s.item}>
-							<h2>Зоны головной боли</h2>
-							<div className={s.headachesChart}>
-								<div className={s.front}></div>
-								<div className={s.back}></div>
-							</div>
-						</div>
-						
-					</div>
-					<div className={`${s.chartContent} ${s.flexItem}`}>
-						<h2>График</h2>
-						<div className={s.chart}></div>
-						<p className={s.chartDescription}></p>
-					</div>
-				</section>
-
-			</main>
+			{/* //календарь */}
+			<SidebarCalendar openCalendar={openCalendar} setOpenCalendar={setOpenCalendar} closeIcon={<CloseIcon />} />
 			
 
+			<MainSection />
+
+		
 			<Footer />
 		</div>
 	)

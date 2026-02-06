@@ -8,25 +8,11 @@
 	min-height: 100vh;
 }
 
-main {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-
-	margin-top: 1.25rem;
-
-	gap: 2.5rem;
-	flex: 1;
-}
-
 .icon {
-	display: flex;
-	align-items: center;
-	padding: 1rem;
 	background-color: $secondary-color;
 	top: 1.25rem;
-	border-radius: 100rem;
-	padding: 0.625rem;
+	width: 2.75rem;
+	height: 2.75rem;
 	color: $fc-main;
 
 	cursor: pointer;
@@ -43,68 +29,8 @@ main {
 .menu {
 	left: 1.25rem;
 	&:active{
-		// transform: translateX(-1.25rem);
 		transform: scale(0.9);
 	}
-}
-
-.sidebar {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-
-  position: fixed;
-
-  top: 0;
-  left: -16rem;
-  width: 16rem;
-  height: 100%;
-  background: $secondary-color;
-	border-top-right-radius: 2rem;
-	border-bottom-right-radius: 2rem;
-  padding: 1.25rem;
-
-  transition: 0.3s ease;
-  color: $fc-main;
-  z-index: 1000;
-
-	.logo{
-		margin-bottom: 1.25rem;
-	}
-
-	.list{
-		display: flex;
-		flex-direction: column;
-		width: 100%;	
-		gap: 1rem;
-
-		a {
-			text-align: start;
-			display: block;
-			color: $fc-main;
-			text-decoration: none;
-			@include fluid-text(20, 16);
-
-			padding: 0.5rem 1rem;
-			border-radius: 2rem;
-			transition: background-color 0.2s ease-in-out;
-
-			&:hover {
-				background-color: $block-color;
-			}
-		}
-	} 
-}
-
-.sidebar.active {
-  left: 0;
-}
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 999;
 }
 
 .calendar {
@@ -114,59 +40,6 @@ main {
 	}
 }
 
-.logo {
-	font-family: 'LilyScriptOne', cursive;
-	@include fluid-text(32, 24);
-	color: $fc-logo;
-	padding: 0.625rem 0;
-}
-
-.dayBar {
-	background-color: $secondary-color;
-	text-align: center;
-	@include fluid-text(32, 20);
-
-	padding: 0.625rem;
-
-	width: 100%;
-}
-
-section {
-	display: flex;
-	padding: 1.25rem;
-	gap: 1.25rem;
-
-	h2 {
-		@include fluid-text(28, 20);
-	}
-}
-
-.flexItem {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	flex: 1;
-}
-
-.parametersContent {
-	flex-direction: column;
-	gap: 1.25rem;
-}
-
-.item {
-	display: flex;
-	align-items: center;
-	flex-direction: column;
-	gap: 0.625rem;
-
-	width: 100%;
-}
-
-button.add {
-	background-color: $block-color;
-	width: 100%;
-	@include fluid-text(28, 20);
-}
 
 @media (max-width: 768px) {
 	section {
