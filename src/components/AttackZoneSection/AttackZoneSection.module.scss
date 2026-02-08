@@ -1,0 +1,10 @@
+@use '../../styles/globals.scss' as *;
+
+.item {
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+	gap: 0.625rem;
+
+	width: 100%;
+}

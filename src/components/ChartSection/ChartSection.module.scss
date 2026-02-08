@@ -1,0 +1,10 @@
+
+@use '../../styles/globals.scss' as *;
+
+
+.flexItem {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	flex: 1;
+}

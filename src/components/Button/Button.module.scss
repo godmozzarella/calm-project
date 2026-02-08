@@ -6,12 +6,12 @@ button {
     justify-content: center;
 
     text-wrap: nowrap;
+    text-align: center;
     font-family: 'Roboto', Arial, sans-serif;
 
     gap: 0.625rem;
     background-color: transparent;
     padding: 0.625rem;
-    box-sizing: border-box;
 
     border-radius: 2rem;
     border: none;
@@ -73,7 +73,10 @@ button {
     font-weight: $fw-semibold;
 }
 
+
 .icon {
+  display: flex;
+  align-items: center;
 	svg {
 		@include fluid-text(24, 20);
 	}

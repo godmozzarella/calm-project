@@ -37,10 +37,8 @@ const MainPage = () => {
 			{/* //календарь */}
 			<SidebarCalendar openCalendar={openCalendar} setOpenCalendar={setOpenCalendar} closeIcon={<CloseIcon />} />
 			
-
 			<MainSection />
 
-		
 			<Footer />
 		</div>
 	)

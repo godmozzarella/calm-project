@@ -1,0 +1,11 @@
+@use '../../styles/globals.scss' as *;
+
+.dayBar {
+	background-color: $secondary-color;
+	text-align: center;
+	@include fluid-text(32, 20);
+
+	padding: 0.625rem;
+
+	width: 100%;
+}
