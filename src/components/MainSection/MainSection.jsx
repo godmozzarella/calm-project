@@ -1,5 +1,11 @@
-import s from './MainSection.module.scss'
+
 import { Link } from 'react-router-dom'
+import s from './MainSection.module.scss'
+import AttackSection from '../AttackSection/AttackSection'
+import MedicationSection from '../MedicationSection/MedicationSection'
+import AttackZoneSection from '../AttackZoneSection/AttackZoneSection'
+import ChartSection from '../ChartSection/ChartSection'
+import DayBar from '../DayBar/DayBar'
 
 const MainSection = () => {
     return (
@@ -7,37 +13,24 @@ const MainSection = () => {
             <Link to={'/'}>
 							<h1 className={s.logo}>Calm</h1>
 						</Link>
-						<div className={s.dayBar}>Понедельник, 4 февраля</div>
+
+						<DayBar />
+
 						<section>
 							<div className={`${s.parametersContent} ${s.flexItem}`}>
 
 								{/* приступы */}
-								<div className={s.item}>
-									<h2>Приступы</h2>
-									<button className={s.add}>+</button>
-								</div>
+								<AttackSection />
 
 								{/* принятые препараты */}
-								<div className={s.item}>
-									<h2>Принятые препараты</h2>
-									<button className={s.add}>+</button>
-								</div>
+								<MedicationSection />
 
 								{/* зоны головной боли */}
-								<div className={s.item}>
-									<h2>Зоны головной боли</h2>
-									<div className={s.headachesChart}>
-										<div className={s.front}></div>
-										<div className={s.back}></div>
-									</div>
-								</div>
-								
+								<AttackZoneSection />							
 							</div>
-							<div className={`${s.chartContent} ${s.flexItem}`}>
-								<h2>График</h2>
-								<div className={s.chart}></div>
-								<p className={s.chartDescription}></p>
-							</div>
+
+							{/* график */}
+							<ChartSection />
 						</section>
         </main>
     )

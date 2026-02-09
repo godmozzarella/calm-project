@@ -5,50 +5,82 @@ import Form from '../FormAuthorization/FormAuthorization'
 
 const AddUser = () =>{
 
-    const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [email, setEmail] = useState('');
+    const [loginEmail, setLoginEmail] = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
+    const [registerEmail, setRegisterEmail] = useState('');
+    const [registerPassword, setRegisterPassword] = useState('');
+    const [userName, setUserName] = useState('');
     const [users, setUsers] = useState([])
     const navigate = useNavigate();
 
-     {/* // TODO: Добавить в localStorage */}
 	const addUser = user => {
 		setUsers(prev => [...prev, user])
 	}
 
-    users
+    const loginUser = (email, password) => {
+        const savedUsers = JSON.parse(localStorage.getItem('users')) || [];
+
+        const user = savedUsers.find(
+            user => user.email === email && user.password === password
+        );
+
+        if (user) {
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            return true;
+        }
+
+        return false;
+    }
 
     const handleRegistration = (e) => {
         e.preventDefault();
-        if (!email || !password || !confirmPassword) {
+
+        if (!userName || !registerEmail || !registerPassword || !confirmPassword) {
             alert("Заполните все поля");
             return;
         }
 
-        if (password !== confirmPassword) {
+        if (registerPassword !== confirmPassword) {
             alert("Пароли не совпадают");
             return;
         }
-        
-        addUser({ id: Date.now(), password, confirmPassword, email });
-        setPassword('');
+
+        const newUser = { id: Date.now(), email: registerEmail, password: registerPassword, name: userName};
+
+        addUser(newUser);
+
+        const updatedUsers = [...users, newUser];
+        localStorage.setItem('users', JSON.stringify(updatedUsers));
+
+        localStorage.setItem('currentUser', JSON.stringify(newUser));
+
+        setRegisterPassword('');
         setConfirmPassword('');
-        setEmail('');
-        console.log("Пользователь добавлен!");
+        setRegisterEmail('');
+        setUserName('');
+
+        alert('Вы зарегистрированы!');
+
+    
     };
 
     const handleLogin = (e) => {
         e.preventDefault();
-        if (!email || !password) {
+        if (!loginEmail || !loginPassword) {
             alert("Заполните все поля");
             return;
         }
         
-        addUser({ id: Date.now(), password, confirmPassword, email });
-        setPassword('');
-        setEmail('');
+        const isAuthenticated = loginUser(loginEmail, loginPassword);
+        if (isAuthenticated) {
+            setLoginPassword('');
+            setLoginEmail('');
+           navigate('/profile');
 
-        navigate('/main');
+        } else {
+            alert("Неверный email или пароль");
+        }
     };
 
     return (
@@ -56,12 +88,18 @@ const AddUser = () =>{
             <Form
                 handleRegistration={handleRegistration}
                 handleLogin={handleLogin}
-                email={email}
-                setEmail={(e) => setEmail(e.target.value)}
-                password={password}
-                setPassword={(e) => setPassword(e.target.value)}
+                loginEmail={loginEmail}
+                setLoginEmail={(e) => setLoginEmail(e.target.value)}
+                loginPassword={loginPassword}
+                setLoginPassword={(e) => setLoginPassword(e.target.value)}
+                registerEmail={registerEmail}
+                setRegisterEmail={(e) => setRegisterEmail(e.target.value)}
+                registerPassword={registerPassword}
+                setRegisterPassword={(e) => setRegisterPassword(e.target.value)}
                 confirmPassword={confirmPassword}
                 setConfirmPassword={(e) => setConfirmPassword(e.target.value)}
+                userName={userName}
+                setUserName={(e) => setUserName(e.target.value)}
             />
         </>
         

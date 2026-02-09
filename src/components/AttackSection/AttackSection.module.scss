@@ -1,0 +1,26 @@
+@use '../../styles/globals.scss' as *;
+
+.item {
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+	gap: 0.625rem;
+
+	width: 100%;
+}
+
+.add {
+	color: $fc-dark;
+	background-color: $block-color;
+	width: 100%;
+	height: 2.75rem;
+	@include fluid-text(28, 20);
+
+	transition: background-color 0.3s ease-in-out,
+							transform 0.1s ease-in-out
+							;
+
+	&:active{
+		transform: scale(0.95);
+	}
+}

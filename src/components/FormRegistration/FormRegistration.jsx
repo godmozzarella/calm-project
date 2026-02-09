@@ -9,10 +9,17 @@ const FormRegistration = (props) => {
 			password, 
 			setPassword, 
 			confirmPassword, 
-			setConfirmPassword } = props;
+			setConfirmPassword,
+            userName,
+            setUserName
+         } = props;
 
     return (
         <form onSubmit={onSubmit}>
+             <Input type="text" 
+                    placeholder="Введите имя" 
+                    value={userName} 
+                    onChange={setUserName} />  
             <Input  type="email" 
                     placeholder="Электронная почта" 
                     value={email} 
@@ -21,7 +28,7 @@ const FormRegistration = (props) => {
                     placeholder="Пароль" 
                     value={password}
                     onChange={setPassword}
-                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"/>   
+                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#@$!%*?&])[A-Za-z\d#@$!%*?&]{8,}$"/>   
             <Input  type="password" 
                     placeholder="Повторите пароль" 
                     value={confirmPassword} 
