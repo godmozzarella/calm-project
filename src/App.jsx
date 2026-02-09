@@ -1,8 +1,9 @@
 import { Route, Routes } from 'react-router-dom'
 
 import IndexPage from './pages/IndexPage/IndexPage'
-import MainPage from './pages/MainPage/MainPage'
 import ScrollToTop from './components/ScrollToTop'
+import ProtectedRoute from './components/ProtectedRoute'
+import MainPage from './pages/MainPage/MainPage'
 
 const App = () => {
 	return (
@@ -13,9 +14,13 @@ const App = () => {
 				path="/"
 				element={<IndexPage />}
 			/>
-			<Route
-				path="/main"
-				element={<MainPage />}
+			<Route 
+				path="/profile" 
+				element={
+					<ProtectedRoute>
+						<MainPage />
+					</ProtectedRoute>
+				} 
 			/>
 			<Route
 				path="*"

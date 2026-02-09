@@ -1,12 +1,23 @@
-import s from './SidebarMenu.module.scss'
 
-const SidebarMenu = (props) => {
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import s from './SidebarProfile.module.scss'
+
+const SidebarProfile = (props) => {
 
 	const { 
 			openMenu, 
 			setOpenMenu,
-			closeIcon
+			closeIcon,
+			user
 		} = props;
+		
+		const navigate = useNavigate();
+		
+		useEffect(() => {
+			const user = JSON.parse(localStorage.getItem("currentUser"));
+			if (!user) navigate("/");
+		}, [navigate]);
 
     return (
         <>
@@ -17,8 +28,10 @@ const SidebarMenu = (props) => {
 			
 							<a href="#">Профиль</a>  
 							<div className={s.profileIcon}>
-								<img src="/profile.png" alt="Profile" />
+								<img src={user?.avatar || "/profile.png"} alt="Profile" />
 							</div>
+							<p>{user?.name}</p>
+							<p>{user?.email}</p>
 							<a href="#">Статистика</a>  
 							<a href="#">Настройки</a>  
 						</div>
@@ -29,4 +42,4 @@ const SidebarMenu = (props) => {
     )
 }
 
-export default SidebarMenu
+export default SidebarProfile

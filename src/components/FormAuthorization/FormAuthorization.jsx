@@ -1,8 +1,7 @@
-import Button from '../Button/Button'
-import Input from '../Input/Input'
+
 import FormLogin from '../FormLogin/FormLogin'
 import FormRegistration from '../FormRegistration/FormRegistration'
-import { useState } from 'react';
+import { useState} from 'react';
 
 
 import s from './FormAuthorization.module.scss'
@@ -11,15 +10,23 @@ const Form = (props) => {
     const {
         handleRegistration,
         handleLogin,
-        email,
-        setEmail,
-        password,
-        setPassword,
+        loginEmail,
+        setLoginEmail,
+        registerEmail,
+        setRegisterEmail,
+        loginPassword,
+        setLoginPassword,
+        registerPassword,
+        setRegisterPassword,
         confirmPassword,
         setConfirmPassword,
+        userName,
+        setUserName
     } = props
 
     const [activeTab, setActiveTab] = useState('login'); 
+
+    
     
     return (
         <div className={s.authWrapper}>
@@ -41,20 +48,22 @@ const Form = (props) => {
 
             {activeTab === 'login' && ( <FormLogin 
                 onSubmit={handleLogin}
-                email={email}
-                setEmail={setEmail}
-                password={password}
-                setPassword={setPassword}
+                email={loginEmail}
+                setEmail={setLoginEmail}
+                password={loginPassword}
+                setPassword={setLoginPassword}
             /> )}
 
             {activeTab === 'register' && ( <FormRegistration 
                 onSubmit={handleRegistration}
-                email={email}
-                setEmail={setEmail}
-                password={password}
-                setPassword={setPassword}
+                email={registerEmail}
+                setEmail={setRegisterEmail}
+                password={registerPassword}
+                setPassword={setRegisterPassword}
                 confirmPassword={confirmPassword}
                 setConfirmPassword={setConfirmPassword}
+                userName={userName}
+                setUserName={setUserName}
             /> )}
 
         </div>
