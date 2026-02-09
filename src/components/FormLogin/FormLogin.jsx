@@ -26,7 +26,7 @@ const FormLogin = (props) => {
                 placeholder="Пароль"
                 value={password}
                 onChange={setPassword}
-                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#@$!%*?&])[A-Za-z\d#@$!%*?&]{8,}$"
             />  
             <Button
                 colored

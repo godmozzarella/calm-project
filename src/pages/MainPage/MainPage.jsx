@@ -2,9 +2,9 @@ import Footer from '../../components/Footer/Footer'
 
 import { Link } from 'react-router-dom'
 import { CalendarMonthIcon, MenuIcon, CloseIcon } from '../../assets/icons'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
-import SidebarMenu from '../../components/SidebarMenu/SidebarMenu'
+import SidebarProfile from '../../components/SidebarProfile/SidebarProfile'
 import SidebarCalendar from '../../components/SidebarCalendar/SidebarCalendar'
 import MainSection from '../../components/MainSection/MainSection'
 import Button from '../../components/Button/Button'
@@ -15,6 +15,17 @@ const MainPage = () => {
 
 	const [openMenu, setOpenMenu] = useState(false);
 	const [openCalendar, setOpenCalendar] = useState(false)
+
+	 const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        setUser(currentUser);
+    }, []);
+
+    if (!user) {
+        return <p>Пользователь не авторизован</p>;
+    }
 
 	return (
 		<div className={s.mainPage}>
@@ -32,7 +43,7 @@ const MainPage = () => {
 			/>
 			
 			{/* боковое меню */}
-			<SidebarMenu openMenu={openMenu} setOpenMenu={setOpenMenu} closeIcon={<CloseIcon />} />
+			<SidebarProfile openMenu={openMenu} setOpenMenu={setOpenMenu} closeIcon={<CloseIcon />} user={user}/>
 
 			{/* //календарь */}
 			<SidebarCalendar openCalendar={openCalendar} setOpenCalendar={setOpenCalendar} closeIcon={<CloseIcon />} />
