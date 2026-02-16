@@ -43,10 +43,20 @@ const MainPage = () => {
 			/>
 			
 			{/* боковое меню */}
-			<SidebarProfile openMenu={openMenu} setOpenMenu={setOpenMenu} closeIcon={<CloseIcon />} user={user}/>
+			<SidebarProfile 
+				openMenu={openMenu} 
+				setOpenMenu={setOpenMenu} 
+				closeIcon={<CloseIcon />} 
+				user={user} 
+				setUser={setUser}
+			/> 
 
 			{/* //календарь */}
-			<SidebarCalendar openCalendar={openCalendar} setOpenCalendar={setOpenCalendar} closeIcon={<CloseIcon />} />
+			<SidebarCalendar 
+				openCalendar={openCalendar} 
+				setOpenCalendar={setOpenCalendar} 
+				closeIcon={<CloseIcon />} 
+			/>
 			
 			<MainSection />
 

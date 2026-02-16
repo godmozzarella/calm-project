@@ -1,0 +1,80 @@
+@use '../../styles/globals.scss' as *;
+
+.editForm {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
+	background-color: $secondary-color;   
+	padding: 20px;
+	position: absolute;
+	top: 0;
+	right: 0;
+	opacity: 1;
+	z-index: 1002;
+	transition: opacity 0.3s ease;
+}
+
+.photoActions {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	width: 100%;
+}
+
+.uploadPhoto {
+	display: none;
+}
+
+.editButton {
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.625rem;
+	background-color: $block-color;
+	border-radius: 2rem;
+	width: 100%;
+	color: $fc-main;
+
+	transition: transform 0.2s ease;
+
+	&:hover {
+		transform: scale(0.99);
+	}
+}
+
+.profileBaseIcon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 8rem;
+	height: 8rem;
+	border-radius: 50%;
+	background-color: $block-color;
+}
+
+.profileLetter {
+	font-size: 2rem;
+	font-weight: 600;
+}
+
+.profileIconImage {
+	border-radius: 50%;
+	width: 8rem;
+	height: 8rem;
+	object-fit: cover;
+}
+
+
+.hidden {
+   display: none;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1001;
+}
+

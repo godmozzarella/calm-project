@@ -8,12 +8,13 @@ const Input = (props) =>{
 		placeholder,
 		value,
 		onChange,
-		pattern
+		pattern,
+		className,
 	} = props;
 
 	return(
 		<input 
-			classname={s.input}
+			className={`${s.input} ${className}`}
 			id={id} 
 			placeholder={placeholder}
 			type={type}
