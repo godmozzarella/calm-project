@@ -55,14 +55,26 @@
   right: 0;
 }
 
-.profileIcon {
+.profileBaseIcon {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 5rem;
-	height: 5rem;
+	width: 8rem;
+	height: 8rem;
 	border-radius: 50%;
 	background-color: $block-color;
+}
+
+.profileLetter {
+	font-size: 2rem;
+	font-weight: 600;
+}
+
+.profileIconImage {
+	width: 8rem;
+	height: 8rem;
+	border-radius: 50%;
+	object-fit: cover;
 }
 
 .overlay {
