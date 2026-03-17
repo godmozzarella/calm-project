@@ -64,3 +64,5 @@ Calm - Отслеживай. Понимай. Живи легче!
 
 ## 3. Контекстная диаграмма
 ![Context diagram](src/assets/context.svg)
+
+---
