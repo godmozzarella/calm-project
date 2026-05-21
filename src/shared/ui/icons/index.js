@@ -24,6 +24,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import CheckCircleIcon from '@mui/icons-material/CheckCircleOutlined'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import LogoutIcon from '@mui/icons-material/Logout'
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
@@ -57,6 +58,7 @@ export {
 	CheckCircleIcon,
 	ErrorOutlineIcon,
 	ChevronRightIcon,
+	ChevronLeftIcon,
 	ArrowBackIcon,
 	LogoutIcon,
 	PhotoCameraIcon,
