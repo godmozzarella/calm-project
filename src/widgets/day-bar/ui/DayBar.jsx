@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/icons'
 
 import s from './DayBar.module.scss'
@@ -21,17 +19,19 @@ const MONTHS_SHORT = [
 	'июл', 'авг', 'сен', 'окт', 'ноя', 'дек',
 ]
 
-const midnight = (d = new Date()) => {
+export const midnight = (d = new Date()) => {
 	const copy = new Date(d)
 	copy.setHours(0, 0, 0, 0)
 	return copy
 }
 
+export const dateKey = d =>
+	`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
 const diffDays = (a, b) =>
 	Math.round((b.getTime() - a.getTime()) / 86_400_000)
 
 const getWeekDays = date => {
-	/* Monday-based week containing date */
 	const day = date.getDay() === 0 ? 6 : date.getDay() - 1
 	return Array.from({ length: 7 }, (_, i) => {
 		const d = new Date(date)
@@ -50,9 +50,12 @@ const relativeLabel = date => {
 	return null
 }
 
-const DayBar = () => {
-	const [date, setDate] = useState(midnight())
+const isSameDay = (a, b) =>
+	a.getDate() === b.getDate() &&
+	a.getMonth() === b.getMonth() &&
+	a.getFullYear() === b.getFullYear()
 
+const DayBar = ({ date, setDate }) => {
 	const today = midnight()
 	const isToday = date.getTime() === today.getTime()
 	const label = relativeLabel(date)
@@ -66,25 +69,17 @@ const DayBar = () => {
 		})
 	}
 
-	const isSameDay = (a, b) =>
-		a.getDate() === b.getDate() &&
-		a.getMonth() === b.getMonth() &&
-		a.getFullYear() === b.getFullYear()
-
 	return (
 		<div className={s.dayBar}>
-			{/* ── Left arrow ── */}
 			<button className={s.navBtn} onClick={() => shift(-1)} aria-label="Предыдущий день">
 				<ChevronLeftIcon />
 			</button>
 
-			{/* ── Big day number ── */}
 			<div className={s.dayNumber}>
 				<span className={s.number}>{date.getDate()}</span>
 				<span className={s.month}>{MONTHS_SHORT[date.getMonth()]}</span>
 			</div>
 
-			{/* ── Center: weekday + label ── */}
 			<div className={s.center}>
 				<span className={s.weekday}>{WEEKDAYS_FULL[date.getDay()]}</span>
 				{label && (
@@ -99,7 +94,6 @@ const DayBar = () => {
 				)}
 			</div>
 
-			{/* ── Week strip ── */}
 			<div className={s.weekStrip}>
 				{weekDays.map(d => {
 					const selected = isSameDay(d, date)
@@ -108,7 +102,12 @@ const DayBar = () => {
 					return (
 						<button
 							key={d.toISOString()}
-							className={`${s.dayPill} ${selected ? s.dayPillSelected : ''} ${todayDay && !selected ? s.dayPillToday : ''} ${future ? s.dayPillFuture : ''}`}
+							className={[
+								s.dayPill,
+								selected                   && s.dayPillSelected,
+								todayDay && !selected      && s.dayPillToday,
+								future                     && s.dayPillFuture,
+							].filter(Boolean).join(' ')}
 							onClick={() => !future && setDate(midnight(d))}
 							disabled={future}
 							aria-label={`${d.getDate()} ${MONTHS[d.getMonth()]}`}
@@ -120,7 +119,6 @@ const DayBar = () => {
 				})}
 			</div>
 
-			{/* ── Right arrow ── */}
 			<button
 				className={`${s.navBtn} ${isToday ? s.navBtnDisabled : ''}`}
 				onClick={() => !isToday && shift(1)}

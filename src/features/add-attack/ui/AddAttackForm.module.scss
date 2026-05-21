@@ -1,0 +1,328 @@
+@use 'app/styles/globals.scss' as *;
+
+/* ── Overlay ── */
+.overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(3px);
+	z-index: 1100;
+	display: flex;
+	align-items: flex-end;
+
+	@media (min-width: 640px) {
+		align-items: center;
+		justify-content: center;
+	}
+}
+
+/* ── Bottom sheet / modal ── */
+.sheet {
+	background: rgba(28, 31, 40, 0.98);
+	border: 1px solid rgba(92, 173, 228, 0.1);
+	border-radius: 1.5rem 1.5rem 0 0;
+	width: 100%;
+	max-height: 92dvh;
+	display: flex;
+	flex-direction: column;
+	animation: slideUp 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+
+	@media (min-width: 640px) {
+		border-radius: 1.5rem;
+		max-width: 560px;
+		max-height: 88dvh;
+	}
+}
+
+@keyframes slideUp {
+	from { transform: translateY(100%); opacity: 0; }
+	to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Handle (mobile) ── */
+.handle {
+	width: 2.5rem;
+	height: 4px;
+	background: rgba(255, 255, 255, 0.15);
+	border-radius: 2px;
+	margin: 0.75rem auto 0;
+	flex-shrink: 0;
+
+	@media (min-width: 640px) { display: none; }
+}
+
+/* ── Header ── */
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 1rem 1.25rem 0.75rem;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	flex-shrink: 0;
+}
+
+.title {
+	@include fluid-text(17, 15);
+	font-weight: $fw-semibold;
+	color: $fc-main;
+}
+
+.closeBtn {
+	background: none;
+	border: none;
+	color: $fc-secondary;
+	cursor: pointer;
+	@include fluid-text(16, 14);
+	padding: 0.25rem 0.5rem;
+	border-radius: 0.5rem;
+	transition: color 0.15s ease, background-color 0.15s ease;
+
+	&:hover {
+		color: $fc-main;
+		background: rgba(255, 255, 255, 0.06);
+	}
+}
+
+/* ── Scrollable body ── */
+.body {
+	overflow-y: auto;
+	flex: 1;
+	padding: 0.25rem 1.25rem 0.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	scrollbar-width: none;
+	&::-webkit-scrollbar { display: none; }
+}
+
+.error {
+	@include fluid-text(12, 11);
+	color: $error-color;
+	background: rgba(239, 68, 68, 0.08);
+	border: 1px solid rgba(239, 68, 68, 0.2);
+	border-radius: 0.625rem;
+	padding: 0.5rem 0.875rem;
+}
+
+/* ── Section ── */
+.section {
+	display: flex;
+	width: 100%;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 0.875rem 0;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+	&:last-child { border-bottom: none; }
+}
+
+.sectionLabel {
+	@include fluid-text(11, 10);
+	font-weight: $fw-semibold;
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
+	color: rgba(140, 150, 170, 0.7);
+}
+
+/* ── Intensity ── */
+.intensityRow {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.slider {
+	flex: 1;
+	-webkit-appearance: none;
+	appearance: none;
+	height: 4px;
+	border-radius: 2px;
+	background: linear-gradient(to right, #22c55e 0%, #84cc16 20%, #eab308 45%, #f97316 70%, #ef4444 100%);
+	outline: none;
+	cursor: pointer;
+	padding: 0 10px;
+	box-sizing: border-box;
+
+	&::-webkit-slider-runnable-track {
+		height: 4px;
+		border-radius: 2px;
+	}
+
+	&::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		background: rgba(20, 22, 30, 1);
+		cursor: pointer;
+		border: 2px solid rgba(255, 255, 255, 0.12);
+		box-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+		margin-top: -8px;
+		transition: transform 0.12s ease;
+
+		&:active { transform: scale(1.15); }
+	}
+
+	&::-moz-range-track {
+		height: 4px;
+		border-radius: 2px;
+		background: linear-gradient(to right, #22c55e 0%, #84cc16 20%, #eab308 45%, #f97316 70%, #ef4444 100%);
+		border: none;
+	}
+
+	&::-moz-range-thumb {
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		background: rgba(20, 22, 30, 1);
+		cursor: pointer;
+		border: 2px solid rgba(255, 255, 255, 0.12);
+		box-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+		transition: transform 0.12s ease;
+	}
+
+	&:active::-moz-range-thumb { transform: scale(1.15); }
+}
+
+.intensityValue {
+	@include fluid-text(24, 20);
+	font-weight: $fw-semibold;
+	min-width: 2rem;
+	text-align: center;
+	transition: color 0.2s ease;
+}
+
+.intensityLabels {
+	display: flex;
+	justify-content: space-between;
+	@include fluid-text(10, 9);
+	color: rgba(140, 150, 170, 0.5);
+}
+
+/* ── Chips ── */
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.chip {
+	padding: 0.4rem 0.875rem;
+	border-radius: 2rem;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	background: none;
+	color: $fc-secondary;
+	@include fluid-text(13, 11);
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.06);
+		color: $fc-main;
+	}
+}
+
+.chipActive {
+	background: rgba(92, 173, 228, 0.15);
+	border-color: rgba(92, 173, 228, 0.4);
+	color: $fc-contrast;
+}
+
+/* ── Time ── */
+.timeRow {
+	display: flex;
+	gap: 1rem;
+}
+
+.timeField {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	flex: 1;
+
+	span {
+		@include fluid-text(11, 10);
+		color: $fc-secondary;
+	}
+}
+
+.timeInput {
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 0.625rem;
+	color: $fc-main;
+	padding: 0.5rem 0.75rem;
+	@include fluid-text(14, 12);
+	width: 100%;
+	cursor: pointer;
+	transition: border-color 0.15s ease;
+
+	&:focus {
+		outline: none;
+		border-color: rgba(92, 173, 228, 0.4);
+	}
+
+	/* Chrome time picker dark */
+	color-scheme: dark;
+}
+
+.checkboxRow {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	cursor: pointer;
+	@include fluid-text(13, 11);
+	color: $fc-secondary;
+	width: fit-content;
+}
+
+.checkbox {
+	width: 1rem;
+	height: 1rem;
+	accent-color: $fc-contrast;
+	cursor: pointer;
+}
+
+/* ── Note ── */
+.textarea {
+	background: rgba(255, 255, 255, 0.04);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 0.75rem;
+	color: $fc-main;
+	padding: 0.75rem;
+	@include fluid-text(13, 12);
+	resize: none;
+	width: 100%;
+	font-family: 'Roboto', Arial, sans-serif;
+	transition: border-color 0.15s ease;
+
+	&::placeholder { color: rgba(190, 190, 190, 0.35); }
+
+	&:focus {
+		outline: none;
+		border-color: rgba(92, 173, 228, 0.3);
+	}
+}
+
+/* ── Footer ── */
+.footer {
+	padding: 0.875rem 1.25rem 1.25rem;
+	border-top: 1px solid rgba(255, 255, 255, 0.06);
+	flex-shrink: 0;
+}
+
+.submitBtn {
+	width: 100%;
+	padding: 0.8rem;
+	border-radius: 0.875rem;
+	border: none;
+	background: linear-gradient(135deg, rgba(102, 186, 241, 1), rgba(14, 123, 196, 1));
+	color: #fff;
+	@include fluid-text(15, 13);
+	font-weight: $fw-semibold;
+	cursor: pointer;
+	transition: opacity 0.18s ease, transform 0.1s ease;
+
+	&:hover { opacity: 0.9; }
+	&:active { transform: scale(0.98); }
+}
