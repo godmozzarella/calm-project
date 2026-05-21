@@ -7,6 +7,8 @@
 	width: 100%;
 	background-color: $secondary-color;
 	padding: 0.875rem 1.75rem;
+	max-width: 1920px;
+	margin: 0 auto;
 }
 
 /* ── Nav arrows ── */
@@ -124,6 +126,38 @@
 	gap: 0.35rem;
 	flex: 1;
 	justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+	.dayBar {
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
+	}
+
+	.weekStrip {
+		display: none;
+	}
+
+	.center {
+		flex: 1;
+		align-items: flex-start;
+	}
+}
+
+@media (max-width: 480px) {
+	.dayBar {
+		padding: 0.65rem 0.875rem;
+	}
+
+	.dayNumber {
+		flex-direction: row;
+		align-items: baseline;
+		gap: 0.3rem;
+	}
+
+	.number {
+		@include fluid-text(28, 22);
+	}
 }
 
 .dayPill {

@@ -72,9 +72,14 @@ html:has(.indexBody) {
 }
 
 @media (max-width: 48rem) {
+	.indexBody {
+		margin-top: 5rem;
+		padding: 0 1.25rem;
+	}
+
 	.rowContent {
 		flex-direction: column;
-		gap: 2rem;
+		gap: 1.5rem;
 	}
 
 	.containerItem:nth-child(1) {
@@ -83,25 +88,36 @@ html:has(.indexBody) {
 
 	.containerItem:nth-child(2) {
 		order: 1;
-		flex-direction: row;
 	}
 
 	.containerItem {
-		max-width: 70%;
+		max-width: 100%;
+		align-items: center;
 	}
 
 	h1,
 	.description {
 		text-align: center;
 	}
+
+	.buttons {
+		flex-direction: column;
+		width: 100%;
+
+		> * { width: 100%; }
+	}
 }
 
 @media (max-width: 27rem) {
-	.containerItem:last-child {
-		flex-direction: column;
+	.indexBody {
+		padding: 0 1rem;
 	}
 
 	.containerItem {
 		max-width: 100%;
+	}
+
+	.bigLogo {
+		@include fluid-text(80, 56);
 	}
 }
