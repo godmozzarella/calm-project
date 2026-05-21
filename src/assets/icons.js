@@ -18,6 +18,7 @@ import AnalyticsIcon from '@mui/icons-material/AnalyticsOutlined';
 import MenuIcon from '@mui/icons-material/MenuOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/AddCircle';
+import UploadIcon from '@mui/icons-material/Upload';
 
 export {
     InstallDesktopIcon,
@@ -40,4 +41,5 @@ export {
     MenuIcon,
     CloseIcon,
     AddIcon,
+    UploadIcon,
 };

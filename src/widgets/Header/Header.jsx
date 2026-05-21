@@ -1,10 +1,13 @@
-import Button from '../Button/Button'
+import Button from '../../shared/Button/Button'
 import s from './Header.module.scss'
 
-const Header = () =>{
+const Header = () => {
 	return (
 		<header>
-			<a className={s.logo} href="#">
+			<a
+				className={s.logo}
+				href="#"
+			>
 				Calm
 			</a>
 			<nav>
@@ -16,14 +19,12 @@ const Header = () =>{
 				</span>
 
 				<Button
-					onClick={() =>
-						document
-							.getElementById('regAndLog')
-							?.scrollIntoView()
-					}
+					onClick={() => document.getElementById('regAndLog')?.scrollIntoView()}
 					colored
 					children={
-						<>Используй <span className={s.inTextLogo}>Calm</span> уже сейчас!</>
+						<>
+							Используй <span className={s.inTextLogo}>Calm</span> уже сейчас!
+						</>
 					}
 				/>
 			</nav>

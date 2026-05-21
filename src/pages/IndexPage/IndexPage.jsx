@@ -1,9 +1,9 @@
-import Footer from '../../components/Footer/Footer'
-import Header from '../../components/Header/Header'
-import Section from '../../components/IndexSection/IndexSection'
-import SectionBlock from '../../components/IndexSectionBlock/IndexSectionBlock'
-import Button from '../../components/Button/Button'
-import AddUser from '../../components/AddUser/AddUser'
+import Footer from '../../widgets/Footer/Footer'
+import Header from '../../widgets/Header/Header'
+import Section from '../../widgets/IndexSection/IndexSection'
+import SectionBlock from '../../widgets/IndexSectionBlock/IndexSectionBlock'
+import Button from '../../shared/Button/Button'
+import AddUser from '../../widgets/AddUser/AddUser'
 
 import s from './IndexPage.module.scss'
 

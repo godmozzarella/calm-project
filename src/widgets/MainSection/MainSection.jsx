@@ -5,7 +5,7 @@ import AttackSection from '../AttackSection/AttackSection'
 import MedicationSection from '../MedicationSection/MedicationSection'
 import AttackZoneSection from '../AttackZoneSection/AttackZoneSection'
 import ChartSection from '../ChartSection/ChartSection'
-import DayBar from '../DayBar/DayBar'
+import DayBar from '../../features/DayBar/DayBar'
 
 const MainSection = () => {
     return (

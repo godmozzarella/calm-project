@@ -4,43 +4,73 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+
 	gap: 1rem;
-	background-color: $secondary-color;   
+	background-color: $block-color;   
 	padding: 20px;
+	border-radius: 2rem;
+
 	position: absolute;
-	top: 0;
-	right: 0;
+	top: 1rem;
+	right: 1rem;
 	opacity: 1;
 	z-index: 1002;
+
 	transition: opacity 0.3s ease;
 }
 
-.photoActions {
+.header {
 	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
+	justify-content: space-between;
+	align-items: center;
+	gap: 1.25rem;
 	width: 100%;
 }
 
-.uploadPhoto {
+.title {
+	font-size: 1.5rem;
+	font-weight: 600;
+}
+
+.close{
+	cursor: pointer;
+}
+
+.uploadAvatarInput {
 	display: none;
 }
 
-.editButton {
-	cursor: pointer;
+.avatarContainer{
+	position: relative;
+}
+
+.uploadAvatar {
+	position: absolute;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 0.625rem;
-	background-color: $block-color;
-	border-radius: 2rem;
-	width: 100%;
-	color: $fc-main;
 
-	transition: transform 0.2s ease;
+	background-color: $secondary-color;
+	padding: 0.25rem;
+	border-radius: 2rem;
+
+	aspect-ratio: 1 / 1;
+	max-width: 2rem;
+	max-height: 2rem;
+	cursor: pointer;
+
+	top: 70%;
+	left: 75%;
+}
+
+.deleteAvatar {
+	color: $fc-main;
+	padding: 0;
+
+	transition: color 0.3s ease;
 
 	&:hover {
-		transform: scale(0.99);
+		color: $fc-dark;
 	}
 }
 
@@ -51,12 +81,13 @@
 	width: 8rem;
 	height: 8rem;
 	border-radius: 50%;
-	background-color: $block-color;
+	background-color: $contrast-color;
 }
 
 .profileLetter {
-	font-size: 2rem;
+	font-size: 3rem;
 	font-weight: 600;
+	color: $fc-dark;
 }
 
 .profileIconImage {
