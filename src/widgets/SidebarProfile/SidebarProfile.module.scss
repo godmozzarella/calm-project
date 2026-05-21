@@ -62,12 +62,13 @@
 	width: 8rem;
 	height: 8rem;
 	border-radius: 50%;
-	background-color: $block-color;
+	background-color: $contrast-color;
 }
 
 .profileLetter {
-	font-size: 2rem;
+	font-size: 3rem;
 	font-weight: 600;
+	color: $fc-dark;
 }
 
 .profileIconImage {

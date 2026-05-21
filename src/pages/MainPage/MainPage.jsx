@@ -1,13 +1,12 @@
-import Footer from '../../components/Footer/Footer'
+import Footer from '../../widgets/Footer/Footer'
 
-import { Link } from 'react-router-dom'
-import { CalendarMonthIcon, MenuIcon, CloseIcon } from '../../assets/icons'
+import { CalendarMonthIcon, MenuIcon } from '../../assets/icons'
 import { useState, useEffect } from 'react'
 
-import SidebarProfile from '../../components/SidebarProfile/SidebarProfile'
-import SidebarCalendar from '../../components/SidebarCalendar/SidebarCalendar'
-import MainSection from '../../components/MainSection/MainSection'
-import Button from '../../components/Button/Button'
+import SidebarProfile from '../../widgets/SidebarProfile/SidebarProfile'
+import SidebarCalendar from '../../widgets/SidebarCalendar/SidebarCalendar'
+import MainSection from '../../widgets/MainSection/MainSection'
+import Button from '../../shared/Button/Button'
 
 import s from './MainPage.module.scss'
 
@@ -46,7 +45,6 @@ const MainPage = () => {
 			<SidebarProfile 
 				openMenu={openMenu} 
 				setOpenMenu={setOpenMenu} 
-				closeIcon={<CloseIcon />} 
 				user={user} 
 				setUser={setUser}
 			/> 
@@ -55,7 +53,6 @@ const MainPage = () => {
 			<SidebarCalendar 
 				openCalendar={openCalendar} 
 				setOpenCalendar={setOpenCalendar} 
-				closeIcon={<CloseIcon />} 
 			/>
 			
 			<MainSection />
