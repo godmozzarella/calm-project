@@ -1,4 +1,5 @@
 import { ATTACK_TYPE_LABELS, SYMPTOM_LABELS, TRIGGER_LABELS, intensityColor } from '@/entities/attack'
+import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
 import s from './AddAttackForm.module.scss'
 
 const TYPES    = Object.entries(ATTACK_TYPE_LABELS).map(([value, label]) => ({ value, label }))
@@ -7,6 +8,7 @@ const TRIGGERS = Object.entries(TRIGGER_LABELS).map(([value, label]) => ({ value
 
 
 const AddAttackForm = ({ open, form, error, onClose, setField, toggleArrayField, onSubmit }) => {
+	useBodyScrollLock(open)
 	if (!open) return null
 
 	return (

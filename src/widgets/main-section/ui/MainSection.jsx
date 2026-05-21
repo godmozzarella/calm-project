@@ -23,7 +23,7 @@ const MainSection = () => {
 			<div className={s.grid}>
 				<div className={s.topRow}>
 					<AttackSection date={dateKey(date)} />
-					<MedicationSection />
+					<MedicationSection date={dateKey(date)} />
 					<AttackZoneSection />
 				</div>
 
