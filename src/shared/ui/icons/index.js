@@ -23,6 +23,12 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import CheckCircleIcon from '@mui/icons-material/CheckCircleOutlined'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import LogoutIcon from '@mui/icons-material/Logout'
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
+import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
+import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 
 export {
 	InstallDesktopIcon,
@@ -50,4 +56,10 @@ export {
 	VisibilityOffIcon,
 	CheckCircleIcon,
 	ErrorOutlineIcon,
+	ChevronRightIcon,
+	ArrowBackIcon,
+	LogoutIcon,
+	PhotoCameraIcon,
+	NotificationsNoneIcon,
+	DarkModeOutlinedIcon,
 }

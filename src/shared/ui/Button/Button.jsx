@@ -15,7 +15,7 @@ const {
 		<button 
 		type={type}
 			onClick={onClick} 
-			className={`${colored ? s.colored : className}`}>			
+			className={`${colored ? s.colored : ''} ${className || ''}`}>			
 			{children && <span className={sText ? s.sText : s.mText}>{children}</span>}
 			{icon && <span className={s.icon}>{icon}</span>}
 		</button>

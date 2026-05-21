@@ -14,17 +14,23 @@ export const useEditProfile = ({ user, setUser }) => {
 	const [open, setOpen] = useState(false)
 	const [editData, setEditData] = useState(null)
 	const [tempAvatar, setTempAvatar] = useState(null)
+	const [passwordError, setPasswordError] = useState('')
 
 	const openForm = () => {
 		setEditData(makeEditData(user))
 		setTempAvatar(user?.avatar || null)
+		setPasswordError('')
 		setOpen(true)
 	}
 
-	const closeForm = () => setOpen(false)
+	const closeForm = () => {
+		setOpen(false)
+		setPasswordError('')
+	}
 
 	const handleInputChange = e => {
 		const { id, value } = e.target
+		if (id === 'password') setPasswordError('')
 		setEditData(prev => ({ ...prev, [id]: value }))
 	}
 
@@ -46,14 +52,14 @@ export const useEditProfile = ({ user, setUser }) => {
 		setEditData(prev => ({ ...prev, avatar: null }))
 	}
 
-	const handleSaveChanges = () => {
+	const handleSaveChanges = (onSuccess) => {
 		if (!editData) return
 
 		const updated = { ...user, name: editData.name, email: editData.email }
 
 		if (editData.newPassword) {
 			if (editData.password !== user.password) {
-				alert('Неверный текущий пароль')
+				setPasswordError('Неверный текущий пароль')
 				return
 			}
 			updated.password = editData.newPassword
@@ -64,12 +70,14 @@ export const useEditProfile = ({ user, setUser }) => {
 		setUser(updated)
 		setCurrentUser(updated)
 		setOpen(false)
+		onSuccess?.()
 	}
 
 	return {
 		open,
 		editData,
 		tempAvatar,
+		passwordError,
 		openForm,
 		closeForm,
 		handleInputChange,
