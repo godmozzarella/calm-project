@@ -49,8 +49,7 @@ const AuthForm = () => {
 					Регистрация
 				</button>
 				<div
-					className={s.tabSlider}
-					style={{ left: activeTab === 'register' ? '50%' : '0%' }}
+					className={`${s.tabSlider} ${activeTab === 'register' ? s.tabSliderRight : ''}`}
 				/>
 			</div>
 

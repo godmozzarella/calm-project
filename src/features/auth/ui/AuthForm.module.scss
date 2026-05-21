@@ -50,21 +50,17 @@
 	position: absolute;
 	top: 0.25rem;
 	bottom: 0.25rem;
+	/* (100% - 2×padding − gap) / 2 */
 	width: calc(50% - 0.375rem);
-	background: linear-gradient(
-		135deg,
-		rgba(92, 173, 228, 0.18) 0%,
-		rgba(54, 61, 83, 0.9) 100%
-	);
-	border: 1px solid rgba(92, 173, 228, 0.2);
+	left: 0.25rem;
+	background-color: $block-color;
 	border-radius: 0.55rem;
 	transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 	z-index: 1;
-	left: 0.25rem;
 }
 
-.tabActive:last-of-type ~ .tabSlider,
-.tabSlider[style*='50%'] {
+.tabSliderRight {
+	/* padding + tab1-width + gap = 0.25 + (50%−0.375) + 0.25 */
 	left: calc(50% + 0.125rem);
 }
 
