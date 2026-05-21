@@ -30,6 +30,12 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
+import MedicationIcon from '@mui/icons-material/Medication'
+import LocalPharmacyIcon from '@mui/icons-material/LocalPharmacy'
+import WaterDropIcon from '@mui/icons-material/WaterDrop'
+import AirIcon from '@mui/icons-material/Air'
+import HealingIcon from '@mui/icons-material/Healing'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 
 export {
 	InstallDesktopIcon,
@@ -64,4 +70,10 @@ export {
 	PhotoCameraIcon,
 	NotificationsNoneIcon,
 	DarkModeOutlinedIcon,
+	MedicationIcon,
+	LocalPharmacyIcon,
+	WaterDropIcon,
+	AirIcon,
+	HealingIcon,
+	ArrowForwardIcon,
 }
