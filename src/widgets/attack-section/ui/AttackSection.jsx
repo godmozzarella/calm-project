@@ -1,25 +1,121 @@
-import { AddIcon } from '@/shared/ui/icons'
+import { useState, useCallback, useEffect } from 'react'
+
+import { AddIcon, DeleteIcon } from '@/shared/ui/icons'
+import { AddAttackForm, useAddAttack } from '@/features/add-attack'
+import { getAttacksByDate, deleteAttack, ATTACK_TYPE_LABELS, SYMPTOM_LABELS, intensityColor } from '@/entities/attack'
 
 import s from './AttackSection.module.scss'
 
-const AttackSection = () => {
-	return (
-		<div className={s.card}>
-			<div className={s.cardHeader}>
-				<h2 className={s.title}>Приступы</h2>
-				<button className={s.addBtn} aria-label="Добавить приступ">
-					<AddIcon fontSize="small" />
-					<span>Добавить</span>
-				</button>
-			</div>
+const shortDate = iso => {
+	const [, m, d] = iso.split('-')
+	return `${Number(d)}.${Number(m)}`
+}
 
-			<div className={s.cardBody}>
-				<div className={s.placeholder}>
-					<p className={s.placeholderText}>Приступов за день нет</p>
-					<p className={s.placeholderHint}>Интенсивность, симптомы, триггеры — всё будет здесь</p>
+const formatRange = attack => {
+	const startDate = attack.startDate ?? attack.date
+	const endDate = attack.endDate ?? startDate
+	const startLabel = attack.startTime + (startDate !== endDate ? ` ${shortDate(startDate)}` : '')
+	if (attack.ongoing) return `${startLabel} — сейчас`
+	if (!attack.endTime) return startLabel
+	const endLabel = attack.endTime + (startDate !== endDate ? ` ${shortDate(endDate)}` : '')
+	return `${startLabel} — ${endLabel}`
+}
+
+const AttackSection = ({ date }) => {
+	const [attacks, setAttacks] = useState(() => getAttacksByDate(date))
+
+	const reload = useCallback(
+		() => setAttacks(getAttacksByDate(date)),
+		[date]
+	)
+
+	useEffect(() => { reload() }, [reload])
+
+	const { open, form, error, openForm, closeForm, setField, toggleArrayField, submit } =
+		useAddAttack({ date, onSuccess: reload })
+
+	const handleDelete = id => {
+		deleteAttack(id)
+		reload()
+	}
+
+	return (
+		<>
+			<div className={s.card}>
+				<div className={s.cardHeader}>
+					<h2 className={s.title}>Приступы</h2>
+					<button className={s.addBtn} onClick={openForm} aria-label="Добавить приступ">
+						<AddIcon fontSize="small" />
+						<span>Добавить</span>
+					</button>
+				</div>
+
+				<div className={s.cardBody}>
+					{attacks.length === 0 ? (
+						<div className={s.empty}>
+							<p className={s.emptyText}>Приступов за день нет</p>
+							<p className={s.emptyHint}>Интенсивность, симптомы, триггеры — всё будет здесь</p>
+						</div>
+					) : (
+						<ul className={s.list}>
+							{attacks.map(attack => (
+								<li key={attack.id} className={s.attackCard}>
+									<div className={s.attackTop}>
+										<div className={s.attackMeta}>
+											<span className={s.attackTime}>
+												{formatRange(attack)}
+											</span>
+											<span className={s.attackType}>
+												{ATTACK_TYPE_LABELS[attack.type]}
+											</span>
+										</div>
+										<div className={s.attackRight}>
+											<span
+												className={s.intensityBadge}
+												style={{ background: `${intensityColor(attack.intensity)}22`, color: intensityColor(attack.intensity), borderColor: `${intensityColor(attack.intensity)}55` }}
+											>
+												{attack.intensity}/10
+											</span>
+											<button
+												className={s.deleteBtn}
+												onClick={() => handleDelete(attack.id)}
+												aria-label="Удалить"
+											>
+												<DeleteIcon style={{ fontSize: '1rem' }} />
+											</button>
+										</div>
+									</div>
+
+									{attack.symptoms.length > 0 && (
+										<div className={s.chips}>
+											{attack.symptoms.map(sym => (
+												<span key={sym} className={s.chip}>
+													{SYMPTOM_LABELS[sym]}
+												</span>
+											))}
+										</div>
+									)}
+
+									{attack.note && (
+										<p className={s.note}>{attack.note}</p>
+									)}
+								</li>
+							))}
+						</ul>
+					)}
 				</div>
 			</div>
-		</div>
+
+			<AddAttackForm
+				open={open}
+				form={form}
+				error={error}
+				onClose={closeForm}
+				setField={setField}
+				toggleArrayField={toggleArrayField}
+				onSubmit={submit}
+			/>
+		</>
 	)
 }
 

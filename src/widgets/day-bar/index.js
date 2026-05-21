@@ -1,1 +1,1 @@
-export { default as DayBar } from './ui/DayBar'
+export { default as DayBar, midnight, dateKey } from './ui/DayBar'
