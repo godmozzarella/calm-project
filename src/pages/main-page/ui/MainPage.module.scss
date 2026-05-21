@@ -41,8 +41,18 @@
 }
 
 
-@media (max-width: 768px) {
-	section {
-		flex-direction: column;
+@media (max-width: 480px) {
+	.icon {
+		width: 2.25rem;
+		height: 2.25rem;
+		top: 0.875rem;
+	}
+
+	.menu {
+		left: 0.875rem;
+	}
+
+	.calendar {
+		right: 0.875rem;
 	}
 }

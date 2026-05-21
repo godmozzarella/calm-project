@@ -17,6 +17,10 @@ import {
 	LanguageIcon,
 	VisibilityIcon,
 	VisibilityOffIcon,
+	TelegramIcon,
+	XIcon,
+	YouTubeIcon,
+	InstagramIcon,
 } from '@/shared/ui/icons'
 import { useEditProfile } from '@/features/edit-profile'
 import { clearCurrentUser } from '@/entities/user'
@@ -151,6 +155,19 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 							<span className={s.navIcon}><LogoutIcon fontSize="small" /></span>
 							<span className={s.navLabel}>Выйти из аккаунта</span>
 						</button>
+
+						<div className={s.divider} />
+
+						{/* ── Socials + copyright ── */}
+						<div className={s.footerBlock}>
+							<div className={s.socials}>
+								<a href="#" className={s.socialLink} aria-label="Telegram"><TelegramIcon style={{ fontSize: '1.1rem' }} /></a>
+								<a href="#" className={s.socialLink} aria-label="X"><XIcon style={{ fontSize: '1.1rem' }} /></a>
+								<a href="#" className={s.socialLink} aria-label="YouTube"><YouTubeIcon style={{ fontSize: '1.1rem' }} /></a>
+								<a href="#" className={s.socialLink} aria-label="Instagram"><InstagramIcon style={{ fontSize: '1.1rem' }} /></a>
+							</div>
+							<p className={s.copyright}>2026 © Calm</p>
+						</div>
 					</div>
 
 					{/* ── Edit profile sub-panel ── */}
