@@ -19,63 +19,70 @@ const AuthForm = () => {
 		emailError,
 		loginPasswordError,
 		registerPasswordError,
+		confirmPasswordError,
+		loginFormError,
+		registerFormError,
 		setLoginPassword,
 		setRegisterPassword,
 		setConfirmPassword,
 		setUserName,
 		handleEmailChange,
 		handleRegistration,
-		handleLogin
+		handleLogin,
 	} = useAuth()
 
 	return (
 		<div className={s.authWrapper}>
 			<div className={s.tabSwitcher}>
-				<div
-					className={`${s.tab} ${activeTab === 'login' ? 'active' : ''}`}
+				<button
+					type="button"
+					className={`${s.tab} ${activeTab === 'login' ? s.tabActive : ''}`}
 					onClick={() => setActiveTab('login')}
 				>
 					Вход
-				</div>
-				<div
-					className={`${s.tab} ${activeTab === 'register' ? 'active' : ''}`}
+				</button>
+				<button
+					type="button"
+					className={`${s.tab} ${activeTab === 'register' ? s.tabActive : ''}`}
 					onClick={() => setActiveTab('register')}
 				>
 					Регистрация
-				</div>
+				</button>
 				<div
 					className={s.tabSlider}
 					style={{ left: activeTab === 'register' ? '50%' : '0%' }}
 				/>
 			</div>
 
-			{activeTab === 'login' && (
-				<LoginForm
-					onSubmit={handleLogin}
-					email={loginEmail}
-					setEmail={e => handleEmailChange(e, 'login')}
-					password={loginPassword}
-					setPassword={setLoginPassword}
-					passwordError={loginPasswordError}
-					emailError={emailError}
-				/>
-			)}
-
-			{activeTab === 'register' && (
-				<RegisterForm
-					onSubmit={handleRegistration}
-					email={registerEmail}
-					setEmail={e => handleEmailChange(e, 'register')}
-					password={registerPassword}
-					setPassword={setRegisterPassword}
-					confirmPassword={confirmPassword}
-					setConfirmPassword={setConfirmPassword}
-					userName={userName}
-					setUserName={setUserName}
-					passwordError={registerPasswordError}
-					emailError={emailError}
-				/>
-			)}
+			<div className={s.formArea}>
+				{activeTab === 'login' ? (
+					<LoginForm
+						onSubmit={handleLogin}
+						email={loginEmail}
+						setEmail={e => handleEmailChange(e, 'login')}
+						password={loginPassword}
+						setPassword={setLoginPassword}
+						passwordError={loginPasswordError}
+						formError={loginFormError}
+					/>
+				) : (
+					<RegisterForm
+						onSubmit={handleRegistration}
+						email={registerEmail}
+						setEmail={e => handleEmailChange(e, 'register')}
+						password={registerPassword}
+						setPassword={setRegisterPassword}
+						confirmPassword={confirmPassword}
+						setConfirmPassword={setConfirmPassword}
+						userName={userName}
+						setUserName={setUserName}
+						emailError={emailError}
+						passwordError={registerPasswordError}
+						confirmPasswordError={confirmPasswordError}
+						formError={registerFormError}
+					/>
+				)}
+			</div>
 		</div>
 	)
 }
