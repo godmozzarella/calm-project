@@ -1,0 +1,27 @@
+@use 'app/styles/globals.scss' as *;
+
+input{
+
+    padding: 0.625rem 1.25rem;
+    border-radius: 2rem;
+
+    @include fluid-text(16, 12);
+    font-family: 'Roboto', Arial, sans-serif;
+    font-weight: $fw-semibold;
+    
+    background-color: $main-color;
+    color: $fc-main;
+    border: none;
+    outline: none;
+    width: 100%;
+}
+
+input[type="email"] {
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+input[type="email"] {
+    -moz-appearance: textfield;
+}
+
