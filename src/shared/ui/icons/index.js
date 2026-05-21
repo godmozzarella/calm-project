@@ -1,0 +1,65 @@
+import InstallDesktopIcon from '@mui/icons-material/InstallDesktop'
+import InstallMobileIcon from '@mui/icons-material/InstallMobile'
+import PersonIcon from '@mui/icons-material/PersonOutlineOutlined'
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonthOutlined'
+import MedicalInformationIcon from '@mui/icons-material/MedicalInformationOutlined'
+import ForwardToInboxIcon from '@mui/icons-material/ForwardToInboxOutlined'
+import TelegramIcon from '@mui/icons-material/Telegram'
+import YouTubeIcon from '@mui/icons-material/YouTube'
+import XIcon from '@mui/icons-material/X'
+import InstagramIcon from '@mui/icons-material/Instagram'
+import LanguageIcon from '@mui/icons-material/Language'
+import DeleteIcon from '@mui/icons-material/Delete'
+import EditIcon from '@mui/icons-material/Edit'
+import CircleIcon from '@mui/icons-material/PanoramaFishEye'
+import SecurityIcon from '@mui/icons-material/Security'
+import ConnectIcon from '@mui/icons-material/ConnectWithoutContact'
+import AnalyticsIcon from '@mui/icons-material/AnalyticsOutlined'
+import MenuIcon from '@mui/icons-material/MenuOutlined'
+import CloseIcon from '@mui/icons-material/Close'
+import AddIcon from '@mui/icons-material/AddCircle'
+import UploadIcon from '@mui/icons-material/Upload'
+import VisibilityIcon from '@mui/icons-material/Visibility'
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
+import CheckCircleIcon from '@mui/icons-material/CheckCircleOutlined'
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import LogoutIcon from '@mui/icons-material/Logout'
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
+import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
+import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
+
+export {
+	InstallDesktopIcon,
+	InstallMobileIcon,
+	PersonIcon,
+	CalendarMonthIcon,
+	MedicalInformationIcon,
+	ForwardToInboxIcon,
+	TelegramIcon,
+	YouTubeIcon,
+	XIcon,
+	InstagramIcon,
+	LanguageIcon,
+	DeleteIcon,
+	EditIcon,
+	CircleIcon,
+	SecurityIcon,
+	ConnectIcon,
+	AnalyticsIcon,
+	MenuIcon,
+	CloseIcon,
+	AddIcon,
+	UploadIcon,
+	VisibilityIcon,
+	VisibilityOffIcon,
+	CheckCircleIcon,
+	ErrorOutlineIcon,
+	ChevronRightIcon,
+	ArrowBackIcon,
+	LogoutIcon,
+	PhotoCameraIcon,
+	NotificationsNoneIcon,
+	DarkModeOutlinedIcon,
+}
