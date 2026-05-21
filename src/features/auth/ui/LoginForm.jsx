@@ -1,28 +1,64 @@
+import { useState } from 'react'
+
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
-import { PASSWORD_PATTERN } from '@/shared/lib/validation'
+import { VisibilityIcon, VisibilityOffIcon } from '@/shared/ui/icons'
+
+import s from './LoginForm.module.scss'
 
 const LoginForm = props => {
-	const { onSubmit, email, setEmail, password, setPassword } = props
+	const {
+		onSubmit,
+		email,
+		setEmail,
+		password,
+		setPassword,
+		passwordError,
+		formError,
+	} = props
+
+	const [showPassword, setShowPassword] = useState(false)
 
 	return (
-		<form onSubmit={onSubmit}>
+		<form onSubmit={onSubmit} className={s.form} noValidate>
+			{formError && (
+				<div className={s.formError}>
+					<span>{formError}</span>
+				</div>
+			)}
+
 			<Input
-				id="email"
+				id="loginEmail"
 				type="email"
-				placeholder="Электронная почта"
+				label="Электронная почта"
+				placeholder="you@example.com"
 				value={email}
 				onChange={setEmail}
 			/>
+
 			<Input
-				id="password"
-				type="password"
-				placeholder="Пароль"
+				id="loginPassword"
+				type={showPassword ? 'text' : 'password'}
+				label="Пароль"
+				placeholder="••••••••"
 				value={password}
 				onChange={setPassword}
-				pattern={PASSWORD_PATTERN}
+				error={passwordError || ''}
+				rightElement={
+					<button
+						type="button"
+						onClick={() => setShowPassword(p => !p)}
+						tabIndex={-1}
+						aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+					>
+						{showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+					</button>
+				}
 			/>
-			<Button colored>Войти</Button>
+
+			<Button type="submit" colored className={s.submitBtn}>
+				Войти
+			</Button>
 		</form>
 	)
 }
