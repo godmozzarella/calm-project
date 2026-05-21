@@ -1,10 +1,79 @@
 @use 'app/styles/globals.scss' as *;
 
-.item {
+.card {
+	display: flex;
+	flex-direction: column;
+	background-color: $block-color;
+	border: 1px solid rgba(92, 173, 228, 0.08);
+	border-radius: 1.25rem;
+	overflow: hidden;
+	height: 100%;
+}
+
+.cardHeader {
+	padding: 1.125rem 1.25rem 0.875rem;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.title {
+	@include fluid-text(17, 14);
+	font-weight: $fw-semibold;
+	color: $fc-main;
+}
+
+.cardBody {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.875rem;
+	flex: 1;
+	padding: 1.25rem;
+}
+
+/* ── Two head views ── */
+.headsRow {
 	display: flex;
 	align-items: center;
-	flex-direction: column;
-	gap: 0.625rem;
-
+	gap: 1rem;
 	width: 100%;
+}
+
+.headView {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+	flex: 1;
+}
+
+.headPlaceholder {
+	width: 100%;
+	aspect-ratio: 3 / 4;
+	max-width: 7rem;
+	border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%;
+	background: rgba(255, 255, 255, 0.04);
+	border: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.headLabel {
+	@include fluid-text(11, 10);
+	font-weight: $fw-semibold;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: rgba(140, 150, 170, 0.6);
+}
+
+.dividerV {
+	width: 1px;
+	height: 6rem;
+	background: rgba(255, 255, 255, 0.06);
+	flex-shrink: 0;
+}
+
+.hint {
+	@include fluid-text(11, 10);
+	color: rgba(190, 190, 190, 0.35);
+	text-align: center;
+	line-height: 1.5;
 }

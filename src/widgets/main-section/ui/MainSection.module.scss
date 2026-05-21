@@ -1,49 +1,55 @@
 @use 'app/styles/globals.scss' as *;
 
-
-main {
+.main {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-
-	margin-top: 1.25rem;
-
-	gap: 2.5rem;
 	flex: 1;
+	width: 100%;
+	padding-bottom: 2rem;
+	gap: 1.5rem;
 }
-
 
 .logo {
 	font-family: 'LilyScriptOne', cursive;
 	@include fluid-text(32, 24);
 	color: $fc-logo;
-	padding: 0.625rem 0;
+	padding: 1.25rem 0 0;
 }
 
-section {
-	display: flex;
-	padding: 1.25rem;
-	gap: 1.25rem;
+.grid {
+	padding: 0 1.5rem;
+}
 
-	h2 {
-		@include fluid-text(28, 20);
+/* ── Outer grid wrapper ── */
+.grid {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+	width: 100%;
+}
+
+/* ── Top row: Attacks | Medications | Pain Zones ── */
+.topRow {
+	display: grid;
+	grid-template-columns: 2fr 1.2fr 1.5fr;
+	gap: 1.25rem;
+	align-items: stretch;
+}
+
+/* ── Bottom row: Chart full width ── */
+.bottomRow {
+	width: 100%;
+}
+
+@media (max-width: 1024px) {
+	.topRow {
+		grid-template-columns: 1fr 1fr;
 	}
 }
 
-.flexItem {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	flex: 1;
-}
-
-.parametersContent {
-	flex-direction: column;
-	gap: 1.25rem;
-}
-
-@media (max-width: 768px) {
-	section {
-		flex-direction: column;
+@media (max-width: 640px) {
+	.topRow {
+		grid-template-columns: 1fr;
 	}
 }
