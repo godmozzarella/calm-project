@@ -6,10 +6,16 @@ const TYPES    = Object.entries(ATTACK_TYPE_LABELS).map(([value, label]) => ({ v
 const SYMPTOMS = Object.entries(SYMPTOM_LABELS).map(([value, label]) => ({ value, label }))
 const TRIGGERS = Object.entries(TRIGGER_LABELS).map(([value, label]) => ({ value, label }))
 
+const todayKey = () => {
+	const d = new Date()
+	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 const AddAttackForm = ({ open, form, error, onClose, setField, toggleArrayField, onSubmit }) => {
 	useBodyScrollLock(open)
 	if (!open) return null
+
+	const today = todayKey()
 
 	return (
 		<div className={s.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
@@ -73,6 +79,7 @@ const AddAttackForm = ({ open, form, error, onClose, setField, toggleArrayField,
 								<input
 									type="date"
 									value={form.startDate}
+									max={today}
 									onChange={e => setField('startDate', e.target.value)}
 									className={s.timeInput}
 								/>
@@ -90,6 +97,7 @@ const AddAttackForm = ({ open, form, error, onClose, setField, toggleArrayField,
 										type="date"
 										value={form.endDate}
 										min={form.startDate}
+										max={today}
 										onChange={e => setField('endDate', e.target.value)}
 										className={s.timeInput}
 									/>

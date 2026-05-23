@@ -45,6 +45,12 @@
 	.topRow {
 		grid-template-columns: 1fr 1fr;
 	}
+
+	/* третий блок (AttackZone) занимает всю ширину второй строки,
+	   чтобы не оставалась пустая клетка справа */
+	.topRow > :nth-child(3) {
+		grid-column: 1 / -1;
+	}
 }
 
 /* ── Large mobile ── */

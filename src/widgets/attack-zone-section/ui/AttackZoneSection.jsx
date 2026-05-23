@@ -9,6 +9,7 @@ import {
 } from '@/entities/attack'
 import HeadFront from './HeadFront'
 import HeadBack  from './HeadBack'
+import { subscribe, ATTACKS_CHANGED } from '@/shared/lib/dataEvents'
 import s from './AttackZoneSection.module.scss'
 
 // green → yellow → red → remove
@@ -37,6 +38,11 @@ const AttackZoneSection = ({ date }) => {
 		setAttacks(getAttacksByDate(date))
 		setSelectedId(null)
 	}, [date])
+
+	// Эффект 1b: при внешнем добавлении/удалении приступа — перечитать список
+	useEffect(() => subscribe(ATTACKS_CHANGED, () => {
+		setAttacks(getAttacksByDate(date))
+	}), [date])
 
 	// Эффект 2: смена выбранного приступа — загрузить зоны из него или из calm_zones
 	useEffect(() => {
