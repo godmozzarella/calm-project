@@ -38,7 +38,7 @@ const MainSection = () => {
 				</div>
 
 				<div className={s.bottomRow}>
-					<ChartSection />
+					<ChartSection showPatterns={false} statsLink />
 				</div>
 			</div>
 		</main>

@@ -36,6 +36,9 @@ import WaterDropIcon from '@mui/icons-material/WaterDrop'
 import AirIcon from '@mui/icons-material/Air'
 import HealingIcon from '@mui/icons-material/Healing'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import OpenInNewIcon from '@mui/icons-material/OpenInNew'
+import PrintIcon from '@mui/icons-material/Print'
+import FileDownloadIcon from '@mui/icons-material/FileDownload'
 
 export {
 	InstallDesktopIcon,
@@ -76,4 +79,7 @@ export {
 	AirIcon,
 	HealingIcon,
 	ArrowForwardIcon,
+	OpenInNewIcon,
+	PrintIcon,
+	FileDownloadIcon,
 }

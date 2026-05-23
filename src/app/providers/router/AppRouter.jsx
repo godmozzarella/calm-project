@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 
 import { IndexPage } from '@/pages/index-page'
 import { MainPage } from '@/pages/main-page'
+import { StatsPage } from '@/pages/stats-page'
 import ProtectedRoute from '@/app/providers/router/ProtectedRoute'
 
 const AppRouter = () => {
@@ -13,6 +14,14 @@ const AppRouter = () => {
 				element={
 					<ProtectedRoute>
 						<MainPage />
+					</ProtectedRoute>
+				}
+			/>
+			<Route
+				path="/stats"
+				element={
+					<ProtectedRoute>
+						<StatsPage />
 					</ProtectedRoute>
 				}
 			/>
