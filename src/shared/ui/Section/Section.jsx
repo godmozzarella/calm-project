@@ -7,7 +7,7 @@ const Section = props => {
 		<section id={id} className={colored ? s.colored : ''}>
 			<div className={s.container}>
 				{title && <h1 className={s.title}>{title}</h1>}
-				{children}
+				<div className={s.blocks}>{children}</div>
 			</div>
 		</section>
 	)
