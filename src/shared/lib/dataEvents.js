@@ -9,10 +9,11 @@
 export const ATTACKS_CHANGED = 'calm:attacks-changed'
 export const MEDICATIONS_CHANGED = 'calm:medications-changed'
 export const ZONES_CHANGED = 'calm:zones-changed'
+export const DATE_SELECTED = 'calm:date-selected'
 
-export const emit = name => {
+export const emit = (name, detail) => {
 	if (typeof window === 'undefined') return
-	window.dispatchEvent(new CustomEvent(name))
+	window.dispatchEvent(new CustomEvent(name, detail !== undefined ? { detail } : undefined))
 }
 
 export const subscribe = (name, handler) => {
