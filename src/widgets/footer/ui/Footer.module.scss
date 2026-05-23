@@ -5,8 +5,9 @@ footer {
 	flex-direction: column;
 	align-items: center;
 
-	margin: 7.5rem auto 0.625rem auto;
-	width: 70%;
+	margin: 5rem auto 1rem auto;
+	padding: 0 1rem;
+	width: min(70%, 87.5rem);
 }
 
 ul {
@@ -112,16 +113,16 @@ hr {
 	}
 }
 
-@media (max-width: 64rem) {
+@media (max-width: 90rem) {
 	footer {
-        width: 60%;
-    }
+		width: min(90%, 87.5rem);
+	}
 }
 
 @media (max-width: 48rem) {
 	footer {
-        width: 80%;
-    }
+		width: 90%;
+	}
 	.bottomLeft {
 			align-items: flex-start;
 			justify-content: space-between;
@@ -132,8 +133,8 @@ hr {
 
 @media (max-width: 27rem) {
 	footer {
-    width: 90%;
-  }
+		width: 92%;
+	}
 
 	.item1 {
 		gap: 0.625rem;
