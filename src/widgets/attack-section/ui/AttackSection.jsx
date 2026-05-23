@@ -3,22 +3,37 @@ import { useState, useCallback, useEffect } from 'react'
 import { AddIcon, DeleteIcon } from '@/shared/ui/icons'
 import { AddAttackForm, useAddAttack } from '@/features/add-attack'
 import { getAttacksByDate, deleteAttack, ATTACK_TYPE_LABELS, SYMPTOM_LABELS, intensityColor } from '@/entities/attack'
+import { subscribe, ATTACKS_CHANGED } from '@/shared/lib/dataEvents'
 
 import s from './AttackSection.module.scss'
 
+const MONTH_SHORT = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
+
 const shortDate = iso => {
 	const [, m, d] = iso.split('-')
-	return `${Number(d)}.${Number(m)}`
+	return `${Number(d)} ${MONTH_SHORT[Number(m) - 1]}`
 }
 
 const formatRange = attack => {
 	const startDate = attack.startDate ?? attack.date
 	const endDate = attack.endDate ?? startDate
-	const startLabel = attack.startTime + (startDate !== endDate ? ` ${shortDate(startDate)}` : '')
-	if (attack.ongoing) return `${startLabel} — сейчас`
-	if (!attack.endTime) return startLabel
-	const endLabel = attack.endTime + (startDate !== endDate ? ` ${shortDate(endDate)}` : '')
-	return `${startLabel} — ${endLabel}`
+	const sameDay = startDate === endDate
+
+	const startTime = attack.startTime
+	const endTime = attack.endTime
+
+	if (attack.ongoing) {
+		return sameDay
+			? `${startTime} — сейчас`
+			: `${shortDate(startDate)}, ${startTime} — сейчас`
+	}
+	if (!endTime) {
+		return `${shortDate(startDate)}, ${startTime}`
+	}
+	if (sameDay) {
+		return `${shortDate(startDate)}, ${startTime} — ${endTime}`
+	}
+	return `${shortDate(startDate)} ${startTime} — ${shortDate(endDate)} ${endTime}`
 }
 
 const AttackSection = ({ date }) => {
@@ -30,6 +45,8 @@ const AttackSection = ({ date }) => {
 	)
 
 	useEffect(() => { reload() }, [reload])
+
+	useEffect(() => subscribe(ATTACKS_CHANGED, reload), [reload])
 
 	const { open, form, error, openForm, closeForm, setField, toggleArrayField, submit } =
 		useAddAttack({ date, onSuccess: reload })

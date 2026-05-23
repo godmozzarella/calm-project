@@ -11,6 +11,7 @@ import {
 	OVERUSE_THRESHOLD,
 } from '@/entities/medication'
 import { getAttacksByDate, ATTACK_TYPE_LABELS } from '@/entities/attack'
+import { subscribe, ATTACKS_CHANGED, MEDICATIONS_CHANGED } from '@/shared/lib/dataEvents'
 
 import s from './MedicationSection.module.scss'
 
@@ -29,6 +30,12 @@ const MedicationSection = ({ date }) => {
 	}, [date])
 
 	useEffect(() => { reload() }, [reload])
+
+	useEffect(() => {
+		const off1 = subscribe(ATTACKS_CHANGED, reload)
+		const off2 = subscribe(MEDICATIONS_CHANGED, reload)
+		return () => { off1(); off2() }
+	}, [reload])
 
 	const {
 		open, step, selected, meta, error,
