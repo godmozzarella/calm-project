@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 
 import { getAllAttacks } from '@/entities/attack'
 import { getAllMedications } from '@/entities/medication'
+import { OpenInNewIcon } from '@/shared/ui/icons'
 import {
 	subscribe,
 	emit,
@@ -18,7 +20,7 @@ import { computeKpis, computePatterns } from '../lib/aggregates'
 
 import s from './ChartSection.module.scss'
 
-const ChartSection = () => {
+const ChartSection = ({ showPatterns = true, statsLink = false }) => {
 	const [period, setPeriod] = useState('month')
 	const [metric, setMetric] = useState('intensity')
 	const [attacks, setAttacks] = useState(() => getAllAttacks())
@@ -43,8 +45,8 @@ const ChartSection = () => {
 	)
 
 	const patterns = useMemo(
-		() => computePatterns(attacks, medications, buckets),
-		[attacks, medications, buckets]
+		() => (showPatterns ? computePatterns(attacks, medications, buckets) : null),
+		[attacks, medications, buckets, showPatterns]
 	)
 
 	const handleBarClick = dateKey => {
@@ -83,6 +85,12 @@ const ChartSection = () => {
 							</button>
 						))}
 					</div>
+					{statsLink && (
+						<Link to="/stats" className={s.statsLink}>
+							Подробная статистика
+							<OpenInNewIcon style={{ fontSize: '0.875rem' }} />
+						</Link>
+					)}
 				</div>
 			</div>
 
@@ -99,9 +107,9 @@ const ChartSection = () => {
 					<p className={s.hint}>
 						Когда вы добавите первый приступ, он появится на графике
 					</p>
-				) : (
+				) : showPatterns && patterns ? (
 					<PatternsBlock patterns={patterns} />
-				)}
+				) : null}
 			</div>
 		</div>
 	)
