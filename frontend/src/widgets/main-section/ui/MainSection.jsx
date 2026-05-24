@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 
 import { AttackSection } from '@/widgets/attack-section'
 import { MedicationSection } from '@/widgets/medication-section'
@@ -24,9 +23,7 @@ const MainSection = () => {
 
 	return (
 		<main className={s.main}>
-			<Link to="/">
-				<h1 className={s.logo}>Calm</h1>
-			</Link>
+			<h1 className={s.logo}>Calm</h1>
 
 			<DayBar date={date} setDate={setDate} />
 

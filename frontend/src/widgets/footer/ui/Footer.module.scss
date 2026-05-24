@@ -11,22 +11,18 @@ footer {
 }
 
 ul {
-	display: flex;
 	list-style-type: none;
 }
 
-li {
-	a {
-		font-weight: $fw-medium;
-		font-family: 'Roboto', Arial, sans-serif;
-		color: $fc-main;
-		@include fluid-text(16, 12);
+li a {
+	font-weight: $fw-medium;
+	font-family: 'Roboto', Arial, sans-serif;
+	color: $fc-main;
+	@include fluid-text(14, 11);
+	transition: color 0.3s ease;
 
-		transition: all 0.3s ease;
-
-		&:hover {
-			color: $fc-contrast;
-		}
+	&:hover {
+		color: $fc-contrast;
 	}
 }
 
@@ -35,7 +31,7 @@ hr {
 	border: 0;
 	height: 1px;
 	background-color: #555;
-	margin: 0.625rem 0;
+	margin: 1.25rem 0 0.625rem;
 }
 
 .logo {
@@ -44,46 +40,110 @@ hr {
 	color: $fc-logo;
 }
 
-.item1,
-.item2 {
-	display: flex;
+.item1 {
+	display: grid;
+	grid-template-columns: 1.4fr repeat(3, 1fr);
 	gap: 2.5rem;
-
 	width: 100%;
 }
 
-.item1 {
-	ul {
-		display: flex;
-		justify-content: space-between;
+.glowBlock {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	position: relative;
+}
 
-		flex-basis: 75%;
+.glowOrb {
+	width: 5rem;
+	height: 5rem;
+	border-radius: 50%;
+	background: radial-gradient(circle at 40% 35%, rgba(140, 190, 240, 0.55), rgba(92, 143, 210, 0.25) 55%, transparent 75%);
+	box-shadow:
+		0 0 2.5rem 0.75rem rgba(92, 173, 228, 0.22),
+		0 0 5rem 1.5rem rgba(92, 173, 228, 0.10);
+	animation: orbPulse 4s ease-in-out infinite;
+	flex-shrink: 0;
+}
+
+.glowText {
+	font-family: 'Roboto', Arial, sans-serif;
+	color: $fc-secondary;
+	@include fluid-text(12, 10);
+	text-align: center;
+	line-height: 1.5;
+	max-width: 10rem;
+	opacity: 0.75;
+}
+
+@keyframes orbPulse {
+	0%, 100% {
+		box-shadow:
+			0 0 2.5rem 0.75rem rgba(92, 173, 228, 0.22),
+			0 0 5rem 1.5rem rgba(92, 173, 228, 0.10);
+		transform: scale(1);
 	}
-
-	.logoBlock {
-		display: flex;
-		flex-direction: column;
-		gap: 0.3125rem;
-
-		flex-basis: 25%;
+	50% {
+		box-shadow:
+			0 0 3.5rem 1.25rem rgba(92, 173, 228, 0.35),
+			0 0 7rem 2.5rem rgba(92, 173, 228, 0.16);
+		transform: scale(1.06);
 	}
+}
+
+.logoBlock {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
 }
 
 .slogan {
 	font-family: 'Roboto', Arial, sans-serif;
 	color: $fc-main;
 	font-weight: $fw-medium;
-	@include fluid-text(24, 20);
+	@include fluid-text(22, 18);
 }
 
-.item2 {
-	align-items: center;
-	justify-content: space-between;
+.tagline {
+	font-family: 'Roboto', Arial, sans-serif;
+	color: $fc-secondary;
+	@include fluid-text(13, 11);
+	line-height: 1.45;
+	max-width: 22rem;
+}
+
+.linksGrid {
+	display: contents;
+}
+
+.linkCol {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
 
 	ul {
 		display: flex;
-		gap: 1.25rem;
+		flex-direction: column;
+		gap: 0.5rem;
 	}
+}
+
+.colTitle {
+	font-family: 'Roboto', Arial, sans-serif;
+	font-weight: $fw-semibold;
+	@include fluid-text(15, 12);
+	color: $fc-contrast;
+	letter-spacing: 0.02em;
+}
+
+.item2 {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: space-between;
+	gap: 2.5rem;
 }
 
 .bottomLeft {
@@ -92,14 +152,13 @@ hr {
 	gap: 1.25rem;
 }
 
-.languageButton{
-		background-color: $fc-main;
-		color: rgb(22, 22, 22);
-		padding: 0.3125rem 0.625rem;
-		@include fluid-text(12, 9);
-
-		transition: all 0.3s ease;
-	}
+.languageButton {
+	background-color: $fc-main;
+	color: rgb(22, 22, 22);
+	padding: 0.3125rem 0.625rem;
+	@include fluid-text(12, 9);
+	transition: all 0.3s ease;
+}
 
 .copyright {
 	font-family: 'Roboto', Arial, sans-serif;
@@ -107,57 +166,47 @@ hr {
 	color: $fc-secondary;
 }
 
-.socialLink {
-	svg {
-		@include fluid-text(24, 20);
-	}
+.socials {
+	display: flex;
+	gap: 1.25rem;
+}
+
+.socialLink svg {
+	@include fluid-text(24, 20);
 }
 
 @media (max-width: 90rem) {
-	footer {
-		width: min(90%, 87.5rem);
+	footer { width: min(90%, 87.5rem); }
+}
+
+@media (max-width: 64rem) {
+	.item1 {
+		grid-template-columns: 1fr 1fr;
+		row-gap: 2rem;
 	}
 }
 
 @media (max-width: 48rem) {
-	footer {
-		width: 90%;
-	}
-	.bottomLeft {
-			align-items: flex-start;
-			justify-content: space-between;
-			height: auto;
-			flex-direction: column;
-		}
-}	
-
-@media (max-width: 27rem) {
-	footer {
-		width: 92%;
-	}
+	footer { width: 90%; }
 
 	.item1 {
-		gap: 0.625rem;
-
-		.logoBlock{
-			flex-basis: 70%;
-		}
-
-		ul{
-			flex-direction: column;
-			align-items: flex-end;
-			gap: 0.25rem;
-			flex-basis: 30%;
-		}
-		
+		grid-template-columns: 1fr;
+		row-gap: 1.5rem;
 	}
-	
+
 	.item2 {
-		ul {
-			flex-direction: column;
-			align-items: flex-end;
-			gap: 0.25rem;
-		}
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 1rem;
 	}
-	
+
+	.bottomLeft {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.75rem;
+	}
+}
+
+@media (max-width: 27rem) {
+	footer { width: 92%; }
 }
