@@ -1,0 +1,217 @@
+@use 'app/styles/globals.scss' as *;
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 1rem;
+	width: 100%;
+}
+
+.block {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 1rem 1.125rem;
+	background: rgba(23, 25, 29, 0.5);
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	border-radius: 0.875rem;
+	min-width: 0;
+}
+
+.blockTitle {
+	@include fluid-text(13, 12);
+	font-weight: $fw-semibold;
+	color: $fc-main;
+	letter-spacing: 0.02em;
+}
+
+.empty {
+	@include fluid-text(12, 11);
+	color: rgba(140, 150, 170, 0.5);
+	line-height: 1.5;
+}
+
+/* ── Bar rows (триггеры / симптомы) ── */
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.barRow {
+	display: grid;
+	grid-template-columns: 7rem 1fr auto;
+	align-items: center;
+	gap: 0.625rem;
+}
+
+.barLabel {
+	@include fluid-text(12, 11);
+	color: $fc-secondary;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.barTrack {
+	height: 0.5rem;
+	background: rgba(255, 255, 255, 0.06);
+	border-radius: 2rem;
+	overflow: hidden;
+	min-width: 0;
+}
+
+.barFill {
+	height: 100%;
+	border-radius: 2rem;
+	transition: width 0.25s ease;
+}
+
+.barCount {
+	@include fluid-text(12, 11);
+	font-weight: $fw-semibold;
+	color: $fc-main;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.barShare {
+	color: rgba(140, 150, 170, 0.6);
+	font-weight: $fw-medium;
+}
+
+/* ── Зоны боли (heatmap) ── */
+.blockZones {
+	gap: 0.625rem;
+}
+
+.heads {
+	display: flex;
+	gap: 0.75rem;
+	justify-content: center;
+}
+
+.head {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.35rem;
+	flex: 1;
+	min-width: 0;
+	max-width: 9rem;
+}
+
+.headLabel {
+	@include fluid-text(10, 9);
+	font-weight: $fw-semibold;
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
+	color: rgba(140, 150, 170, 0.6);
+}
+
+.legend {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.75rem;
+	@include fluid-text(10, 9);
+	color: rgba(140, 150, 170, 0.55);
+}
+
+.legendDot {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	margin-right: 0.25rem;
+	vertical-align: middle;
+}
+
+.dotRed    { background: rgba(239, 68, 68, 0.7); }
+.dotYellow { background: rgba(234, 179, 8, 0.7); }
+.dotGreen  { background: rgba(34, 197, 94, 0.7); }
+
+/* ── Препараты ── */
+.medList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	max-height: 22rem;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+
+	&::-webkit-scrollbar {
+		width: 6px;
+	}
+	&::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.12);
+		border-radius: 3px;
+	}
+}
+
+.medItem {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	padding: 0.5rem 0.75rem;
+	background: rgba(255, 255, 255, 0.025);
+	border: 1px solid rgba(255, 255, 255, 0.04);
+	border-radius: 0.625rem;
+}
+
+.medMeta {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	min-width: 0;
+}
+
+.medName {
+	@include fluid-text(13, 12);
+	font-weight: $fw-semibold;
+	color: $fc-main;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.medCount {
+	@include fluid-text(11, 10);
+	color: rgba(140, 150, 170, 0.6);
+}
+
+.medBadge {
+	flex-shrink: 0;
+	@include fluid-text(11, 10);
+	font-weight: $fw-semibold;
+	padding: 0.2rem 0.55rem;
+	border-radius: 2rem;
+	border: 1px solid;
+	white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+	.grid {
+		grid-template-columns: 1fr;
+	}
+
+	.barRow {
+		grid-template-columns: 6rem 1fr auto;
+	}
+}
+
+@media (max-width: 420px) {
+	.barRow {
+		grid-template-columns: 5rem 1fr auto;
+		gap: 0.4rem;
+	}
+
+	.block {
+		padding: 0.875rem 0.875rem;
+	}
+}

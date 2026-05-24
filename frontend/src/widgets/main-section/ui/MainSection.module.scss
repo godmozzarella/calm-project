@@ -1,0 +1,74 @@
+@use 'app/styles/globals.scss' as *;
+
+.main {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	flex: 1;
+	width: 100%;
+	margin: 0 auto;
+	padding-bottom: 2rem;
+	gap: 1.5rem;
+}
+
+.logo {
+	font-family: 'LilyScriptOne', cursive;
+	@include fluid-text(32, 24);
+	color: $fc-logo;
+	padding: 1.25rem 0 0;
+}
+
+/* ── Outer grid wrapper ── */
+.grid {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+	width: 100%;
+	padding: 0 1.5rem;
+}
+
+/* ── Top row: Attacks | Medications | Pain Zones ── */
+.topRow {
+	display: grid;
+	grid-template-columns: 2fr 1.2fr 1.5fr;
+	gap: 1.25rem;
+	align-items: stretch;
+}
+
+/* ── Bottom row: Chart full width ── */
+.bottomRow {
+	width: 100%;
+}
+
+/* ── Tablet ── */
+@media (max-width: 1024px) {
+	.topRow {
+		grid-template-columns: 1fr 1fr;
+	}
+
+	/* третий блок (AttackZone) занимает всю ширину второй строки,
+	   чтобы не оставалась пустая клетка справа */
+	.topRow > :nth-child(3) {
+		grid-column: 1 / -1;
+	}
+}
+
+/* ── Large mobile ── */
+@media (max-width: 640px) {
+	.grid {
+		padding: 0 1rem;
+		gap: 0.875rem;
+	}
+
+	.topRow {
+		grid-template-columns: 1fr;
+		gap: 0.875rem;
+	}
+}
+
+/* ── Small mobile ── */
+@media (max-width: 400px) {
+	.grid {
+		padding: 0 0.75rem;
+	}
+}

@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: calm-backend
+  profiles:
+    active: dev
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017/calm}
+      auto-index-creation: true
+  jackson:
+    mapper:
+      accept-case-insensitive-enums: true
+
+server:
+  port: ${PORT:8080}
+  servlet:
+    context-path: /api
+
+calm:
+  jwt:
+    # ВНИМАНИЕ: в проде должен задаваться через ENV CALM_JWT_SECRET. Минимум 32 байта.
+    secret: ${CALM_JWT_SECRET:dev-secret-change-me-please-32bytes-min}
+    # Срок жизни access-токена (минуты)
+    expiration-minutes: ${CALM_JWT_EXP_MIN:1440}
+  cors:
+    # Разрешённые origin'ы (через запятую). На проде сюда подставится домен фронта.
+    allowed-origins: ${CALM_CORS_ORIGINS:http://localhost:5173,http://localhost:4173}
+
+logging:
+  level:
+    org.springframework.data.mongodb.core: WARN
+    org.springframework.security: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
