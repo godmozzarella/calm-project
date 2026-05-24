@@ -7,6 +7,9 @@ spring:
     mongodb:
       uri: ${MONGO_URI:mongodb://localhost:27017/calm}
       auto-index-creation: true
+  jackson:
+    mapper:
+      accept-case-insensitive-enums: true
 
 server:
   port: ${PORT:8080}
