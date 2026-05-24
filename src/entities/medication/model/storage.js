@@ -1,3 +1,6 @@
+import { generateId } from '@/shared/lib/generateId'
+import { emit, MEDICATIONS_CHANGED } from '@/shared/lib/dataEvents'
+
 const KEY = 'calm_medications'
 
 const readAll = () => {
@@ -5,7 +8,10 @@ const readAll = () => {
 	catch { return [] }
 }
 
-const writeAll = list => localStorage.setItem(KEY, JSON.stringify(list))
+const writeAll = list => {
+	localStorage.setItem(KEY, JSON.stringify(list))
+	emit(MEDICATIONS_CHANGED)
+}
 
 /** Препараты за конкретный день ('YYYY-MM-DD'), отсортированные по времени */
 export const getMedicationsByDate = date =>
@@ -19,7 +25,7 @@ export const getAllMedications = () => readAll()
 /** Добавить запись */
 export const addMedication = med => {
 	const all = readAll()
-	const newMed = { ...med, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
+	const newMed = { ...med, id: generateId(), createdAt: new Date().toISOString() }
 	writeAll([...all, newMed])
 	return newMed
 }

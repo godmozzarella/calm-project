@@ -1,3 +1,6 @@
+import { generateId } from '@/shared/lib/generateId'
+import { emit, ATTACKS_CHANGED } from '@/shared/lib/dataEvents'
+
 const KEY = 'calm_attacks'
 
 const readAll = () => {
@@ -5,7 +8,10 @@ const readAll = () => {
 	catch { return [] }
 }
 
-const writeAll = attacks => localStorage.setItem(KEY, JSON.stringify(attacks))
+const writeAll = attacks => {
+	localStorage.setItem(KEY, JSON.stringify(attacks))
+	emit(ATTACKS_CHANGED)
+}
 
 /** Все приступы, которые захватывают конкретный день (формат 'YYYY-MM-DD') */
 export const getAttacksByDate = date =>
@@ -29,7 +35,7 @@ export const getAttacksInRange = (from, to) =>
 /** Добавить приступ */
 export const addAttack = attack => {
 	const all = readAll()
-	const newAttack = { ...attack, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
+	const newAttack = { ...attack, id: generateId(), createdAt: new Date().toISOString() }
 	writeAll([...all, newAttack])
 	return newAttack
 }

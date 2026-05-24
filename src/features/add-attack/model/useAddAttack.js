@@ -51,7 +51,18 @@ export const useAddAttack = ({ date, onSuccess }) => {
 			setError('Укажите время начала')
 			return
 		}
+		const nowDate = new Date()
+		const todayStr = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, '0')}-${String(nowDate.getDate()).padStart(2, '0')}`
+		const nowStr = `${String(nowDate.getHours()).padStart(2, '0')}:${String(nowDate.getMinutes()).padStart(2, '0')}`
+		if (form.startDate > todayStr || (form.startDate === todayStr && form.startTime > nowStr)) {
+			setError('Начало не может быть в будущем')
+			return
+		}
 		if (!form.ongoing && form.endDate && form.endTime) {
+			if (form.endDate > todayStr || (form.endDate === todayStr && form.endTime > nowStr)) {
+				setError('Конец не может быть в будущем')
+				return
+			}
 			const start = `${form.startDate}T${form.startTime}`
 			const end = `${form.endDate}T${form.endTime}`
 			if (end <= start) {
