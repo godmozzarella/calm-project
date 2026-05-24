@@ -16,12 +16,11 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 .idea
+.claude
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-
-# AI assistant working notes
-AI_CHANGELOG.md
+CHANGELOG.md
