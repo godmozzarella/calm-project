@@ -2,7 +2,8 @@ package com.calm.feature.attack;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -20,12 +21,15 @@ import java.util.Set;
  * Это совпадает с тем форматом, который читают/пишут HeadFront/HeadBack.
  */
 @Document(collection = "attacks")
+@CompoundIndexes({
+	@CompoundIndex(name = "user_startDate", def = "{'userId': 1, 'startDate': 1}"),
+	@CompoundIndex(name = "user_ongoing",   def = "{'userId': 1, 'ongoing': 1}")
+})
 public class Attack {
 
 	@Id
 	private String id;
 
-	@Indexed
 	private String userId;
 
 	private LocalDate startDate;
