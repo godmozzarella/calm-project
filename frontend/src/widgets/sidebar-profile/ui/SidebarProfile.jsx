@@ -24,6 +24,7 @@ import {
 } from '@/shared/ui/icons'
 import { useEditProfile } from '@/features/edit-profile'
 import { clearCurrentUser } from '@/entities/user'
+import { clearToken } from '@/shared/api'
 
 import s from './SidebarProfile.module.scss'
 
@@ -68,6 +69,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 	}
 
 	const handleLogout = () => {
+		clearToken()
 		clearCurrentUser()
 		navigate('/')
 	}
