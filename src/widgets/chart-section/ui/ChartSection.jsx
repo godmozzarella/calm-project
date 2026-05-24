@@ -1,22 +1,115 @@
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { Link } from 'react-router-dom'
+
+import { getAllAttacks } from '@/entities/attack'
+import { getAllMedications } from '@/entities/medication'
+import { OpenInNewIcon } from '@/shared/ui/icons'
+import {
+	subscribe,
+	emit,
+	ATTACKS_CHANGED,
+	MEDICATIONS_CHANGED,
+	DATE_SELECTED,
+} from '@/shared/lib/dataEvents'
+
+import BarChart from './BarChart'
+import KpiTiles from './KpiTiles'
+import PatternsBlock from './PatternsBlock'
+import { buildBuckets, PERIOD_OPTIONS, METRIC_OPTIONS } from '../lib/buckets'
+import { computeKpis, computePatterns } from '../lib/aggregates'
+
 import s from './ChartSection.module.scss'
 
-const ChartSection = () => {
+const ChartSection = ({ showPatterns = true, statsLink = false }) => {
+	const [period, setPeriod] = useState('month')
+	const [metric, setMetric] = useState('intensity')
+	const [attacks, setAttacks] = useState(() => getAllAttacks())
+	const [medications, setMedications] = useState(() => getAllMedications())
+
+	const reloadAttacks = useCallback(() => setAttacks(getAllAttacks()), [])
+	const reloadMeds = useCallback(() => setMedications(getAllMedications()), [])
+
+	useEffect(() => subscribe(ATTACKS_CHANGED, reloadAttacks), [reloadAttacks])
+	useEffect(() => subscribe(MEDICATIONS_CHANGED, reloadMeds), [reloadMeds])
+
+	const buckets = useMemo(
+		() => buildBuckets(period, attacks),
+		[period, attacks]
+	)
+
+	const kpis = useMemo(
+		() => computeKpis(attacks, buckets),
+		// medications в deps — нужен пересчёт overuseDays при добавлении/удалении препарата
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[attacks, buckets, medications]
+	)
+
+	const patterns = useMemo(
+		() => (showPatterns ? computePatterns(attacks, medications, buckets) : null),
+		[attacks, medications, buckets, showPatterns]
+	)
+
+	const handleBarClick = dateKey => {
+		if (!dateKey) return
+		emit(DATE_SELECTED, dateKey)
+	}
+
 	return (
 		<div className={s.card}>
 			<div className={s.cardHeader}>
 				<h2 className={s.title}>График</h2>
-				<span className={s.soon}>Скоро</span>
+				<div className={s.controls}>
+					<div className={s.tabs} role="tablist" aria-label="Метрика">
+						{METRIC_OPTIONS.map(o => (
+							<button
+								key={o.value}
+								className={`${s.tab} ${metric === o.value ? s.tabActive : ''}`}
+								onClick={() => setMetric(o.value)}
+								role="tab"
+								aria-selected={metric === o.value}
+							>
+								{o.label}
+							</button>
+						))}
+					</div>
+					<div className={s.tabs} role="tablist" aria-label="Период">
+						{PERIOD_OPTIONS.map(o => (
+							<button
+								key={o.value}
+								className={`${s.tab} ${period === o.value ? s.tabActive : ''}`}
+								onClick={() => setPeriod(o.value)}
+								role="tab"
+								aria-selected={period === o.value}
+							>
+								{o.label}
+							</button>
+						))}
+					</div>
+					{statsLink && (
+						<Link to="/stats" className={s.statsLink}>
+							Подробная статистика
+							<OpenInNewIcon style={{ fontSize: '0.875rem' }} />
+						</Link>
+					)}
+				</div>
 			</div>
 
 			<div className={s.cardBody}>
-				<div className={s.chartPlaceholder}>
-					<div className={s.bars}>
-						{[40, 70, 30, 90, 55, 75, 45, 60, 80, 35, 65, 50].map((h, i) => (
-							<div key={i} className={s.bar} style={{ height: `${h}%` }} />
-						))}
-					</div>
-				</div>
-				<p className={s.hint}>Статистика приступов по дням — появится после накопления данных</p>
+				<KpiTiles kpis={kpis} />
+
+				<BarChart
+					buckets={buckets}
+					metric={metric}
+					onBarClick={handleBarClick}
+				/>
+
+				{attacks.length === 0 ? (
+					<p className={s.hint}>
+						Когда вы добавите первый приступ, он появится на графике
+					</p>
+				) : showPatterns && patterns ? (
+					<PatternsBlock patterns={patterns} />
+				) : null}
 			</div>
 		</div>
 	)
