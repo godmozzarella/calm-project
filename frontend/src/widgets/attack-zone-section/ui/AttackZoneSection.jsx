@@ -1,12 +1,6 @@
 import { useState, useEffect } from 'react'
-import {
-	PAIN_ZONE_LABELS,
-	getAttacksByDate,
-	updateAttack,
-	getZonesByDate,
-	setZonesByDate,
-	toZoneMap,
-} from '@/entities/attack'
+import { PAIN_ZONE_LABELS, getZonesByDate, setZonesByDate, toZoneMap } from '@/entities/attack'
+import { attackApi } from '@/shared/api'
 import HeadFront from './HeadFront'
 import HeadBack  from './HeadBack'
 import { subscribe, ATTACKS_CHANGED } from '@/shared/lib/dataEvents'
@@ -35,13 +29,12 @@ const AttackZoneSection = ({ date }) => {
 
 	// Эффект 1: смена даты — перезагрузить приступы, сбросить выбор
 	useEffect(() => {
-		setAttacks(getAttacksByDate(date))
-		setSelectedId(null)
+		attackApi.getByDate(date).then(list => { setAttacks(list); setSelectedId(null) })
 	}, [date])
 
 	// Эффект 1b: при внешнем добавлении/удалении приступа — перечитать список
 	useEffect(() => subscribe(ATTACKS_CHANGED, () => {
-		setAttacks(getAttacksByDate(date))
+		attackApi.getByDate(date).then(setAttacks)
 	}), [date])
 
 	// Эффект 2: смена выбранного приступа — загрузить зоны из него или из calm_zones
@@ -78,8 +71,9 @@ const AttackZoneSection = ({ date }) => {
 
 	const saveZones = (next, attackId) => {
 		if (attackId) {
-			updateAttack(attackId, { painZones: next })
-			// синхронизировать кеш приступов чтобы эффект 2 не перезатёр зоны
+			const attack = attacks.find(a => a.id === attackId)
+			if (!attack) return
+			attackApi.update(attackId, { ...attack, painZones: next })
 			setAttacks(prev => prev.map(a => a.id === attackId ? { ...a, painZones: next } : a))
 		} else {
 			setZonesByDate(date, next)

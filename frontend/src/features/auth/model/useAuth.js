@@ -1,162 +1,128 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import {
-	addUser,
-	findUserByCredentials,
-	isEmailTaken,
-	setCurrentUser
-} from '@/entities/user'
+import { authApi } from '@/shared/api'
 import { validateEmail, validatePassword } from '@/shared/lib/validation'
 
 const DEBOUNCE_MS = 700
 
 export const useAuth = () => {
-	const navigate = useNavigate()
+  const navigate = useNavigate()
 
-	const [loginEmail, setLoginEmail] = useState('')
-	const [loginPassword, setLoginPassword] = useState('')
-	const [registerEmail, setRegisterEmail] = useState('')
-	const [registerPassword, setRegisterPassword] = useState('')
-	const [confirmPassword, setConfirmPassword] = useState('')
-	const [confirmTouched, setConfirmTouched] = useState(false)
-	const [userName, setUserName] = useState('')
+  const [loginEmail,    setLoginEmailState]    = useState('')
+  const [loginPassword, setLoginPasswordState] = useState('')
 
-	/* ── debounced field errors ── */
-	const [emailError, setEmailError] = useState('')
-	const [loginPasswordError, setLoginPasswordError] = useState('')
-	const [registerPasswordError, setRegisterPasswordError] = useState('')
+  const [registerEmail,    setRegisterEmail]    = useState('')
+  const [registerPassword, setRegisterPassword] = useState('')
+  const [confirmPassword,  setConfirmPassword]  = useState('')
+  const [confirmTouched,   setConfirmTouched]   = useState(false)
+  const [userName,         setUserNameState]    = useState('')
 
-	/* ── form-level errors (не field) ── */
-	const [loginFormError, setLoginFormError] = useState('')
-	const [registerFormError, setRegisterFormError] = useState('')
+  const [emailError,            setEmailError]            = useState('')
+  const [loginPasswordError,    setLoginPasswordError]    = useState('')
+  const [registerPasswordError, setRegisterPasswordError] = useState('')
+  const [loginFormError,        setLoginFormError]        = useState('')
+  const [registerFormError,     setRegisterFormError]     = useState('')
 
-	/* ── email debounce (только для регистрации) ── */
-	useEffect(() => {
-		const t = setTimeout(() => setEmailError(validateEmail(registerEmail)), DEBOUNCE_MS)
-		return () => clearTimeout(t)
-	}, [registerEmail])
+  const [loading, setLoading] = useState(false)
 
-	/* ── password debounces ── */
-	useEffect(() => {
-		const t = setTimeout(() => setLoginPasswordError(validatePassword(loginPassword)), DEBOUNCE_MS)
-		return () => clearTimeout(t)
-	}, [loginPassword])
+  useEffect(() => {
+    const t = setTimeout(() => setEmailError(validateEmail(registerEmail)), DEBOUNCE_MS)
+    return () => clearTimeout(t)
+  }, [registerEmail])
 
-	useEffect(() => {
-		const t = setTimeout(() => setRegisterPasswordError(validatePassword(registerPassword)), DEBOUNCE_MS)
-		return () => clearTimeout(t)
-	}, [registerPassword])
+  useEffect(() => {
+    const t = setTimeout(() => setLoginPasswordError(validatePassword(loginPassword)), DEBOUNCE_MS)
+    return () => clearTimeout(t)
+  }, [loginPassword])
 
-	/* ── confirmPassword — реактивно (не debounce) ── */
-	const confirmPasswordError =
-		confirmTouched && confirmPassword && confirmPassword !== registerPassword
-			? 'Пароли не совпадают'
-			: ''
+  useEffect(() => {
+    const t = setTimeout(() => setRegisterPasswordError(validatePassword(registerPassword)), DEBOUNCE_MS)
+    return () => clearTimeout(t)
+  }, [registerPassword])
 
-	const handleEmailChange = (e, type = 'register') => {
-		if (type === 'register') {
-			setRegisterEmail(e.target.value)
-		} else {
-			setLoginEmail(e.target.value)
-		}
-		setLoginFormError('')
-		setRegisterFormError('')
-	}
+  const confirmPasswordError =
+    confirmTouched && confirmPassword && confirmPassword !== registerPassword
+      ? 'Пароли не совпадают'
+      : ''
 
-	const handleLogin = e => {
-		e.preventDefault()
-		setLoginFormError('')
+  const handleEmailChange = (e, type = 'register') => {
+    if (type === 'register') setRegisterEmail(e.target.value)
+    else setLoginEmailState(e.target.value)
+    setLoginFormError('')
+    setRegisterFormError('')
+  }
 
-		if (!loginEmail || !loginPassword) {
-			setLoginFormError('Пожалуйста, заполните все поля')
-			return
-		}
+  const handleLogin = async e => {
+    e.preventDefault()
+    setLoginFormError('')
 
-		const user = findUserByCredentials(loginEmail, loginPassword)
-		if (!user) {
-			setLoginFormError('Неверный email или пароль')
-			return
-		}
+    if (!loginEmail || !loginPassword) {
+      setLoginFormError('Пожалуйста, заполните все поля')
+      return
+    }
 
-		setCurrentUser(user)
-		setLoginEmail('')
-		setLoginPassword('')
-		navigate('/profile')
-	}
+    setLoading(true)
+    try {
+      await authApi.login(loginEmail, loginPassword)
+      setLoginEmailState('')
+      setLoginPasswordState('')
+      navigate('/profile')
+    } catch (err) {
+      setLoginFormError(err.message ?? 'Неверный email или пароль')
+    } finally {
+      setLoading(false)
+    }
+  }
 
-	const handleRegistration = e => {
-		e.preventDefault()
-		setRegisterFormError('')
+  const handleRegistration = async e => {
+    e.preventDefault()
+    setRegisterFormError('')
 
-		if (!userName || !registerEmail || !registerPassword || !confirmPassword) {
-			setRegisterFormError('Пожалуйста, заполните все поля')
-			return
-		}
-		if (emailError) {
-			setRegisterFormError('Введите корректный email')
-			return
-		}
-		if (registerPasswordError) {
-			setRegisterFormError(registerPasswordError)
-			return
-		}
-		if (registerPassword !== confirmPassword) {
-			setRegisterFormError('Пароли не совпадают')
-			return
-		}
-		if (isEmailTaken(registerEmail)) {
-			setRegisterFormError('Пользователь с таким email уже существует')
-			return
-		}
+    if (!userName || !registerEmail || !registerPassword || !confirmPassword) {
+      setRegisterFormError('Пожалуйста, заполните все поля')
+      return
+    }
+    if (emailError) { setRegisterFormError('Введите корректный email'); return }
+    if (registerPasswordError) { setRegisterFormError(registerPasswordError); return }
+    if (registerPassword !== confirmPassword) { setRegisterFormError('Пароли не совпадают'); return }
 
-		const newUser = {
-			id: Date.now(),
-			email: registerEmail,
-			password: registerPassword,
-			name: userName,
-			avatar: null
-		}
+    setLoading(true)
+    try {
+      await authApi.register(registerEmail, registerPassword, userName)
+      setRegisterEmail('')
+      setRegisterPassword('')
+      setConfirmPassword('')
+      setConfirmTouched(false)
+      setUserNameState('')
+      navigate('/profile')
+    } catch (err) {
+      setRegisterFormError(err.message ?? 'Ошибка регистрации')
+    } finally {
+      setLoading(false)
+    }
+  }
 
-		addUser(newUser)
-		setCurrentUser(newUser)
-
-		setRegisterEmail('')
-		setRegisterPassword('')
-		setConfirmPassword('')
-		setConfirmTouched(false)
-		setUserName('')
-
-		navigate('/profile')
-	}
-
-	return {
-		/* values */
-		loginEmail,
-		loginPassword,
-		registerEmail,
-		registerPassword,
-		confirmPassword,
-		userName,
-		/* field errors */
-		emailError,
-		loginPasswordError,
-		registerPasswordError,
-		confirmPasswordError,
-		/* form errors */
-		loginFormError,
-		registerFormError,
-		/* setters */
-		setLoginPassword: e => { setLoginPassword(e.target.value); setLoginFormError('') },
-		setRegisterPassword: e => { setRegisterPassword(e.target.value); setRegisterFormError('') },
-		setConfirmPassword: e => {
-			setConfirmPassword(e.target.value)
-			setConfirmTouched(true)
-			setRegisterFormError('')
-		},
-		setUserName: e => { setUserName(e.target.value); setRegisterFormError('') },
-		handleEmailChange,
-		handleRegistration,
-		handleLogin,
-	}
+  return {
+    loginEmail,
+    loginPassword,
+    registerEmail,
+    registerPassword,
+    confirmPassword,
+    userName,
+    emailError,
+    loginPasswordError,
+    registerPasswordError,
+    confirmPasswordError,
+    loginFormError,
+    registerFormError,
+    loading,
+    setLoginPassword:    e => { setLoginPasswordState(e.target.value);    setLoginFormError('') },
+    setRegisterPassword: e => { setRegisterPassword(e.target.value);      setRegisterFormError('') },
+    setConfirmPassword:  e => { setConfirmPassword(e.target.value); setConfirmTouched(true); setRegisterFormError('') },
+    setUserName:         e => { setUserNameState(e.target.value);          setRegisterFormError('') },
+    handleEmailChange,
+    handleRegistration,
+    handleLogin,
+  }
 }

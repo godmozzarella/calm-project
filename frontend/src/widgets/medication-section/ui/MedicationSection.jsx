@@ -2,15 +2,9 @@ import { useState, useCallback, useEffect } from 'react'
 
 import { AddIcon, DeleteIcon } from '@/shared/ui/icons'
 import { AddMedicationForm, useAddMedication } from '@/features/add-medication'
-import {
-	getMedicationsByDate,
-	deleteMedication,
-	updateMedication,
-	getOveruseDaysInMonth,
-	EFFECTIVENESS_LABELS,
-	OVERUSE_THRESHOLD,
-} from '@/entities/medication'
-import { getAttacksByDate, ATTACK_TYPE_LABELS } from '@/entities/attack'
+import { EFFECTIVENESS_LABELS, OVERUSE_THRESHOLD } from '@/entities/medication'
+import { ATTACK_TYPE_LABELS } from '@/entities/attack'
+import { attackApi, medicationApi } from '@/shared/api'
 import { subscribe, ATTACKS_CHANGED, MEDICATIONS_CHANGED } from '@/shared/lib/dataEvents'
 
 import s from './MedicationSection.module.scss'
@@ -18,15 +12,15 @@ import s from './MedicationSection.module.scss'
 const EFFECTIVENESS_COLORS = { 1: '#ef4444', 2: '#eab308', 3: '#22c55e' }
 
 const MedicationSection = ({ date }) => {
-	const [medications, setMedications] = useState(() => getMedicationsByDate(date))
-	const [attacks,     setAttacks]     = useState(() => getAttacksByDate(date))
+	const [medications, setMedications] = useState([])
+	const [attacks,     setAttacks]     = useState([])
 	const [overuseDays, setOveruseDays] = useState(0)
 
 	const reload = useCallback(() => {
-		setMedications(getMedicationsByDate(date))
-		setAttacks(getAttacksByDate(date))
 		const [year, month] = date.split('-').map(Number)
-		setOveruseDays(getOveruseDaysInMonth(year, month))
+		medicationApi.getByDate(date).then(setMedications)
+		attackApi.getByDate(date).then(setAttacks)
+		medicationApi.getOveruseDays(year, month).then(setOveruseDays)
 	}, [date])
 
 	useEffect(() => { reload() }, [reload])
@@ -38,20 +32,18 @@ const MedicationSection = ({ date }) => {
 	}, [reload])
 
 	const {
-		open, step, selected, meta, error,
+		open, step, selected, meta, error, loading,
 		openForm, closeForm,
 		toggleItem, isSelected, setItemDosage,
 		setMetaField, nextStep, prevStep, submit,
 	} = useAddMedication({ date, onSuccess: reload })
 
-	const handleDelete = id => {
-		deleteMedication(id)
-		reload()
-	}
+	const handleDelete = id => medicationApi.delete(id)
 
 	const handleEffectiveness = (id, value) => {
-		updateMedication(id, { effectiveness: value })
-		reload()
+		const med = medications.find(m => m.id === id)
+		if (!med) return
+		medicationApi.update(id, { ...med, effectiveness: med.effectiveness === value ? null : value })
 	}
 
 	const linkedAttack = attackId => attacks.find(a => a.id === attackId)
