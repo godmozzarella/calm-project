@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 
-import { getAllAttacks } from '@/entities/attack'
-import { getAllMedications } from '@/entities/medication'
 import { OpenInNewIcon } from '@/shared/ui/icons'
+import { attackApi, medicationApi } from '@/shared/api'
 import {
 	subscribe,
 	emit,
@@ -23,11 +22,14 @@ import s from './ChartSection.module.scss'
 const ChartSection = ({ showPatterns = true, statsLink = false }) => {
 	const [period, setPeriod] = useState('month')
 	const [metric, setMetric] = useState('intensity')
-	const [attacks, setAttacks] = useState(() => getAllAttacks())
-	const [medications, setMedications] = useState(() => getAllMedications())
+	const [attacks, setAttacks] = useState([])
+	const [medications, setMedications] = useState([])
 
-	const reloadAttacks = useCallback(() => setAttacks(getAllAttacks()), [])
-	const reloadMeds = useCallback(() => setMedications(getAllMedications()), [])
+	const reloadAttacks = useCallback(() => attackApi.getAll().then(setAttacks), [])
+	const reloadMeds    = useCallback(() => medicationApi.getAll().then(setMedications), [])
+
+	useEffect(() => { reloadAttacks() }, [reloadAttacks])
+	useEffect(() => { reloadMeds() },    [reloadMeds])
 
 	useEffect(() => subscribe(ATTACKS_CHANGED, reloadAttacks), [reloadAttacks])
 	useEffect(() => subscribe(MEDICATIONS_CHANGED, reloadMeds), [reloadMeds])

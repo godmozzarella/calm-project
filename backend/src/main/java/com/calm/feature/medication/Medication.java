@@ -2,6 +2,8 @@ package com.calm.feature.medication;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -17,12 +19,14 @@ import java.time.LocalTime;
  * (см. project_moh_metric_deferred). Сейчас они опциональны и игнорируются фронтом.
  */
 @Document(collection = "medications")
+@CompoundIndexes({
+	@CompoundIndex(name = "user_date_time", def = "{'userId': 1, 'date': 1, 'time': 1}")
+})
 public class Medication {
 
 	@Id
 	private String id;
 
-	@Indexed
 	private String userId;
 
 	private String name;

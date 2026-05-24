@@ -2,7 +2,8 @@ import { useState, useCallback, useEffect } from 'react'
 
 import { AddIcon, DeleteIcon } from '@/shared/ui/icons'
 import { AddAttackForm, useAddAttack } from '@/features/add-attack'
-import { getAttacksByDate, deleteAttack, ATTACK_TYPE_LABELS, SYMPTOM_LABELS, intensityColor } from '@/entities/attack'
+import { ATTACK_TYPE_LABELS, SYMPTOM_LABELS, intensityColor } from '@/entities/attack'
+import { attackApi } from '@/shared/api'
 import { subscribe, ATTACKS_CHANGED } from '@/shared/lib/dataEvents'
 
 import s from './AttackSection.module.scss'
@@ -37,10 +38,10 @@ const formatRange = attack => {
 }
 
 const AttackSection = ({ date }) => {
-	const [attacks, setAttacks] = useState(() => getAttacksByDate(date))
+	const [attacks, setAttacks] = useState([])
 
 	const reload = useCallback(
-		() => setAttacks(getAttacksByDate(date)),
+		() => attackApi.getByDate(date).then(setAttacks),
 		[date]
 	)
 
@@ -48,13 +49,10 @@ const AttackSection = ({ date }) => {
 
 	useEffect(() => subscribe(ATTACKS_CHANGED, reload), [reload])
 
-	const { open, form, error, openForm, closeForm, setField, toggleArrayField, submit } =
+	const { open, form, error, loading, openForm, closeForm, setField, toggleArrayField, submit } =
 		useAddAttack({ date, onSuccess: reload })
 
-	const handleDelete = id => {
-		deleteAttack(id)
-		reload()
-	}
+	const handleDelete = id => attackApi.delete(id)
 
 	return (
 		<>

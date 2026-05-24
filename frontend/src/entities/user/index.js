@@ -1,11 +1,6 @@
 export {
-	getUsers,
-	saveUsers,
-	addUser,
-	findUserByCredentials,
-	isEmailTaken,
 	getCurrentUser,
 	setCurrentUser,
 	clearCurrentUser,
-	updateCurrentUser
+	updateCurrentUser,
 } from './model/storage'

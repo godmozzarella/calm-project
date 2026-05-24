@@ -1,9 +1,12 @@
 package com.calm.common.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -35,6 +38,30 @@ public class GlobalExceptionHandler {
 		return ResponseEntity
 				.badRequest()
 				.body(new ErrorResponse(Instant.now(), 400, "Bad Request", "Ошибка валидации", details));
+	}
+
+	@ExceptionHandler(ConstraintViolationException.class)
+	public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException e) {
+		List<String> details = e.getConstraintViolations().stream()
+				.map(v -> v.getPropertyPath() + ": " + v.getMessage())
+				.toList();
+		return ResponseEntity
+				.badRequest()
+				.body(new ErrorResponse(Instant.now(), 400, "Bad Request", "Ошибка валидации", details));
+	}
+
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ErrorResponse> handleUnreadable(HttpMessageNotReadableException e) {
+		return ResponseEntity
+				.badRequest()
+				.body(ErrorResponse.of(400, "Bad Request", "Некорректный формат тела запроса"));
+	}
+
+	@ExceptionHandler(MissingServletRequestParameterException.class)
+	public ResponseEntity<ErrorResponse> handleMissingParam(MissingServletRequestParameterException e) {
+		return ResponseEntity
+				.badRequest()
+				.body(ErrorResponse.of(400, "Bad Request", "Отсутствует обязательный параметр: " + e.getParameterName()));
 	}
 
 	@ExceptionHandler(Exception.class)
