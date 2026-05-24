@@ -10,22 +10,24 @@ import s from './MainSection.module.scss'
 
 const MainSection = () => {
 	return (
-		<main>
+		<main className={s.main}>
 			<Link to="/">
 				<h1 className={s.logo}>Calm</h1>
 			</Link>
 
 			<DayBar />
 
-			<section>
-				<div className={`${s.parametersContent} ${s.flexItem}`}>
+			<div className={s.grid}>
+				<div className={s.topRow}>
 					<AttackSection />
 					<MedicationSection />
 					<AttackZoneSection />
 				</div>
 
-				<ChartSection />
-			</section>
+				<div className={s.bottomRow}>
+					<ChartSection />
+				</div>
+			</div>
 		</main>
 	)
 }

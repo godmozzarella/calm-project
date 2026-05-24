@@ -10,48 +10,92 @@ html:has(.indexBody) {
 	flex-direction: column;
 	align-items: center;
 	margin: $margin-top-body auto 0 auto;
+	width: 100%;
 }
 
+/* ── Hero ── */
 .rowContent {
-	display: flex;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
 	align-items: center;
-	justify-content: space-around;
+	gap: 3rem;
+	width: 100%;
 }
 
 .containerItem {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	gap: 1.25rem;
-	max-width: 40%;
+	gap: 1.5rem;
+	min-width: 0;
 
 	h1 {
-		@include fluid-text(32, 24);
+		@include fluid-text(40, 24);
 		font-weight: $fw-semibold;
+		text-wrap: balance;
+		line-height: 1.15;
 	}
 
 	.description {
 		@include fluid-text(20, 16);
 		font-weight: $fw-light;
 		color: $fc-contrast;
-		text-wrap: warp;
+		text-wrap: pretty;
+		line-height: 1.5;
+		max-width: 32rem;
 	}
-
-	.buttons {
-		display: flex;
-		align-items: center;
-		gap: 0.625rem;
-	}
-}
-
-.bigLogo {
-	@include fluid-text(128, 64);
-	font-family: 'LilyScriptOne', cursive;
-	color: $fc-logo;
 }
 
 .containerItem:last-child {
 	align-items: center;
+	gap: 2rem;
+	position: relative;
+}
+
+.bigLogo {
+	@include fluid-text(160, 64);
+	font-family: 'LilyScriptOne', cursive;
+	color: $fc-logo;
+	line-height: 1;
+	letter-spacing: 0.02em;
+	text-align: center;
+	background: linear-gradient(135deg, #66baf1 0%, #118bde 50%, #0e7bc4 100%);
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	filter: drop-shadow(0 0.5rem 1.5rem rgba(17, 139, 222, 0.35));
+	position: relative;
+	z-index: 1;
+}
+
+.containerItem:last-child::before {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 28rem;
+	max-width: 90%;
+	aspect-ratio: 1;
+	background: radial-gradient(circle, rgba(17, 139, 222, 0.18) 0%, rgba(17, 139, 222, 0) 65%);
+	pointer-events: none;
+	z-index: 0;
+}
+
+.buttons {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 0.75rem;
+	width: 100%;
+	max-width: 32rem;
+	position: relative;
+	z-index: 1;
+
+	> * {
+		flex: 1 1 14rem;
+	}
 }
 
 .buttonText {
@@ -65,43 +109,51 @@ html:has(.indexBody) {
 	font-family: 'LilyScriptOne', cursive;
 }
 
+/* ── Breakpoints ── */
 @media (max-width: 64rem) {
-	.buttons {
-		flex-direction: column;
+	.rowContent {
+		gap: 2rem;
 	}
 }
 
 @media (max-width: 48rem) {
+	.indexBody {
+		margin-top: 5rem;
+	}
+
 	.rowContent {
-		flex-direction: column;
-		gap: 2rem;
+		grid-template-columns: 1fr;
+		gap: 1.5rem;
+		min-height: auto;
+		padding: 1rem 0 2rem;
 	}
 
-	.containerItem:nth-child(1) {
-		order: 2;
-	}
-
-	.containerItem:nth-child(2) {
-		order: 1;
-		flex-direction: row;
-	}
+	.containerItem:nth-child(1) { order: 2; }
+	.containerItem:nth-child(2) { order: 1; }
 
 	.containerItem {
-		max-width: 70%;
+		align-items: center;
 	}
 
-	h1,
-	.description {
+	.containerItem h1,
+	.containerItem .description {
 		text-align: center;
+	}
+
+	.buttons {
+		flex-direction: column;
+		width: 100%;
+
+		> * { width: 100%; flex: 0 0 auto; }
 	}
 }
 
 @media (max-width: 27rem) {
-	.containerItem:last-child {
-		flex-direction: column;
+	.indexBody {
+		margin-top: 4.5rem;
 	}
 
-	.containerItem {
-		max-width: 100%;
+	.containerItem:last-child::before {
+		width: 22rem;
 	}
 }

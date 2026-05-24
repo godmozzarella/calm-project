@@ -1,70 +1,86 @@
 @use 'app/styles/globals.scss' as *;
 
 .block,
-.coloredBlock{
-    display: flex;
-    flex-direction: column;
-
-    padding: 1.25rem;
-    gap: 0.625rem;
+.coloredBlock {
+	display: flex;
+	flex-direction: column;
+	padding: 1.5rem;
+	gap: 0.75rem;
+	width: 100%;
+	height: 100%;
+	border-radius: 1.5rem;
+	transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
+.block {
+	align-items: center;
+	text-align: center;
+	background-color: $block-color;
+	border: 1px solid rgba(92, 173, 228, 0.08);
+	box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.18);
 
-.block{
-    align-items: center;
-    text-align: center;
-    width: 50%;
-
-    border-radius: 2rem;
-    background-color: $block-color;
-}
-
-.coloredBlock{
-    width: 70%;
-		.desc{
-    	color: $fc-contrast;
+	&:hover {
+		transform: translateY(-0.25rem);
+		border-color: rgba(92, 173, 228, 0.35);
+		box-shadow: 0 0.875rem 1.75rem rgba(0, 0, 0, 0.28);
 	}
 }
 
-.title{
-    @include fluid-text(24, 20);
-    font-weight: $fw-semibold;
+.coloredBlock {
+	align-items: flex-start;
+	text-align: left;
+	background-color: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(92, 173, 228, 0.12);
+
+	&:hover {
+		border-color: rgba(92, 173, 228, 0.3);
+		background-color: rgba(255, 255, 255, 0.035);
+	}
 }
 
-.description{
-    @include fluid-text(20, 16);
-    font-weight: $fw-light;
+.title {
+	@include fluid-text(22, 18);
+	font-weight: $fw-semibold;
 }
 
-.coloredDescription{
-    @include fluid-text(20, 16);
-    font-weight: $fw-light;
-    color: $fc-contrast;
+.description {
+	@include fluid-text(18, 14);
+	font-weight: $fw-light;
+	line-height: 1.5;
 }
 
-.icon{
-    svg{
-        color: $fc-contrast;
-        @include fluid-text(48, 32);
-    }
+.coloredDescription {
+	@include fluid-text(18, 14);
+	font-weight: $fw-light;
+	line-height: 1.5;
+	color: $fc-contrast;
 }
 
-@media (max-width: 64rem) {
-	.block {
-        width: 60%;
-    }
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 3.5rem;
+	height: 3.5rem;
+	border-radius: 50%;
+	background: linear-gradient(135deg, rgba(102, 186, 241, 0.18), rgba(14, 123, 196, 0.18));
+	border: 1px solid rgba(92, 173, 228, 0.25);
+	margin-bottom: 0.25rem;
+
+	svg {
+		color: $fc-contrast;
+		@include fluid-text(32, 24);
+	}
 }
 
 @media (max-width: 48rem) {
 	.block,
-    .coloredBlock {
-        width: 80%;
-    }
-}	
+	.coloredBlock {
+		padding: 1.25rem;
+	}
 
-@media (max-width: 27rem) {
-	.block,
-    .coloredBlock {
-        width: 100%;
-    }
+	.icon {
+		width: 3rem;
+		height: 3rem;
+	}
 }

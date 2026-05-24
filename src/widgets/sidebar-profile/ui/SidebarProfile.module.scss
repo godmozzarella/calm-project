@@ -329,6 +329,41 @@
 	margin-top: 0.25rem;
 }
 
+/* ── Footer block: socials + copyright ── */
+.footerBlock {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.75rem 1.25rem 1rem;
+}
+
+.socials {
+	display: flex;
+	gap: 0.75rem;
+}
+
+.socialLink {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.875rem;
+	height: 1.875rem;
+	border-radius: 50%;
+	color: $fc-secondary;
+	transition: color 0.18s ease, background-color 0.18s ease;
+
+	&:hover {
+		color: $fc-main;
+		background-color: rgba(255, 255, 255, 0.07);
+	}
+}
+
+.copyright {
+	@include fluid-text(10, 9);
+	color: rgba(140, 150, 170, 0.45);
+}
+
 /* ── Overlay ── */
 .overlay {
 	position: fixed;

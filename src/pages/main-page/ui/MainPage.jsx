@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 
-import { Footer } from '@/widgets/footer'
 import { SidebarProfile } from '@/widgets/sidebar-profile'
 import { SidebarCalendar } from '@/widgets/sidebar-calendar'
 import { MainSection } from '@/widgets/main-section'
@@ -50,8 +49,6 @@ const MainPage = () => {
 			/>
 
 			<MainSection />
-
-			<Footer />
 		</div>
 	)
 }
