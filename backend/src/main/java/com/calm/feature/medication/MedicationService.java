@@ -23,7 +23,7 @@ public class MedicationService {
 	}
 
 	public List<Medication> listInRange(String userId, LocalDate from, LocalDate to) {
-		return repo.findByUserIdAndDateBetweenOrderByDateAscTimeAsc(userId, from, to);
+		return repo.findInRange(userId, from, to);
 	}
 
 	public Medication getOwned(String userId, String id) {
