@@ -11,7 +11,8 @@ import s from './Footer.module.scss'
 
 const Footer = () => {
 	return (
-		<footer id="contacts">
+		<div className={s.footerRoot} id="contacts">
+		<footer>
 			<div className={s.item1}>
 				<div className={s.logoBlock}>
 					<a className={s.logo} href="#">Calm</a>
@@ -40,10 +41,7 @@ const Footer = () => {
 						</ul>
 					</div>
 
-					<div className={s.glowBlock}>
-						<div className={s.glowOrb} aria-hidden="true" />
-						<p className={s.glowText}>Твоя голова заслуживает понимания</p>
-					</div>
+					<div className={s.glowBlock} aria-hidden="true" />
 				</div>
 			</div>
 
@@ -70,6 +68,7 @@ const Footer = () => {
 				</ul>
 			</div>
 		</footer>
+		</div>
 	)
 }
 
