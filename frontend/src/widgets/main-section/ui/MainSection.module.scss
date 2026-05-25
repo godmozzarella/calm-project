@@ -33,6 +33,11 @@
 	grid-template-columns: 2fr 1.2fr 1.5fr;
 	gap: 1.25rem;
 	align-items: stretch;
+
+	/* Все три блока одинаковой высоты — определяется зоной боли (≈ SVG-heads + header) */
+	> * {
+		max-height: clamp(22rem, 54vh, 34rem);
+	}
 }
 
 /* ── Forecast row (between top widgets and chart) ── */

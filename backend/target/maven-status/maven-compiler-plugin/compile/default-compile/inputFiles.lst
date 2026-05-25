@@ -5,11 +5,15 @@
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/common/exception/GlobalExceptionHandler.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/common/exception/NotFoundException.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/config/CorsConfig.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/config/MongoIndexInitializer.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/config/OpenApiConfig.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/config/SecurityConfig.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/admin/AdminDictionaryController.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/admin/AdminSettingsController.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/admin/AdminUserController.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/admin/dto/SystemSettingsDto.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/admin/dto/UpdateRoleRequest.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/admin/dto/UpdateSystemSettingsRequest.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/attack/Attack.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/attack/AttackController.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/attack/AttackRepository.java
@@ -49,6 +53,9 @@
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/forecast/provider/RawForecastDay.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/forecast/provider/WeatherProvider.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/forecast/provider/WeatherProviderRegistry.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/forecast/snapshot/ForecastSnapshot.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/forecast/snapshot/ForecastSnapshotRepository.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/forecast/snapshot/ForecastSnapshotService.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/medication/Medication.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/medication/MedicationController.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/medication/MedicationRepository.java

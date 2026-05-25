@@ -26,7 +26,7 @@ public class DictionaryService {
 			throw new ConflictException("Запись с таким value уже существует в этом справочнике");
 		}
 		int order = req.order() != null ? req.order() : nextOrder(req.type());
-		DictionaryEntry entry = new DictionaryEntry(req.type(), req.value(), req.label(), order);
+		DictionaryEntry entry = new DictionaryEntry(req.type(), req.value(), req.label(), order, req.category());
 		return repo.save(entry);
 	}
 
@@ -35,6 +35,7 @@ public class DictionaryService {
 				.orElseThrow(() -> new NotFoundException("Запись справочника не найдена"));
 		if (req.label() != null) entry.setLabel(req.label());
 		if (req.order() != null) entry.setOrder(req.order());
+		if (req.category() != null) entry.setCategory(req.category().isBlank() ? null : req.category());
 		return repo.save(entry);
 	}
 

@@ -178,3 +178,28 @@
 		@include fluid-text(12, 11);
 	}
 }
+
+.fieldInline {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+
+	span {
+		color: $fc-secondary;
+		@include fluid-text(13, 12);
+	}
+}
+
+.inputNarrow {
+	width: 12rem;
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 0.5rem;
+	padding: 0.5rem 0.75rem;
+	color: $fc-main;
+	@include fluid-text(13, 12);
+	outline: none;
+
+	&:focus { border-color: rgba(92, 173, 228, 0.4); }
+}

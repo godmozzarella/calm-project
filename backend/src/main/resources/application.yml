@@ -6,7 +6,9 @@ spring:
   data:
     mongodb:
       uri: ${MONGO_URI:mongodb://localhost:27017/calm}
-      auto-index-creation: true
+      # auto-index-creation удобен в dev, но в prod выключаем (см. application-prod.yml).
+      # Индексы создаются миграциями/init-скриптами, чтобы старт был предсказуемо быстрым.
+      auto-index-creation: ${CALM_MONGO_AUTO_INDEX:true}
   jackson:
     mapper:
       accept-case-insensitive-enums: true

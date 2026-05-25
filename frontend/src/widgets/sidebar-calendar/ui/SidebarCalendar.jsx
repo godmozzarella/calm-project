@@ -65,6 +65,7 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar }) => {
 	const [viewYear, setViewYear]     = useState(today.getFullYear())
 	const [viewMonth, setViewMonth]   = useState(today.getMonth())
 	const [selected, setSelected]     = useState(null) // dateKey string
+	const [showMarkPanel, setShowMarkPanel] = useState(false)
 	const [marks, setMarks]           = useState(loadMarks)
 
 	const grid = buildGrid(viewYear, viewMonth)
@@ -80,9 +81,20 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar }) => {
 	}
 
 	const selectDay = key => {
-		setSelected(prev => prev === key ? null : key)
+		if (selected === key) {
+			setSelected(null)
+			setShowMarkPanel(false)
+		} else {
+			setSelected(key)
+			setShowMarkPanel(false)
+		}
+	}
+
+	const goToDate = key => {
 		emit(DATE_SELECTED, key)
 		setOpenCalendar(false)
+		setSelected(null)
+		setShowMarkPanel(false)
 	}
 
 	const toggleMark = (key, type) => {
@@ -100,6 +112,7 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar }) => {
 		setViewYear(today.getFullYear())
 		setViewMonth(today.getMonth())
 		setSelected(null)
+		setShowMarkPanel(false)
 	}
 
 	const isViewingCurrentMonth =
@@ -176,12 +189,57 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar }) => {
 					})}
 				</div>
 
-				{/* ── mark panel (appears on day select) ── */}
-				{selected && (
-					<div className={s.markPanel}>
-						<span className={s.markPanelTitle}>
+				{/* ── action panel (appears on day select) ── */}
+				{selected && !showMarkPanel && (
+					<div className={s.actionPanel}>
+						<span className={s.actionPanelDate}>
 							{selected.split('-').reverse().slice(0, 2).join('.')}
 						</span>
+						<div className={s.actionList}>
+							<button
+								className={s.actionBtn}
+								onClick={() => goToDate(selected)}
+							>
+								<span className={s.actionIcon}>→</span>
+								<span className={s.actionLabel}>Перейти к дате</span>
+							</button>
+							<button
+								className={s.actionBtn}
+								onClick={() => setShowMarkPanel(true)}
+							>
+								<span className={s.actionIcon}>◉</span>
+								<span className={s.actionLabel}>Поставить метку</span>
+								{(marks[selected] ?? []).length > 0 && (
+									<span className={s.actionDots}>
+										{(marks[selected] ?? []).slice(0, 3).map(t => (
+											<span
+												key={t}
+												className={s.dot}
+												style={{ background: MARK_TYPES[t]?.color }}
+											/>
+										))}
+									</span>
+								)}
+							</button>
+						</div>
+					</div>
+				)}
+
+				{/* ── mark panel ── */}
+				{selected && showMarkPanel && (
+					<div className={s.markPanel}>
+						<div className={s.markPanelHeader}>
+							<span className={s.markPanelTitle}>
+								{selected.split('-').reverse().slice(0, 2).join('.')}
+							</span>
+							<button
+								className={s.markPanelBack}
+								onClick={() => setShowMarkPanel(false)}
+								aria-label="Назад"
+							>
+								← назад
+							</button>
+						</div>
 						<div className={s.markList}>
 							{Object.entries(MARK_TYPES).map(([type, { label, color }]) => {
 								const active = (marks[selected] ?? []).includes(type)

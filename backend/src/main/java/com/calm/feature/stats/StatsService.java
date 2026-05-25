@@ -5,9 +5,14 @@ import com.calm.feature.attack.AttackRepository;
 import com.calm.feature.dictionary.DictionaryEntry;
 import com.calm.feature.dictionary.DictionaryRepository;
 import com.calm.feature.dictionary.DictionaryType;
+import com.calm.feature.forecast.RiskLevel;
+import com.calm.feature.forecast.snapshot.ForecastSnapshot;
+import com.calm.feature.forecast.snapshot.ForecastSnapshotService;
 import com.calm.feature.medication.Medication;
 import com.calm.feature.medication.MedicationRepository;
 import com.calm.feature.stats.StatsResponse.*;
+import com.calm.feature.user.User;
+import com.calm.feature.user.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -19,7 +24,13 @@ import java.util.stream.Collectors;
 @Service
 public class StatsService {
 
-	private static final int OVERUSE_THRESHOLD = 10;
+	/**
+	 * Пороги MOH (medication overuse headache) по терапевтическому классу:
+	 * triptan/opioid ≥ 10 дней/мес — overuse, nsaid/simple ≥ 15 дней/мес — overuse.
+	 * Препарат без класса (свободный ввод) учитывается как «simple» в защиту.
+	 */
+	private static final int MOH_THRESHOLD_TRIPTAN_OPIOID = 10;
+	private static final int MOH_THRESHOLD_SIMPLE_NSAID   = 15;
 	private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE;
 
 	private static final String[] MONTHS_SHORT =
@@ -28,12 +39,17 @@ public class StatsService {
 	private final AttackRepository attackRepo;
 	private final MedicationRepository medicationRepo;
 	private final DictionaryRepository dictionaryRepo;
+	private final UserRepository userRepo;
+	private final ForecastSnapshotService snapshotService;
 
 	public StatsService(AttackRepository attackRepo, MedicationRepository medicationRepo,
-			DictionaryRepository dictionaryRepo) {
+			DictionaryRepository dictionaryRepo, UserRepository userRepo,
+			ForecastSnapshotService snapshotService) {
 		this.attackRepo = attackRepo;
 		this.medicationRepo = medicationRepo;
 		this.dictionaryRepo = dictionaryRepo;
+		this.userRepo = userRepo;
+		this.snapshotService = snapshotService;
 	}
 
 	private Map<String, String> labelsOf(DictionaryType type) {
@@ -61,9 +77,78 @@ public class StatsService {
 		List<BucketDto> buckets = buildBuckets(range, attacks);
 		KpisDto kpis = computeKpis(attacks, buckets, thisMonthMeds, range);
 		PatternsDto patterns = computePatterns(attacks, meds, range);
+		WeatherCorrelationDto weather = computeWeatherCorrelation(userId, attacks, range);
 
-		return new StatsResponse(kpis, buckets, patterns);
+		return new StatsResponse(kpis, buckets, patterns, weather);
 	}
+
+	// ── Weather correlation ──────────────────────────────────────────────────
+
+	private WeatherCorrelationDto computeWeatherCorrelation(String userId, List<Attack> attacks, DateRange range) {
+		User user = userRepo.findById(userId).orElse(null);
+		if (user == null || user.getLatitude() == null || user.getLongitude() == null) {
+			return new WeatherCorrelationDto(0, 0, 0, null, null, null, null);
+		}
+
+		List<ForecastSnapshot> snapshots = snapshotService.findInRange(
+				user.getLatitude(), user.getLongitude(), range.from(), range.to());
+		if (snapshots.isEmpty()) {
+			return new WeatherCorrelationDto(0, 0, 0, null, null, null, null);
+		}
+
+		Map<LocalDate, ForecastSnapshot> byDate = snapshots.stream()
+				.collect(Collectors.toMap(ForecastSnapshot::getDate, s -> s, (a, b) -> a));
+
+		Set<LocalDate> attackDates = attacks.stream()
+				.map(Attack::getStartDate)
+				.filter(Objects::nonNull)
+				.collect(Collectors.toSet());
+
+		int attacksTotal = 0;
+		int attacksOnElevated = 0;
+		double sumRiskAttack = 0, sumRiskFree = 0;
+		double sumPressureAttack = 0, sumPressureFree = 0;
+		int countAttack = 0, countFree = 0;
+		int pressureAttackCnt = 0, pressureFreeCnt = 0;
+
+		for (var entry : byDate.entrySet()) {
+			LocalDate date = entry.getKey();
+			ForecastSnapshot snap = entry.getValue();
+			boolean hadAttack = attackDates.contains(date);
+
+			if (hadAttack) {
+				attacksTotal++;
+				if (snap.getRisk() == RiskLevel.MEDIUM || snap.getRisk() == RiskLevel.HIGH) {
+					attacksOnElevated++;
+				}
+				sumRiskAttack += snap.getScore();
+				countAttack++;
+				if (snap.getPressureHpa() != null) {
+					sumPressureAttack += snap.getPressureHpa();
+					pressureAttackCnt++;
+				}
+			} else {
+				sumRiskFree += snap.getScore();
+				countFree++;
+				if (snap.getPressureHpa() != null) {
+					sumPressureFree += snap.getPressureHpa();
+					pressureFreeCnt++;
+				}
+			}
+		}
+
+		return new WeatherCorrelationDto(
+				byDate.size(),
+				attacksTotal,
+				attacksOnElevated,
+				countAttack > 0 ? round1(sumRiskAttack / countAttack) : null,
+				countFree   > 0 ? round1(sumRiskFree / countFree)     : null,
+				pressureAttackCnt > 0 ? round1(sumPressureAttack / pressureAttackCnt) : null,
+				pressureFreeCnt   > 0 ? round1(sumPressureFree   / pressureFreeCnt)   : null
+		);
+	}
+
+	private static double round1(double v) { return Math.round(v * 10.0) / 10.0; }
 
 	// ── Range resolution ──────────────────────────────────────────────────────
 
@@ -188,15 +273,57 @@ public class StatsService {
 
 		int streak = longestStreak(attacks, range.from(), range.to());
 
-		Set<LocalDate> overuseDates = thisMonthMeds.stream()
-				.map(Medication::getDate)
-				.filter(Objects::nonNull)
-				.collect(Collectors.toSet());
-		int overuseDays = overuseDates.size();
-		boolean overuseRisk = overuseDays >= OVERUSE_THRESHOLD;
-
-		return new KpisDto(total, Math.round(avgIntensity * 10.0) / 10.0, streak, overuseDays, overuseRisk);
+		MohResult moh = computeMoh(thisMonthMeds);
+		return new KpisDto(total, Math.round(avgIntensity * 10.0) / 10.0, streak, moh.days(), moh.risk());
 	}
+
+	/**
+	 * MOH-метрика: считаем сколько разных дней пользователь принимал «опасные» классы препаратов в этом месяце.
+	 * Класс определяется по справочнику {@link DictionaryType#MEDICATION_PRESET}, лукап по полю
+	 * {@code Medication.therapeuticClass} (если уже сохранён) или по {@code Medication.name} → пресет.
+	 *
+	 * <p>Возвращает количество дней с приёмом препаратов-кандидатов и флаг превышения порога.
+	 */
+	private MohResult computeMoh(List<Medication> meds) {
+		if (meds.isEmpty()) return new MohResult(0, false);
+
+		Map<String, String> nameToClass = dictionaryRepo
+				.findByTypeOrderByOrderAscLabelAsc(DictionaryType.MEDICATION_PRESET).stream()
+				.filter(e -> e.getCategory() != null && !e.getCategory().isBlank())
+				.collect(Collectors.toMap(
+						e -> e.getValue().toLowerCase(),
+						DictionaryEntry::getCategory,
+						(a, b) -> a));
+
+		Map<String, Set<LocalDate>> daysByClass = new HashMap<>();
+		for (Medication m : meds) {
+			if (m.getDate() == null) continue;
+			String cls = resolveClass(m, nameToClass);
+			if (cls == null || "preventive".equals(cls)) continue; // курсовые не считаем
+			daysByClass.computeIfAbsent(cls, k -> new HashSet<>()).add(m.getDate());
+		}
+
+		Set<LocalDate> allDays = new HashSet<>();
+		boolean risk = false;
+		for (var entry : daysByClass.entrySet()) {
+			allDays.addAll(entry.getValue());
+			int days = entry.getValue().size();
+			int threshold = ("triptan".equals(entry.getKey()) || "opioid".equals(entry.getKey()))
+					? MOH_THRESHOLD_TRIPTAN_OPIOID : MOH_THRESHOLD_SIMPLE_NSAID;
+			if (days >= threshold) risk = true;
+		}
+		return new MohResult(allDays.size(), risk);
+	}
+
+	private static String resolveClass(Medication m, Map<String, String> nameToClass) {
+		if (m.getTherapeuticClass() != null && !m.getTherapeuticClass().isBlank()) {
+			return m.getTherapeuticClass();
+		}
+		if (m.getName() == null) return null;
+		return nameToClass.get(m.getName().toLowerCase().trim());
+	}
+
+	private record MohResult(int days, boolean risk) {}
 
 	private int longestStreak(List<Attack> attacks, LocalDate from, LocalDate to) {
 		Set<LocalDate> painDays = attacks.stream()

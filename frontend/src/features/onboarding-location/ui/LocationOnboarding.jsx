@@ -9,7 +9,7 @@ import s from './LocationOnboarding.module.scss'
 
 const LocationOnboarding = ({ open, onClose, setUser }) => {
 	const {
-		results, searching, saving, error,
+		results, searching, saving, geoLocating, error,
 		search, useGeolocation, save,
 	} = useLocationOnboarding({ setUser })
 
@@ -60,12 +60,12 @@ const LocationOnboarding = ({ open, onClose, setUser }) => {
 
 				<Button
 					colored
-					icon={<LocationOnIcon />}
+					icon={geoLocating ? <span className={s.spinner} /> : <LocationOnIcon />}
 					onClick={handleGeo}
-					disabled={saving}
+					disabled={saving || geoLocating}
 					className={s.geoBtn}
 				>
-					Определить автоматически
+					{geoLocating ? 'Определяем местоположение...' : 'Определить автоматически'}
 				</Button>
 
 				<div className={s.dividerRow}>

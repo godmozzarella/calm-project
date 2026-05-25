@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { MEDICATION_PRESETS } from '@/entities/medication'
 import { ATTACK_TYPE_LABELS } from '@/entities/attack'
 import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
+import { useDictionaries } from '@/shared/lib/dictionaries'
 import {
 	MedicationIcon,
 	LocalPharmacyIcon,
@@ -13,12 +14,15 @@ import {
 } from '@/shared/ui/icons'
 import s from './AddMedicationForm.module.scss'
 
+const CUSTOM_CATEGORY = 'Из справочника'
+
 const CATEGORY_ICONS = {
 	'Таблетки':               MedicationIcon,
 	'Капсулы':                LocalPharmacyIcon,
 	'Растворимые / Порошок':  WaterDropIcon,
 	'Назальный спрей':        AirIcon,
 	'Суппозитории':           HealingIcon,
+	[CUSTOM_CATEGORY]:        LocalPharmacyIcon,
 }
 
 const DOSAGE_HINTS = {
@@ -46,6 +50,7 @@ const itemKey = item => `${item.category}::${item.name}`
 /* ── Step 1: выбор препаратов ── */
 const StepSelect = ({ selected, isSelected, toggleItem }) => {
 	const [customName, setCustomName] = useState('')
+	const { medications } = useDictionaries()
 
 	const addCustom = () => {
 		const name = customName.trim()
@@ -53,6 +58,20 @@ const StepSelect = ({ selected, isSelected, toggleItem }) => {
 		toggleItem({ name, dosage: '', category: 'Другое' })
 		setCustomName('')
 	}
+
+	// Препараты из админского справочника — отдельная группа, чтобы не дублировать пресеты.
+	// Защита от дублей: если уже есть в MEDICATION_PRESETS по имени — не показываем во второй раз.
+	const hardcodedNames = new Set(
+		MEDICATION_PRESETS.flatMap(g => g.items.map(i => i.name.toLowerCase()))
+	)
+	const customPresets = medications.filter(m => !hardcodedNames.has(m.label.toLowerCase()))
+
+	const allGroups = customPresets.length
+		? [...MEDICATION_PRESETS, {
+			category: CUSTOM_CATEGORY,
+			items: customPresets.map(m => ({ name: m.label, dosage: '' })),
+		}]
+		: MEDICATION_PRESETS
 
 	return (
 		<div className={s.stepBody}>
@@ -74,7 +93,7 @@ const StepSelect = ({ selected, isSelected, toggleItem }) => {
 
 			<p className={s.stepHint}>Можно выбрать несколько</p>
 
-			{MEDICATION_PRESETS.map(group => {
+			{allGroups.map(group => {
 				const Icon = CATEGORY_ICONS[group.category]
 				return (
 					<div key={group.category} className={s.categoryGroup}>

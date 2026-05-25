@@ -22,6 +22,39 @@
 
 .errorText { color: $error-color; }
 
+.noLocation {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+	padding: 0.25rem 0;
+}
+
+.noLocationText {
+	@include fluid-text(13, 12);
+	color: $fc-secondary;
+	margin: 0;
+	flex: 1;
+}
+
+.noLocationBtn {
+	@include fluid-text(13, 12);
+	color: $fc-main;
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 0.5rem;
+	padding: 0.4rem 0.875rem;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: background 0.18s ease, border-color 0.18s ease;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.09);
+		border-color: rgba(255, 255, 255, 0.18);
+	}
+}
+
 /* ── Плитки ── */
 .tiles {
 	display: grid;

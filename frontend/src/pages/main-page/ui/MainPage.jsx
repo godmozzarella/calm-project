@@ -72,7 +72,13 @@ const MainPage = () => {
 				setOpenCalendar={setOpenCalendar}
 			/>
 
-			<MainSection user={user} />
+			<MainSection
+				user={user}
+				onOpenLocationModal={() => {
+					setOnboardingDismissed(false)
+					setShowLocationOnboarding(true)
+				}}
+			/>
 
 			<LocationOnboarding
 				open={showLocationOnboarding}

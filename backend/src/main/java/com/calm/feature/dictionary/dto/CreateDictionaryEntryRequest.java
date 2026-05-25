@@ -13,5 +13,6 @@ public record CreateDictionaryEntryRequest(
 		@Pattern(regexp = "[a-z][a-z0-9_]*", message = "value: только латинские буквы в нижнем регистре, цифры и подчёркивание")
 		String value,
 		@NotBlank @Size(min = 1, max = 60) String label,
-		Integer order
+		Integer order,
+		@Size(max = 32) String category
 ) {}

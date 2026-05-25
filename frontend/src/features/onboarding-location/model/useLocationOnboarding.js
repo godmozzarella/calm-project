@@ -18,6 +18,7 @@ export const useLocationOnboarding = ({ setUser }) => {
 	const [results, setResults] = useState([])
 	const [searching, setSearching] = useState(false)
 	const [saving, setSaving] = useState(false)
+	const [geoLocating, setGeoLocating] = useState(false)
 	const [error, setError] = useState(null)
 
 	const search = async q => {
@@ -46,6 +47,7 @@ export const useLocationOnboarding = ({ setUser }) => {
 			reject(new Error('no-geolocation'))
 			return
 		}
+		setGeoLocating(true)
 		navigator.geolocation.getCurrentPosition(
 			async pos => {
 				const { latitude, longitude } = pos.coords
@@ -55,9 +57,11 @@ export const useLocationOnboarding = ({ setUser }) => {
 				const picked = place
 					? { name: place.name, latitude, longitude, country: place.country }
 					: { name: 'Моё местоположение', latitude, longitude, country: null }
+				setGeoLocating(false)
 				resolve(picked)
 			},
 			err => {
+				setGeoLocating(false)
 				const msg = err.code === err.PERMISSION_DENIED
 					? 'Доступ к геолокации отклонён. Выбери город вручную.'
 					: 'Не удалось получить геолокацию. Выбери город вручную.'
@@ -95,6 +99,7 @@ export const useLocationOnboarding = ({ setUser }) => {
 		results,
 		searching,
 		saving,
+		geoLocating,
 		error,
 		search,
 		useGeolocation,

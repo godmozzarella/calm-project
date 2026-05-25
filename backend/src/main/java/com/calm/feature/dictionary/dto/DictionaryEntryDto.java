@@ -8,9 +8,11 @@ public record DictionaryEntryDto(
 		DictionaryType type,
 		String value,
 		String label,
-		int order
+		int order,
+		String category
 ) {
 	public static DictionaryEntryDto from(DictionaryEntry e) {
-		return new DictionaryEntryDto(e.getId(), e.getType(), e.getValue(), e.getLabel(), e.getOrder());
+		return new DictionaryEntryDto(e.getId(), e.getType(), e.getValue(), e.getLabel(),
+				e.getOrder(), e.getCategory());
 	}
 }

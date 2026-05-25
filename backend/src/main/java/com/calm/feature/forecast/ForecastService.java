@@ -7,6 +7,7 @@ import com.calm.feature.forecast.provider.NoaaKpService;
 import com.calm.feature.forecast.provider.RawForecastDay;
 import com.calm.feature.forecast.provider.WeatherProvider;
 import com.calm.feature.forecast.provider.WeatherProviderRegistry;
+import com.calm.feature.forecast.snapshot.ForecastSnapshotService;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -44,11 +45,14 @@ public class ForecastService {
 
 	private final WeatherProviderRegistry providers;
 	private final NoaaKpService noaaKpService;
+	private final ForecastSnapshotService snapshotService;
 	private final Map<String, CachedResponse> cache = new ConcurrentHashMap<>();
 
-	public ForecastService(WeatherProviderRegistry providers, NoaaKpService noaaKpService) {
+	public ForecastService(WeatherProviderRegistry providers, NoaaKpService noaaKpService,
+			ForecastSnapshotService snapshotService) {
 		this.providers = providers;
 		this.noaaKpService = noaaKpService;
+		this.snapshotService = snapshotService;
 	}
 
 	public ForecastResponse getForecast(double lat, double lon) {
@@ -70,6 +74,11 @@ public class ForecastService {
 
 		ForecastResponse response = new ForecastResponse(provider.getKey(), days);
 		cache.put(key, new CachedResponse(response, Instant.now()));
+
+		// Сохраняем снимок «сегодня» для построения корреляций «приступ ↔ погода» в статистике.
+		// Тихий best-effort — если падает, прогноз всё равно отдаём.
+		try { snapshotService.saveTodaySnapshot(lat, lon, days); } catch (Exception ignored) {}
+
 		return response;
 	}
 

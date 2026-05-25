@@ -20,7 +20,7 @@ const formatDay = (isoDate, isToday) => {
 	return `${RU_WEEKDAYS[d.getDay()]} · ${d.getDate()} ${RU_MONTHS[d.getMonth()]}`
 }
 
-const ForecastSection = ({ user }) => {
+const ForecastSection = ({ user, onOpenLocationModal }) => {
 	const [data, setData] = useState(null)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState(null)
@@ -41,9 +41,20 @@ const ForecastSection = ({ user }) => {
 	if (!hasLocation) {
 		return (
 			<section className={s.card}>
-				<p className={s.empty}>
-					Укажи свой город в профиле, чтобы видеть прогноз погодного риска.
-				</p>
+				<div className={s.noLocation}>
+					<p className={s.noLocationText}>
+						Укажи свой город, чтобы видеть прогноз погодного риска и копить статистику.
+					</p>
+					{onOpenLocationModal && (
+						<button
+							type="button"
+							className={s.noLocationBtn}
+							onClick={onOpenLocationModal}
+						>
+							Включить прогноз →
+						</button>
+					)}
+				</div>
 			</section>
 		)
 	}

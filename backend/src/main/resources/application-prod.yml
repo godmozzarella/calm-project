@@ -1,0 +1,17 @@
+# Прод-профиль. Активируется через SPRING_PROFILES_ACTIVE=prod.
+# Все секреты (Mongo URI, JWT secret, SMTP, Resend) обязательно через ENV — никаких дефолтов в файле.
+
+spring:
+  data:
+    mongodb:
+      uri: ${MONGO_URI}
+      # В проде индексы НЕ создаются автоматически — стартап тяжёлых добавлений индексов
+      # непредсказуем по времени. Индексы создаются заранее IndexInitializer'ом при первом старте
+      # на пустой БД, либо вручную через миграции.
+      auto-index-creation: false
+
+logging:
+  level:
+    com.calm: INFO
+    org.springframework.web: WARN
+    org.springframework.data.mongodb.core: WARN

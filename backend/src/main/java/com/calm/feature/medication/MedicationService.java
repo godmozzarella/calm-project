@@ -1,6 +1,9 @@
 package com.calm.feature.medication;
 
 import com.calm.common.exception.NotFoundException;
+import com.calm.feature.dictionary.DictionaryEntry;
+import com.calm.feature.dictionary.DictionaryRepository;
+import com.calm.feature.dictionary.DictionaryType;
 import com.calm.feature.medication.dto.MedicationRequest;
 import org.springframework.stereotype.Service;
 
@@ -13,9 +16,11 @@ import java.util.Set;
 public class MedicationService {
 
 	private final MedicationRepository repo;
+	private final DictionaryRepository dictionaryRepo;
 
-	public MedicationService(MedicationRepository repo) {
+	public MedicationService(MedicationRepository repo, DictionaryRepository dictionaryRepo) {
 		this.repo = repo;
+		this.dictionaryRepo = dictionaryRepo;
 	}
 
 	public List<Medication> listForUser(String userId) {
@@ -67,8 +72,26 @@ public class MedicationService {
 		m.setTime(req.time());
 		m.setAttackId(req.attackId());
 		m.setEffectiveness(req.effectiveness());
-		m.setTherapeuticClass(req.therapeuticClass());
+		m.setTherapeuticClass(resolveTherapeuticClass(req));
 		m.setPurpose(req.purpose());
 		m.setNote(req.note());
+	}
+
+	/**
+	 * Если клиент не передал therapeuticClass — пробуем найти препарат в справочнике
+	 * MEDICATION_PRESET по имени и подставить его {@code category}.
+	 */
+	private String resolveTherapeuticClass(MedicationRequest req) {
+		if (req.therapeuticClass() != null && !req.therapeuticClass().isBlank()) {
+			return req.therapeuticClass();
+		}
+		if (req.name() == null) return null;
+		String needle = req.name().toLowerCase().trim();
+		return dictionaryRepo.findByTypeOrderByOrderAscLabelAsc(DictionaryType.MEDICATION_PRESET).stream()
+				.filter(e -> needle.equals(e.getValue().toLowerCase()) || needle.equals(e.getLabel().toLowerCase()))
+				.map(DictionaryEntry::getCategory)
+				.filter(c -> c != null && !c.isBlank())
+				.findFirst()
+				.orElse(null);
 	}
 }

@@ -10,7 +10,7 @@ import { subscribe, DATE_SELECTED } from '@/shared/lib/dataEvents'
 
 import s from './MainSection.module.scss'
 
-const MainSection = ({ user }) => {
+const MainSection = ({ user, onOpenLocationModal }) => {
 	const [date, setDate] = useState(midnight())
 
 	useEffect(() => subscribe(DATE_SELECTED, e => {
@@ -36,7 +36,7 @@ const MainSection = ({ user }) => {
 				</div>
 
 				<div className={s.forecastRow}>
-					<ForecastSection user={user} />
+					<ForecastSection user={user} onOpenLocationModal={onOpenLocationModal} />
 				</div>
 
 				<div className={s.bottomRow}>

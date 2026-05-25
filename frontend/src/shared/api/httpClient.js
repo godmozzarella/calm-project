@@ -17,29 +17,37 @@ const authHeaders = () => {
 
 const jsonHeaders = () => ({ 'Content-Type': 'application/json', ...authHeaders() })
 
-// Флаг чтобы не зациклиться: только одна попытка рефреша за раз.
-let isRefreshing = false
+// Идёт ли уже refresh? Все параллельные 401 ждут эту же promise,
+// чтобы не было race condition и лишних запросов на /auth/refresh.
+let refreshPromise = null
 
-const tryRefresh = async () => {
+const tryRefresh = () => {
+  if (refreshPromise) return refreshPromise
   const rt = getRefreshToken()
-  if (!rt || isRefreshing) return false
-  isRefreshing = true
-  try {
-    const res = await fetch(BASE + '/auth/refresh', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken: rt }),
-    })
-    if (!res.ok) return false
-    const body = await res.json()
-    setToken(body.token)
-    setRefreshToken(body.refreshToken)
-    return true
-  } catch {
-    return false
-  } finally {
-    isRefreshing = false
-  }
+  if (!rt) return Promise.resolve(false)
+
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(BASE + '/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: rt }),
+      })
+      if (!res.ok) return false
+      const body = await res.json()
+      setToken(body.token)
+      setRefreshToken(body.refreshToken)
+      return true
+    } catch {
+      return false
+    } finally {
+      // Освобождаем флаг чуть позже, чтобы все ожидающие точно увидели true/false
+      // и успели взять новый токен из localStorage перед своим retry.
+      setTimeout(() => { refreshPromise = null }, 0)
+    }
+  })()
+
+  return refreshPromise
 }
 
 const clearSession = () => {

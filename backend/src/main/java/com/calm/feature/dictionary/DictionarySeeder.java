@@ -43,21 +43,46 @@ public class DictionarySeeder {
 				entry("hormones", "Гормоны"),
 				entry("alcohol",  "Алкоголь")
 		));
+
+		// Терапевтические классы: triptan, nsaid, simple, opioid, preventive.
+		// Для MOH-метрики: triptan/opioid ≥10 дней/мес — overuse, nsaid/simple ≥15 дней/мес — overuse.
+		seedType(DictionaryType.MEDICATION_PRESET, List.of(
+				entry("sumatriptan",   "Суматриптан",    "triptan"),
+				entry("eletriptan",    "Элетриптан",     "triptan"),
+				entry("rizatriptan",   "Ризатриптан",    "triptan"),
+				entry("zolmitriptan",  "Золмитриптан",   "triptan"),
+				entry("ibuprofen",     "Ибупрофен",      "nsaid"),
+				entry("naproxen",      "Напроксен",      "nsaid"),
+				entry("ketorolac",     "Кеторол",        "nsaid"),
+				entry("nimesulide",    "Нимесулид",      "nsaid"),
+				entry("paracetamol",   "Парацетамол",    "simple"),
+				entry("analgin",       "Анальгин",       "simple"),
+				entry("citramon",      "Цитрамон",       "simple"),
+				entry("tramadol",      "Трамадол",       "opioid"),
+				entry("codeine",       "Кодеин",         "opioid"),
+				entry("propranolol",   "Пропранолол",    "preventive"),
+				entry("topiramate",    "Топирамат",      "preventive"),
+				entry("amitriptyline", "Амитриптилин",   "preventive")
+		));
 	}
 
 	private void seedType(DictionaryType type, List<SeedEntry> entries) {
 		if (repo.countByType(type) > 0) return;
 		int order = 10;
 		for (SeedEntry e : entries) {
-			repo.save(new DictionaryEntry(type, e.value, e.label, order));
+			repo.save(new DictionaryEntry(type, e.value, e.label, order, e.category));
 			order += 10;
 		}
 		log.info("Справочник {}: засеяно {} записей", type, entries.size());
 	}
 
 	private static SeedEntry entry(String value, String label) {
-		return new SeedEntry(value, label);
+		return new SeedEntry(value, label, null);
 	}
 
-	private record SeedEntry(String value, String label) {}
+	private static SeedEntry entry(String value, String label, String category) {
+		return new SeedEntry(value, label, category);
+	}
+
+	private record SeedEntry(String value, String label, String category) {}
 }

@@ -11,4 +11,8 @@ export const adminApi = {
   updateEntry: (id, { label, order }) =>
     http.patch(`/admin/dictionaries/${id}`, { label, order }),
   deleteEntry: id => http.delete(`/admin/dictionaries/${id}`),
+
+  // ── Системные настройки ──
+  getSettings:    () => http.get('/admin/settings'),
+  updateSettings: patch => http.patch('/admin/settings', patch),
 }

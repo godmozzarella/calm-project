@@ -7,13 +7,14 @@ import s from './Tab.module.scss'
 
 const notifyChanged = () => emit('calm:dictionaries-changed')
 
-const DictionaryTab = ({ type, title }) => {
+const DictionaryTab = ({ type, title, categories = null }) => {
 	const [entries, setEntries] = useState([])
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState(null)
 
 	const [value, setValue] = useState('')
 	const [label, setLabel] = useState('')
+	const [category, setCategory] = useState(categories?.[0]?.value ?? '')
 
 	const load = () => {
 		setLoading(true)
@@ -34,6 +35,7 @@ const DictionaryTab = ({ type, title }) => {
 				type,
 				value: value.trim(),
 				label: label.trim(),
+				category: categories ? (category || null) : undefined,
 			})
 			setEntries(prev => [...prev, created].sort((a, b) => a.order - b.order))
 			setValue('')
@@ -55,6 +57,17 @@ const DictionaryTab = ({ type, title }) => {
 		}
 	}
 
+	const handleChangeCategory = async (entry, newCat) => {
+		if (newCat === (entry.category ?? '')) return
+		try {
+			const updated = await adminApi.updateEntry(entry.id, { category: newCat })
+			setEntries(prev => prev.map(e => e.id === updated.id ? updated : e))
+			notifyChanged()
+		} catch (e) {
+			alert(e.message)
+		}
+	}
+
 	const handleDelete = async entry => {
 		if (!window.confirm(`Удалить «${entry.label}»?`)) return
 		try {
@@ -65,6 +78,8 @@ const DictionaryTab = ({ type, title }) => {
 			alert(e.message)
 		}
 	}
+
+	const catLabel = v => categories?.find(c => c.value === v)?.label ?? v ?? '—'
 
 	return (
 		<div className={s.wrap}>
@@ -87,6 +102,17 @@ const DictionaryTab = ({ type, title }) => {
 					placeholder="Название по-русски"
 					className={s.input}
 				/>
+				{categories && (
+					<select
+						className={s.input}
+						value={category}
+						onChange={e => setCategory(e.target.value)}
+					>
+						{categories.map(c => (
+							<option key={c.value} value={c.value}>{c.label}</option>
+						))}
+					</select>
+				)}
 				<button type="submit" className={s.btn}>+ Добавить</button>
 			</form>
 
@@ -99,6 +125,7 @@ const DictionaryTab = ({ type, title }) => {
 						<tr>
 							<th>value</th>
 							<th>Название</th>
+							{categories && <th>Класс</th>}
 							<th>Порядок</th>
 							<th></th>
 						</tr>
@@ -110,6 +137,19 @@ const DictionaryTab = ({ type, title }) => {
 								<td>
 									<EditableCell value={e.label} onSave={v => handleRename(e, v)} />
 								</td>
+								{categories && (
+									<td>
+										<select
+											className={s.inputInline}
+											value={e.category ?? ''}
+											onChange={ev => handleChangeCategory(e, ev.target.value)}
+										>
+											{categories.map(c => (
+												<option key={c.value} value={c.value}>{c.label}</option>
+											))}
+										</select>
+									</td>
+								)}
 								<td className={s.muted}>{e.order}</td>
 								<td>
 									<button
@@ -123,7 +163,7 @@ const DictionaryTab = ({ type, title }) => {
 							</tr>
 						))}
 						{entries.length === 0 && (
-							<tr><td colSpan={4} className={s.muted}>Пусто</td></tr>
+							<tr><td colSpan={categories ? 5 : 4} className={s.muted}>Пусто</td></tr>
 						)}
 					</tbody>
 				</table>

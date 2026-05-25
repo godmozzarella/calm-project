@@ -193,6 +193,71 @@
 	flex-shrink: 0;
 }
 
+/* ── Action panel (choose: go to date / set mark) ── */
+.actionPanel {
+	margin: 1rem 0.75rem 0;
+	padding: 0.875rem 1rem;
+	background: rgba(255, 255, 255, 0.04);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 0.875rem;
+	animation: slideDown 0.2s ease;
+}
+
+.actionPanelDate {
+	display: block;
+	@include fluid-text(12, 10);
+	font-weight: $fw-semibold;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: $fc-secondary;
+	margin-bottom: 0.625rem;
+}
+
+.actionList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+
+.actionBtn {
+	display: flex;
+	align-items: center;
+	gap: 0.625rem;
+	width: 100%;
+	padding: 0.5rem 0.625rem;
+	border-radius: 0.625rem;
+	background: none;
+	border: 1px solid transparent;
+	color: $fc-main;
+	cursor: pointer;
+	text-align: left;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+
+	&:hover {
+		background-color: rgba(255, 255, 255, 0.06);
+		border-color: rgba(255, 255, 255, 0.08);
+	}
+}
+
+.actionIcon {
+	@include fluid-text(14, 12);
+	color: $fc-secondary;
+	width: 1.25rem;
+	text-align: center;
+	flex-shrink: 0;
+}
+
+.actionLabel {
+	flex: 1;
+	@include fluid-text(13, 11);
+}
+
+.actionDots {
+	display: flex;
+	gap: 3px;
+	align-items: center;
+}
+
 /* ── Mark panel ── */
 .markPanel {
 	margin: 1rem 0.75rem 0;
@@ -203,14 +268,31 @@
 	animation: slideDown 0.2s ease;
 }
 
+.markPanelHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.625rem;
+}
+
 .markPanelTitle {
-	display: block;
 	@include fluid-text(12, 10);
 	font-weight: $fw-semibold;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
 	color: $fc-secondary;
-	margin-bottom: 0.625rem;
+}
+
+.markPanelBack {
+	background: none;
+	border: none;
+	color: $fc-secondary;
+	cursor: pointer;
+	@include fluid-text(11, 10);
+	padding: 0;
+	transition: color 0.18s ease;
+
+	&:hover { color: $fc-main; }
 }
 
 .markList {

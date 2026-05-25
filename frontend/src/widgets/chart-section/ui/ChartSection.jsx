@@ -13,6 +13,7 @@ import {
 import BarChart from './BarChart'
 import KpiTiles from './KpiTiles'
 import PatternsBlock from './PatternsBlock'
+import WeatherCorrelationBlock from './WeatherCorrelationBlock'
 import { PERIOD_OPTIONS, METRIC_OPTIONS } from '../lib/buckets'
 
 import s from './ChartSection.module.scss'
@@ -26,6 +27,7 @@ const ChartSection = ({ showPatterns = true, statsLink = false }) => {
 	const [buckets, setBuckets]   = useState([])
 	const [kpis, setKpis]         = useState(EMPTY_KPIS)
 	const [patterns, setPatterns] = useState(EMPTY_PATTERNS)
+	const [weather, setWeather]   = useState(null)
 
 	const load = useCallback(() => {
 		statsApi.getSummary(period).then(data => {
@@ -34,6 +36,7 @@ const ChartSection = ({ showPatterns = true, statsLink = false }) => {
 			// server returns longestStreak, KpiTiles expects streak
 			setKpis({ ...data.kpis, streak: data.kpis.longestStreak })
 			setPatterns(data.patterns ?? EMPTY_PATTERNS)
+			setWeather(data.weather ?? null)
 		}).catch(() => {})
 	}, [period])
 
@@ -102,7 +105,10 @@ const ChartSection = ({ showPatterns = true, statsLink = false }) => {
 						Когда вы добавите первый приступ, он появится на графике
 					</p>
 				) : showPatterns ? (
-					<PatternsBlock patterns={patterns} />
+					<>
+						<PatternsBlock patterns={patterns} />
+						<WeatherCorrelationBlock weather={weather} />
+					</>
 				) : null}
 			</div>
 		</div>

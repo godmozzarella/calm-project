@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 
 import { ChartSection } from '@/widgets/chart-section'
 import { ArrowBackIcon, PrintIcon, FileDownloadIcon } from '@/shared/ui/icons'
 import { getCurrentUser } from '@/entities/user'
-import { attackApi, medicationApi } from '@/shared/api'
+import { attackApi, medicationApi, statsApi } from '@/shared/api'
 import {
 	subscribe,
 	ATTACKS_CHANGED,
@@ -35,7 +35,6 @@ const StatsPage = () => {
 	const [attacks, setAttacks]       = useState([])
 	const [medications, setMedications] = useState([])
 	const [pdfLoading, setPdfLoading] = useState(false)
-	const dashboardRef                = useRef(null)
 	const { symptoms, triggers }      = useDictionaries()
 
 	const loadAttacks = useCallback(() => attackApi.getAll().then(setAttacks).catch(() => {}), [])
@@ -50,18 +49,34 @@ const StatsPage = () => {
 
 	const hasData = attacks.length > 0 || medications.length > 0
 
-	const handlePrint = () => printDashboard()
 	const handleExportAttacks = () => exportAttacksCsv(attacks, { symptoms, triggers })
 	const handleExportMeds    = () => exportMedicationsCsv(medications)
-	const handleDownloadPdf   = async () => {
-		if (!dashboardRef.current || pdfLoading) return
+
+	const buildReportArgs = async () => {
+		const summary = await statsApi.getSummary('month').catch(() => ({}))
+		return [
+			{ attacks, medications, kpis: summary.kpis ?? null, patterns: summary.patterns ?? null, weather: summary.weather ?? null },
+			{ name: user?.name, email: user?.email, date: todayLong(), symptoms, triggers },
+		]
+	}
+
+	const handlePrint = async () => {
+		if (pdfLoading) return
 		setPdfLoading(true)
 		try {
-			await downloadPdf(dashboardRef.current, {
-				name:  user?.name,
-				email: user?.email,
-				date:  todayLong(),
-			})
+			const args = await buildReportArgs()
+			printDashboard(...args)
+		} finally {
+			setPdfLoading(false)
+		}
+	}
+
+	const handleDownloadPdf = async () => {
+		if (pdfLoading) return
+		setPdfLoading(true)
+		try {
+			const args = await buildReportArgs()
+			await downloadPdf(...args)
 		} finally {
 			setPdfLoading(false)
 		}
@@ -69,6 +84,13 @@ const StatsPage = () => {
 
 	return (
 		<div className={s.page}>
+			{pdfLoading && (
+				<div className={s.pdfOverlay}>
+					<div className={s.pdfOverlaySpinner} />
+					<span className={s.pdfOverlayText}>Генерируем PDF…</span>
+				</div>
+			)}
+
 			<div className={s.topBar}>
 				<Link to="/profile" className={s.backBtn} aria-label="К дневнику">
 					<ArrowBackIcon fontSize="small" />
@@ -122,16 +144,7 @@ const StatsPage = () => {
 				</div>
 			</div>
 
-			<div className={s.printOnly}>
-				<h1 className={s.printTitle}>Calm — отчёт о головной боли</h1>
-				<p className={s.printMeta}>
-					{user ? `Пациент: ${user.name}` : ''}
-					{user?.email ? ` · ${user.email}` : ''}
-					{` · сформировано ${todayLong()}`}
-				</p>
-			</div>
-
-			<div className={s.dashboard} ref={dashboardRef}>
+			<div className={s.dashboard}>
 				<ChartSection />
 			</div>
 
