@@ -20,6 +20,13 @@ backend/target/
 backend/.mvn/wrapper/maven-wrapper.jar
 backend/HELP.md
 
+# Secrets / env
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+
 # Logs
 logs/
 *.log

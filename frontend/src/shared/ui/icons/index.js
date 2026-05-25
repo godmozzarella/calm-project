@@ -39,6 +39,12 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import PrintIcon from '@mui/icons-material/Print'
 import FileDownloadIcon from '@mui/icons-material/FileDownload'
+import LocationOnIcon from '@mui/icons-material/LocationOnOutlined'
+import SearchIcon from '@mui/icons-material/Search'
+import ThermostatIcon from '@mui/icons-material/Thermostat'
+import SpeedIcon from '@mui/icons-material/Speed'
+import EmailIcon from '@mui/icons-material/EmailOutlined'
+import EditLocationIcon from '@mui/icons-material/EditLocationOutlined'
 
 export {
 	InstallDesktopIcon,
@@ -82,4 +88,10 @@ export {
 	OpenInNewIcon,
 	PrintIcon,
 	FileDownloadIcon,
+	LocationOnIcon,
+	SearchIcon,
+	ThermostatIcon,
+	SpeedIcon,
+	EmailIcon,
+	EditLocationIcon,
 }

@@ -1,60 +1,52 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 
 import { OpenInNewIcon } from '@/shared/ui/icons'
-import { attackApi, medicationApi } from '@/shared/api'
+import { statsApi } from '@/shared/api'
 import {
 	subscribe,
 	emit,
 	ATTACKS_CHANGED,
 	MEDICATIONS_CHANGED,
-	DATE_SELECTED,
 } from '@/shared/lib/dataEvents'
 
 import BarChart from './BarChart'
 import KpiTiles from './KpiTiles'
 import PatternsBlock from './PatternsBlock'
-import { buildBuckets, PERIOD_OPTIONS, METRIC_OPTIONS } from '../lib/buckets'
-import { computeKpis, computePatterns } from '../lib/aggregates'
+import { PERIOD_OPTIONS, METRIC_OPTIONS } from '../lib/buckets'
 
 import s from './ChartSection.module.scss'
+
+const EMPTY_KPIS = { total: 0, avgIntensity: 0, longestStreak: 0, overuseDays: 0, overuseRisk: false }
+const EMPTY_PATTERNS = { topTriggers: [], topSymptoms: [], zones: { freq: {}, colorMap: {}, max: 0 }, meds: [] }
 
 const ChartSection = ({ showPatterns = true, statsLink = false }) => {
 	const [period, setPeriod] = useState('month')
 	const [metric, setMetric] = useState('intensity')
-	const [attacks, setAttacks] = useState([])
-	const [medications, setMedications] = useState([])
+	const [buckets, setBuckets]   = useState([])
+	const [kpis, setKpis]         = useState(EMPTY_KPIS)
+	const [patterns, setPatterns] = useState(EMPTY_PATTERNS)
 
-	const reloadAttacks = useCallback(() => attackApi.getAll().then(setAttacks), [])
-	const reloadMeds    = useCallback(() => medicationApi.getAll().then(setMedications), [])
+	const load = useCallback(() => {
+		statsApi.getSummary(period).then(data => {
+			setBuckets(data.buckets ?? [])
+			setKpis(data.kpis ?? EMPTY_KPIS)
+			// server returns longestStreak, KpiTiles expects streak
+			setKpis({ ...data.kpis, streak: data.kpis.longestStreak })
+			setPatterns(data.patterns ?? EMPTY_PATTERNS)
+		}).catch(() => {})
+	}, [period])
 
-	useEffect(() => { reloadAttacks() }, [reloadAttacks])
-	useEffect(() => { reloadMeds() },    [reloadMeds])
-
-	useEffect(() => subscribe(ATTACKS_CHANGED, reloadAttacks), [reloadAttacks])
-	useEffect(() => subscribe(MEDICATIONS_CHANGED, reloadMeds), [reloadMeds])
-
-	const buckets = useMemo(
-		() => buildBuckets(period, attacks),
-		[period, attacks]
-	)
-
-	const kpis = useMemo(
-		() => computeKpis(attacks, buckets),
-		// medications в deps — нужен пересчёт overuseDays при добавлении/удалении препарата
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[attacks, buckets, medications]
-	)
-
-	const patterns = useMemo(
-		() => (showPatterns ? computePatterns(attacks, medications, buckets) : null),
-		[attacks, medications, buckets, showPatterns]
-	)
+	useEffect(() => { load() }, [load])
+	useEffect(() => subscribe(ATTACKS_CHANGED,     load), [load])
+	useEffect(() => subscribe(MEDICATIONS_CHANGED, load), [load])
 
 	const handleBarClick = dateKey => {
 		if (!dateKey) return
-		emit(DATE_SELECTED, dateKey)
+		emit('calm:date-selected', dateKey)
 	}
+
+	const hasData = buckets.some(b => b.count > 0)
 
 	return (
 		<div className={s.card}>
@@ -105,11 +97,11 @@ const ChartSection = ({ showPatterns = true, statsLink = false }) => {
 					onBarClick={handleBarClick}
 				/>
 
-				{attacks.length === 0 ? (
+				{!hasData ? (
 					<p className={s.hint}>
 						Когда вы добавите первый приступ, он появится на графике
 					</p>
-				) : showPatterns && patterns ? (
+				) : showPatterns ? (
 					<PatternsBlock patterns={patterns} />
 				) : null}
 			</div>

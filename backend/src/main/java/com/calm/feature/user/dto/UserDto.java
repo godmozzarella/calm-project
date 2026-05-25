@@ -9,9 +9,23 @@ public record UserDto(
 		String email,
 		String name,
 		String avatarUrl,
+		Double latitude,
+		Double longitude,
+		String city,
+		boolean notificationsEnabled,
 		Instant createdAt
 ) {
 	public static UserDto from(User u) {
-		return new UserDto(u.getId(), u.getEmail(), u.getName(), u.getAvatarUrl(), u.getCreatedAt());
+		return new UserDto(
+				u.getId(),
+				u.getEmail(),
+				u.getName(),
+				u.getAvatarUrl(),
+				u.getLatitude(),
+				u.getLongitude(),
+				u.getCity(),
+				u.isNotificationsEnabled(),
+				u.getCreatedAt()
+		);
 	}
 }

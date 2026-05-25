@@ -22,6 +22,7 @@ const AuthForm = () => {
 		confirmPasswordError,
 		loginFormError,
 		registerFormError,
+		retryAfter,
 		setLoginPassword,
 		setRegisterPassword,
 		setConfirmPassword,
@@ -63,6 +64,7 @@ const AuthForm = () => {
 						setPassword={setLoginPassword}
 						passwordError={loginPasswordError}
 						formError={loginFormError}
+						disabled={retryAfter > 0}
 					/>
 				) : (
 					<RegisterForm

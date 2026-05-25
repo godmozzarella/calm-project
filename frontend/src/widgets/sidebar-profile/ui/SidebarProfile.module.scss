@@ -257,6 +257,53 @@
 	white-space: nowrap;
 }
 
+/* ── Подсказка справа в navItem (например город) ── */
+.navHint {
+	@include fluid-text(11, 10);
+	color: rgba(140, 150, 170, 0.7);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 7rem;
+	margin-right: 0.25rem;
+}
+
+/* ── Toggle on/off бейдж ── */
+.toggleOn,
+.toggleOff {
+	@include fluid-text(10, 9);
+	font-weight: $fw-semibold;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	border-radius: 0.875rem;
+	padding: 0.15rem 0.5rem;
+	white-space: nowrap;
+	border: 1px solid;
+}
+
+.toggleOn {
+	color: #63ca8a;
+	background: rgba(99, 202, 138, 0.12);
+	border-color: rgba(99, 202, 138, 0.3);
+}
+
+.toggleOff {
+	color: rgba(140, 150, 170, 0.85);
+	background: rgba(255, 255, 255, 0.04);
+	border-color: rgba(255, 255, 255, 0.08);
+}
+
+.testMessage {
+	@include fluid-text(11, 10);
+	color: $fc-secondary;
+	padding: 0.5rem 0.875rem;
+	background: rgba(92, 173, 228, 0.06);
+	border-left: 2px solid rgba(92, 173, 228, 0.3);
+	border-radius: 0.25rem;
+	margin: 0.25rem 0.875rem 0;
+	line-height: 1.4;
+}
+
 /* ── Logout item ── */
 .logoutItem {
 	color: rgba(239, 100, 100, 0.85);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { intensityColor } from '@/entities/attack'
 import { pickLabelIndices } from '../lib/buckets'
 import s from './BarChart.module.scss'
@@ -29,8 +29,9 @@ const BarChart = ({ buckets, metric, onBarClick }) => {
 	const [w, setW] = useState(MIN_W)
 	const [hover, setHover] = useState(null)
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		if (!wrapRef.current) return
+		setW(Math.max(MIN_W, Math.round(wrapRef.current.getBoundingClientRect().width)))
 		const ro = new ResizeObserver(([entry]) => {
 			setW(Math.max(MIN_W, Math.round(entry.contentRect.width)))
 		})

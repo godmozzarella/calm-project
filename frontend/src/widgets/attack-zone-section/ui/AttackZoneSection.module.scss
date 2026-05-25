@@ -46,6 +46,25 @@
 	padding: 1rem 1.25rem 1.25rem;
 }
 
+.cardBodyDisabled {
+	position: relative;
+}
+
+.emptyHint {
+	@include fluid-text(12, 11);
+	color: rgba(140, 150, 170, 0.75);
+	text-align: center;
+	margin: 0;
+	padding: 0.25rem 0.5rem 0;
+	max-width: 22rem;
+}
+
+.headsRowMuted {
+	opacity: 0.4;
+	filter: grayscale(0.4);
+	pointer-events: none;
+}
+
 /* ── Attack selector ── */
 .attackSelector {
 	display: flex;

@@ -5,12 +5,13 @@ import { AttackSection } from '@/widgets/attack-section'
 import { MedicationSection } from '@/widgets/medication-section'
 import { AttackZoneSection } from '@/widgets/attack-zone-section'
 import { ChartSection } from '@/widgets/chart-section'
+import { ForecastSection } from '@/widgets/forecast-section'
 import { DayBar, midnight, dateKey } from '@/widgets/day-bar'
 import { subscribe, DATE_SELECTED } from '@/shared/lib/dataEvents'
 
 import s from './MainSection.module.scss'
 
-const MainSection = () => {
+const MainSection = ({ user }) => {
 	const [date, setDate] = useState(midnight())
 
 	useEffect(() => subscribe(DATE_SELECTED, e => {
@@ -28,13 +29,17 @@ const MainSection = () => {
 				<h1 className={s.logo}>Calm</h1>
 			</Link>
 
-			<DayBar date={date} setDate={setDate} />
+			<DayBar date={date} setDate={setDate} city={user?.city} />
 
 			<div className={s.grid}>
 				<div className={s.topRow}>
 					<AttackSection date={dateKey(date)} />
 					<MedicationSection date={dateKey(date)} />
 					<AttackZoneSection date={dateKey(date)} />
+				</div>
+
+				<div className={s.forecastRow}>
+					<ForecastSection user={user} />
 				</div>
 
 				<div className={s.bottomRow}>

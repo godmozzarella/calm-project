@@ -15,6 +15,7 @@ const LoginForm = props => {
 		setPassword,
 		passwordError,
 		formError,
+		disabled,
 	} = props
 
 	const [showPassword, setShowPassword] = useState(false)
@@ -56,7 +57,7 @@ const LoginForm = props => {
 				}
 			/>
 
-			<Button type="submit" colored className={s.submitBtn}>
+			<Button type="submit" colored className={s.submitBtn} disabled={disabled}>
 				Войти
 			</Button>
 		</form>

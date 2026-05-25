@@ -21,10 +21,12 @@ import {
 	XIcon,
 	YouTubeIcon,
 	InstagramIcon,
+	EditLocationIcon,
 } from '@/shared/ui/icons'
 import { useEditProfile } from '@/features/edit-profile'
-import { clearCurrentUser } from '@/entities/user'
-import { clearToken } from '@/shared/api'
+import { LocationOnboarding } from '@/features/onboarding-location'
+import { clearCurrentUser, setCurrentUser } from '@/entities/user'
+import { authApi, userApi, forecastApi } from '@/shared/api'
 
 import s from './SidebarProfile.module.scss'
 
@@ -33,6 +35,39 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 	const [view, setView] = useState('main')
 	const [showPassword, setShowPassword] = useState(false)
 	const [showNewPassword, setShowNewPassword] = useState(false)
+	const [locationModalOpen, setLocationModalOpen] = useState(false)
+	const [togglingNotif, setTogglingNotif] = useState(false)
+	const [sendingTest, setSendingTest] = useState(false)
+	const [testMessage, setTestMessage] = useState(null)
+
+	const toggleNotifications = async () => {
+		if (togglingNotif) return
+		setTogglingNotif(true)
+		try {
+			const updated = await userApi.updateMe({ notificationsEnabled: !user.notificationsEnabled })
+			setCurrentUser(updated)
+			setUser(updated)
+		} catch {
+			// ошибка — оставляем как было
+		} finally {
+			setTogglingNotif(false)
+		}
+	}
+
+	const sendTestEmail = async () => {
+		if (sendingTest) return
+		setSendingTest(true)
+		setTestMessage(null)
+		try {
+			const res = await forecastApi.sendTestNotification()
+			setTestMessage(res?.message || 'Письмо отправлено')
+		} catch (e) {
+			setTestMessage(e.message || 'Ошибка отправки')
+		} finally {
+			setSendingTest(false)
+			setTimeout(() => setTestMessage(null), 8000)
+		}
+	}
 
 	const {
 		editData,
@@ -68,8 +103,8 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 		setView('main')
 	}
 
-	const handleLogout = () => {
-		clearToken()
+	const handleLogout = async () => {
+		await authApi.logout()
 		clearCurrentUser()
 		navigate('/')
 	}
@@ -89,8 +124,8 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 
 						<div className={s.userSection}>
 							<label htmlFor="quickAvatarUpload" className={s.avatarWrapper}>
-								{user?.avatar ? (
-									<img className={s.avatar} src={user.avatar} alt="Аватар" />
+								{user?.avatarUrl ? (
+									<img className={s.avatar} src={user.avatarUrl} alt="Аватар" />
 								) : (
 									<div className={s.avatarPlaceholder}>
 										<span className={s.initials}>{initials}</span>
@@ -133,11 +168,45 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 
 						<div className={s.sectionLabel}>Настройки</div>
 						<nav className={s.navSection}>
-							<button className={s.navItem} disabled>
-								<span className={s.navIcon}><NotificationsNoneIcon fontSize="small" /></span>
-								<span className={s.navLabel}>Уведомления</span>
-								<span className={s.soon}>Скоро</span>
+							<button
+								className={s.navItem}
+								onClick={() => setLocationModalOpen(true)}
+								title={user?.city || 'Локация не задана'}
+							>
+								<span className={s.navIcon}><EditLocationIcon fontSize="small" /></span>
+								<span className={s.navLabel}>Город для прогноза</span>
+								<span className={s.navHint}>{user?.city || 'не задан'}</span>
+								<span className={s.navChevron}><ChevronRightIcon fontSize="small" /></span>
 							</button>
+							<button
+								className={s.navItem}
+								onClick={toggleNotifications}
+								disabled={togglingNotif}
+							>
+								<span className={s.navIcon}><NotificationsNoneIcon fontSize="small" /></span>
+								<span className={s.navLabel}>Email-уведомления</span>
+								<span className={user?.notificationsEnabled ? s.toggleOn : s.toggleOff}>
+									{user?.notificationsEnabled ? 'Вкл' : 'Выкл'}
+								</span>
+							</button>
+							<button
+								className={s.navItem}
+								onClick={sendTestEmail}
+								disabled={sendingTest || !user?.notificationsEnabled || !user?.latitude}
+								title={!user?.latitude
+									? 'Сначала укажи город'
+									: !user?.notificationsEnabled
+										? 'Сначала включи уведомления'
+										: 'Отправить тестовое письмо себе'}
+							>
+								<span className={s.navIcon}><NotificationsNoneIcon fontSize="small" /></span>
+								<span className={s.navLabel}>
+									{sendingTest ? 'Отправляем...' : 'Отправить тест-письмо'}
+								</span>
+							</button>
+							{testMessage && (
+								<div className={s.testMessage}>{testMessage}</div>
+							)}
 							<button className={s.navItem} disabled>
 								<span className={s.navIcon}><DarkModeOutlinedIcon fontSize="small" /></span>
 								<span className={s.navLabel}>Тема</span>
@@ -291,6 +360,12 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 			</aside>
 
 			{openMenu && <div className={s.overlay} onClick={handleClose} />}
+
+			<LocationOnboarding
+				open={locationModalOpen}
+				onClose={() => setLocationModalOpen(false)}
+				setUser={setUser}
+			/>
 		</>
 	)
 }

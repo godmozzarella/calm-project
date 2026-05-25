@@ -1,4 +1,4 @@
-import { ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/icons'
+import { ChevronLeftIcon, ChevronRightIcon, LocationOnIcon } from '@/shared/ui/icons'
 
 import s from './DayBar.module.scss'
 
@@ -55,7 +55,7 @@ const isSameDay = (a, b) =>
 	a.getMonth() === b.getMonth() &&
 	a.getFullYear() === b.getFullYear()
 
-const DayBar = ({ date, setDate }) => {
+const DayBar = ({ date, setDate, city }) => {
 	const today = midnight()
 	const isToday = date.getTime() === today.getTime()
 	const label = relativeLabel(date)
@@ -85,6 +85,12 @@ const DayBar = ({ date, setDate }) => {
 				{label && (
 					<span className={`${s.label} ${isToday ? s.labelToday : s.labelPast}`}>
 						{label}
+					</span>
+				)}
+				{city && (
+					<span className={s.city} title={city}>
+						<LocationOnIcon style={{ fontSize: '0.95rem' }} />
+						{city}
 					</span>
 				)}
 				{!isToday && (

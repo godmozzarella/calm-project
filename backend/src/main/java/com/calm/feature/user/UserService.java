@@ -57,6 +57,17 @@ public class UserService {
 			user.setPasswordHash(passwordEncoder.encode(req.newPassword()));
 		}
 
+		// Локация. Если переданы все три поля — обновляем; если переданы null'ы при наличии
+		// флага сброса, пользователь снимает геолокацию (city == "" будем трактовать как очистку).
+		if (req.latitude() != null && req.longitude() != null) {
+			user.setLatitude(req.latitude());
+			user.setLongitude(req.longitude());
+			if (req.city() != null) user.setCity(req.city());
+		}
+		if (req.notificationsEnabled() != null) {
+			user.setNotificationsEnabled(req.notificationsEnabled());
+		}
+
 		return repo.save(user);
 	}
 }

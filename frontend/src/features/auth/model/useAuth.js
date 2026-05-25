@@ -25,6 +25,24 @@ export const useAuth = () => {
   const [registerFormError,     setRegisterFormError]     = useState('')
 
   const [loading, setLoading] = useState(false)
+  const [retryAfter, setRetryAfter] = useState(0)
+
+  const startCountdown = (seconds, setError) => {
+    setRetryAfter(seconds)
+    setError(`Слишком много попыток. Подождите ${seconds} сек.`)
+    const timer = setInterval(() => {
+      setRetryAfter(prev => {
+        const next = prev - 1
+        if (next <= 0) {
+          clearInterval(timer)
+          setError('')
+          return 0
+        }
+        setError(`Слишком много попыток. Подождите ${next} сек.`)
+        return next
+      })
+    }, 1000)
+  }
 
   useEffect(() => {
     const t = setTimeout(() => setEmailError(validateEmail(registerEmail)), DEBOUNCE_MS)
@@ -69,7 +87,11 @@ export const useAuth = () => {
       setLoginPasswordState('')
       navigate('/profile')
     } catch (err) {
-      setLoginFormError(err.message ?? 'Неверный email или пароль')
+      if (err.retryAfter) {
+        startCountdown(err.retryAfter, setLoginFormError)
+      } else {
+        setLoginFormError(err.message ?? 'Неверный email или пароль')
+      }
     } finally {
       setLoading(false)
     }
@@ -97,7 +119,11 @@ export const useAuth = () => {
       setUserNameState('')
       navigate('/profile')
     } catch (err) {
-      setRegisterFormError(err.message ?? 'Ошибка регистрации')
+      if (err.retryAfter) {
+        startCountdown(err.retryAfter, setRegisterFormError)
+      } else {
+        setRegisterFormError(err.message ?? 'Ошибка регистрации')
+      }
     } finally {
       setLoading(false)
     }
@@ -117,6 +143,7 @@ export const useAuth = () => {
     loginFormError,
     registerFormError,
     loading,
+    retryAfter,
     setLoginPassword:    e => { setLoginPasswordState(e.target.value);    setLoginFormError('') },
     setRegisterPassword: e => { setRegisterPassword(e.target.value);      setRegisterFormError('') },
     setConfirmPassword:  e => { setConfirmPassword(e.target.value); setConfirmTouched(true); setRegisterFormError('') },

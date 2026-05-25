@@ -1,13 +1,13 @@
 import { useState } from 'react'
-import { userApi } from '@/shared/api'
+import { http, userApi } from '@/shared/api'
 import { updateCurrentUser } from '@/entities/user'
 
 const makeEditData = user => ({
-  name:        user?.name     || '',
-  email:       user?.email    || '',
+  name:        user?.name      || '',
+  email:       user?.email     || '',
   password:    '',
   newPassword: '',
-  avatar:      user?.avatar   || null,
+  avatarUrl:   user?.avatarUrl || null,
 })
 
 export const useEditProfile = ({ user, setUser }) => {
@@ -19,7 +19,7 @@ export const useEditProfile = ({ user, setUser }) => {
 
   const openForm = () => {
     setEditData(makeEditData(user))
-    setTempAvatar(user?.avatar || null)
+    setTempAvatar(user?.avatarUrl || null)
     setPasswordError('')
     setOpen(true)
   }
@@ -32,21 +32,41 @@ export const useEditProfile = ({ user, setUser }) => {
     setEditData(prev => ({ ...prev, [id]: value }))
   }
 
-  const handleAvatarUpload = e => {
+  const handleAvatarUpload = async e => {
     const file = e.target.files[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => {
-      const base64 = ev.target.result
-      setTempAvatar(base64)
-      setEditData(prev => ({ ...prev, avatar: base64 }))
+
+    // Показываем превью сразу (local blob URL)
+    const preview = URL.createObjectURL(file)
+    setTempAvatar(preview)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const { avatarUrl } = await http.postForm('/users/me/avatar', formData)
+      setTempAvatar(avatarUrl)
+      setEditData(prev => ({ ...prev, avatarUrl }))
+      // Обновляем глобальное состояние сразу
+      const merged = updateCurrentUser({ avatarUrl })
+      setUser(merged)
+    } catch (err) {
+      setTempAvatar(user?.avatarUrl || null)
+      setPasswordError(err.message ?? 'Ошибка загрузки аватара')
+    } finally {
+      URL.revokeObjectURL(preview)
     }
-    reader.readAsDataURL(file)
   }
 
-  const handleAvatarDelete = () => {
-    setTempAvatar(null)
-    setEditData(prev => ({ ...prev, avatar: null }))
+  const handleAvatarDelete = async () => {
+    try {
+      await http.delete('/users/me/avatar')
+      setTempAvatar(null)
+      setEditData(prev => ({ ...prev, avatarUrl: null }))
+      const merged = updateCurrentUser({ avatarUrl: null })
+      setUser(merged)
+    } catch (err) {
+      setPasswordError(err.message ?? 'Ошибка удаления аватара')
+    }
   }
 
   const handleSaveChanges = async onSuccess => {
@@ -63,8 +83,7 @@ export const useEditProfile = ({ user, setUser }) => {
     setSaving(true)
     try {
       const updated = await userApi.updateMe(patch)
-      // avatar хранится локально (загрузка на сервер — будущая фича)
-      const merged = { ...updated, avatar: editData.avatar }
+      const merged = { ...updated, avatarUrl: editData.avatarUrl }
       updateCurrentUser(merged)
       setUser(merged)
       setOpen(false)

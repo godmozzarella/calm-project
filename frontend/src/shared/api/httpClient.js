@@ -1,10 +1,14 @@
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api'
 
-const TOKEN_KEY = 'calm_token'
+const TOKEN_KEY         = 'calm_token'
+const REFRESH_TOKEN_KEY = 'calm_refresh_token'
 
-export const getToken   = ()    => localStorage.getItem(TOKEN_KEY)
-export const setToken   = token => localStorage.setItem(TOKEN_KEY, token)
-export const clearToken = ()    => localStorage.removeItem(TOKEN_KEY)
+export const getToken          = ()    => localStorage.getItem(TOKEN_KEY)
+export const setToken          = token => localStorage.setItem(TOKEN_KEY, token)
+export const clearToken        = ()    => localStorage.removeItem(TOKEN_KEY)
+export const getRefreshToken   = ()    => localStorage.getItem(REFRESH_TOKEN_KEY)
+export const setRefreshToken   = t     => localStorage.setItem(REFRESH_TOKEN_KEY, t)
+export const clearRefreshToken = ()    => localStorage.removeItem(REFRESH_TOKEN_KEY)
 
 const authHeaders = () => {
   const t = getToken()
@@ -13,27 +17,93 @@ const authHeaders = () => {
 
 const jsonHeaders = () => ({ 'Content-Type': 'application/json', ...authHeaders() })
 
-const handle = async (res, path) => {
+// Флаг чтобы не зациклиться: только одна попытка рефреша за раз.
+let isRefreshing = false
+
+const tryRefresh = async () => {
+  const rt = getRefreshToken()
+  if (!rt || isRefreshing) return false
+  isRefreshing = true
+  try {
+    const res = await fetch(BASE + '/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: rt }),
+    })
+    if (!res.ok) return false
+    const body = await res.json()
+    setToken(body.token)
+    setRefreshToken(body.refreshToken)
+    return true
+  } catch {
+    return false
+  } finally {
+    isRefreshing = false
+  }
+}
+
+const clearSession = () => {
+  clearToken()
+  clearRefreshToken()
+  localStorage.removeItem('calm_current_user')
+  window.location.href = '/'
+}
+
+const handle = async (res, path, retryFn) => {
   if (res.status === 204) return null
   const body = await res.json().catch(() => ({}))
   if (res.status === 401) {
-    // Для auth-эндпойнтов 401 = неверные креды → показываем сообщение в форме.
-    // Для всех остальных = протух токен → редирект на /.
-    if (!path.startsWith('/auth/')) {
-      clearToken()
-      localStorage.removeItem('calm_current_user')
-      window.location.href = '/'
+    if (path.startsWith('/auth/')) {
+      // Неверные креды — показываем сообщение в форме, не редиректим
+      throw new Error(body.message ?? 'Unauthorized')
     }
+    // Протух access-токен — пробуем обновить через refresh
+    const refreshed = await tryRefresh()
+    if (refreshed && retryFn) {
+      return retryFn()
+    }
+    clearSession()
     throw new Error(body.message ?? 'Unauthorized')
   }
-  if (!res.ok) throw new Error(body.message ?? `HTTP ${res.status}`)
+  if (res.status === 429) {
+    const retryAfter = parseInt(res.headers.get('Retry-After') ?? '60', 10)
+    const err = new Error(body.error ?? body.message ?? 'Слишком много попыток')
+    err.retryAfter = retryAfter
+    throw err
+  }
+  if (!res.ok) throw new Error(body.error ?? body.message ?? `HTTP ${res.status}`)
   return body
 }
 
 export const http = {
-  get:    path       => fetch(BASE + path, { headers: authHeaders() }).then(r => handle(r, path)),
-  post:   (path, b) => fetch(BASE + path, { method: 'POST',   headers: jsonHeaders(), body: JSON.stringify(b) }).then(r => handle(r, path)),
-  put:    (path, b) => fetch(BASE + path, { method: 'PUT',    headers: jsonHeaders(), body: JSON.stringify(b) }).then(r => handle(r, path)),
-  patch:  (path, b) => fetch(BASE + path, { method: 'PATCH',  headers: jsonHeaders(), body: JSON.stringify(b) }).then(r => handle(r, path)),
-  delete: path       => fetch(BASE + path, { method: 'DELETE', headers: authHeaders() }).then(r => handle(r, path)),
+  get: path => {
+    const go = () => fetch(BASE + path, { headers: authHeaders() })
+      .then(r => handle(r, path, go))
+    return go()
+  },
+  post: (path, b) => {
+    const go = () => fetch(BASE + path, { method: 'POST', headers: jsonHeaders(), body: JSON.stringify(b) })
+      .then(r => handle(r, path, go))
+    return go()
+  },
+  put: (path, b) => {
+    const go = () => fetch(BASE + path, { method: 'PUT', headers: jsonHeaders(), body: JSON.stringify(b) })
+      .then(r => handle(r, path, go))
+    return go()
+  },
+  patch: (path, b) => {
+    const go = () => fetch(BASE + path, { method: 'PATCH', headers: jsonHeaders(), body: JSON.stringify(b) })
+      .then(r => handle(r, path, go))
+    return go()
+  },
+  delete: path => {
+    const go = () => fetch(BASE + path, { method: 'DELETE', headers: authHeaders() })
+      .then(r => handle(r, path, go))
+    return go()
+  },
+  postForm: (path, formData) => {
+    const go = () => fetch(BASE + path, { method: 'POST', headers: authHeaders(), body: formData })
+      .then(r => handle(r, path, go))
+    return go()
+  },
 }

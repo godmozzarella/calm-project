@@ -10,13 +10,51 @@ spring:
   jackson:
     mapper:
       accept-case-insensitive-enums: true
+  # SMTP (Яндекс). Креды задаются через ENV; если пустые — рассылка просто не уходит (warn в логах).
+  # Используем порт 587 + STARTTLS (а не 465 + implicit SSL), так как 465 часто блокируют провайдеры/роутеры.
+  mail:
+    host: ${CALM_SMTP_HOST:smtp.yandex.ru}
+    port: ${CALM_SMTP_PORT:587}
+    username: ${CALM_SMTP_USER:}
+    password: ${CALM_SMTP_PASS:}
+    properties:
+      mail:
+        # Включаем подробный лог SMTP-диалога — попадает в stdout приложения.
+        # Когда почта стабильно работает — можно выключить (CALM_SMTP_DEBUG=false).
+        debug: ${CALM_SMTP_DEBUG:false}
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            enable: false
+            trust: smtp.yandex.ru
+            # Принудительно TLSv1.2 — Яндекс иногда роняет соединение при TLSv1.3
+            # на свежих JDK без явного указания, что и даёт «Exception reading response».
+            protocols: TLSv1.2
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
+    test-connection: false
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
 
 server:
   port: ${PORT:8080}
   servlet:
     context-path: /api
+    encoding:
+      charset: UTF-8
+      force: true
+  tomcat:
+    uri-encoding: UTF-8
 
 calm:
+  base-url: ${CALM_BASE_URL:http://localhost:8080}
+  upload-dir: ${CALM_UPLOAD_DIR:./uploads/avatars}
   jwt:
     # ВНИМАНИЕ: в проде должен задаваться через ENV CALM_JWT_SECRET. Минимум 32 байта.
     secret: ${CALM_JWT_SECRET:dev-secret-change-me-please-32bytes-min}
@@ -25,6 +63,34 @@ calm:
   cors:
     # Разрешённые origin'ы (через запятую). На проде сюда подставится домен фронта.
     allowed-origins: ${CALM_CORS_ORIGINS:http://localhost:5173,http://localhost:4173,http://192.168.31.14:5173}
+  mail:
+    # Транспорт писем: smtp (Spring JavaMailSender) или resend (HTTP API resend.com).
+    # SMTP часто режется домашними провайдерами — для прода рекомендуется resend.
+    provider: ${CALM_MAIL_PROVIDER:smtp}
+    # Адрес, от которого уходят письма пользователям.
+    # Для SMTP должен совпадать с CALM_SMTP_USER. Для Resend — либо верифицированный домен,
+    # либо onboarding@resend.dev (дефолтный песочный отправитель).
+    from: ${CALM_MAIL_FROM:}
+    # Имя отправителя в заголовке From.
+    from-name: ${CALM_MAIL_FROM_NAME:Calm}
+    resend:
+      # API-ключ Resend (https://resend.com/api-keys). Используется только при provider=resend.
+      api-key: ${CALM_RESEND_API_KEY:}
+  notifications:
+    cron: ${CALM_NOTIF_CRON:0 0 8 * * *}
+    zone: ${CALM_NOTIF_ZONE:Europe/Moscow}
+  rate-limit:
+    auth:
+      # Макс. попыток логина/регистрации с одного IP за window-seconds секунд.
+      max-attempts: ${CALM_RATE_LIMIT_ATTEMPTS:10}
+      window-seconds: ${CALM_RATE_LIMIT_WINDOW:60}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: alpha
+  api-docs:
+    path: /v3/api-docs
 
 logging:
   level:
@@ -36,3 +102,6 @@ management:
     web:
       exposure:
         include: health,info
+  health:
+    mail:
+      enabled: false

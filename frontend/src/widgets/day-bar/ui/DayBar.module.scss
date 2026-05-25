@@ -119,6 +119,19 @@
 	}
 }
 
+.city {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.2rem;
+	@include fluid-text(11, 10);
+	color: $fc-secondary;
+	width: fit-content;
+	max-width: 16rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 /* ── Week strip ── */
 .weekStrip {
 	display: flex;

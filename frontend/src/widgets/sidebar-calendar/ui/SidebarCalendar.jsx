@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { CloseIcon, ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/icons'
+import { emit, DATE_SELECTED } from '@/shared/lib/dataEvents'
 
 import s from './SidebarCalendar.module.scss'
 
@@ -78,7 +79,11 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar }) => {
 		else setViewMonth(m => m + 1)
 	}
 
-	const selectDay = key => setSelected(prev => prev === key ? null : key)
+	const selectDay = key => {
+		setSelected(prev => prev === key ? null : key)
+		emit(DATE_SELECTED, key)
+		setOpenCalendar(false)
+	}
 
 	const toggleMark = (key, type) => {
 		setMarks(prev => {

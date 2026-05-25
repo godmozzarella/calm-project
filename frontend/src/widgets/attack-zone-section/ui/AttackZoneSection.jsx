@@ -27,14 +27,25 @@ const AttackZoneSection = ({ date }) => {
 	const [selectedId, setSelectedId] = useState(null)   // null = без привязки
 	const [zones,      setZones]      = useState({})     // { zone: 'green'|'yellow'|'red' }
 
-	// Эффект 1: смена даты — перезагрузить приступы, сбросить выбор
+	// Эффект 1: смена даты — перезагрузить приступы, выбрать первый (если есть)
 	useEffect(() => {
-		attackApi.getByDate(date).then(list => { setAttacks(list); setSelectedId(null) })
+		attackApi.getByDate(date).then(list => {
+			setAttacks(list)
+			setSelectedId(list.length > 0 ? list[0].id : null)
+		})
 	}, [date])
 
 	// Эффект 1b: при внешнем добавлении/удалении приступа — перечитать список
 	useEffect(() => subscribe(ATTACKS_CHANGED, () => {
-		attackApi.getByDate(date).then(setAttacks)
+		attackApi.getByDate(date).then(list => {
+			setAttacks(list)
+			// Если выбранного приступа больше нет (или раньше не было) — переключаемся на первый.
+			setSelectedId(prev => {
+				if (list.length === 0) return null
+				if (prev != null && list.some(a => a.id === prev)) return prev
+				return list[0].id
+			})
+		})
 	}), [date])
 
 	// Эффект 2: смена выбранного приступа — загрузить зоны из него или из calm_zones
@@ -80,7 +91,11 @@ const AttackZoneSection = ({ date }) => {
 		}
 	}
 
+	// Зоны боли привязаны к приступам — без приступа отмечать нечего.
+	const hasAttacks = attacks.length > 0
+
 	const toggleZone = zone => {
+		if (!hasAttacks) return
 		const next = cycleZone(zones, zone)
 		setZones(next)
 		saveZones(next, selectedId)
@@ -88,12 +103,14 @@ const AttackZoneSection = ({ date }) => {
 
 	const removeZone = (e, zone) => {
 		e.stopPropagation()
+		if (!hasAttacks) return
 		const { [zone]: _, ...next } = zones
 		setZones(next)
 		saveZones(next, selectedId)
 	}
 
 	const clearAll = () => {
+		if (!hasAttacks) return
 		setZones({})
 		saveZones({}, selectedId)
 	}
@@ -109,18 +126,17 @@ const AttackZoneSection = ({ date }) => {
 				)}
 			</div>
 
-			<div className={s.cardBody}>
+			<div className={`${s.cardBody} ${!hasAttacks ? s.cardBodyDisabled : ''}`}>
+				{!hasAttacks && (
+					<p className={s.emptyHint}>
+						Сначала добавьте приступ за этот день — тогда можно будет отметить зоны боли.
+					</p>
+				)}
 				{/* Attack selector */}
 				{attacks.length > 0 && (
 					<div className={s.attackSelector}>
 						<span className={s.selectorLabel}>Приступ</span>
 						<div className={s.attackPills}>
-							<button
-								className={`${s.attackPill} ${selectedId === null ? s.attackPillActive : ''}`}
-								onClick={() => selectAttack(null)}
-							>
-								Без привязки
-							</button>
 							{attacks.map(a => (
 								<button
 									key={a.id}
@@ -135,7 +151,7 @@ const AttackZoneSection = ({ date }) => {
 				)}
 
 				{/* Head visualizations */}
-				<div className={s.headsRow}>
+				<div className={`${s.headsRow} ${!hasAttacks ? s.headsRowMuted : ''}`} aria-disabled={!hasAttacks}>
 					<div className={s.headView}>
 						<HeadFront zones={zones} onToggle={toggleZone} />
 						<span className={s.headLabel}>Спереди</span>

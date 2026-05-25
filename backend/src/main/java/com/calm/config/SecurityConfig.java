@@ -1,6 +1,7 @@
 package com.calm.config;
 
 import com.calm.security.JwtAuthFilter;
+import com.calm.security.RateLimitFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,10 +19,13 @@ import org.springframework.web.cors.CorsConfigurationSource;
 public class SecurityConfig {
 
 	private final JwtAuthFilter jwtAuthFilter;
+	private final RateLimitFilter rateLimitFilter;
 	private final CorsConfigurationSource corsConfigurationSource;
 
-	public SecurityConfig(JwtAuthFilter jwtAuthFilter, CorsConfigurationSource corsConfigurationSource) {
+	public SecurityConfig(JwtAuthFilter jwtAuthFilter, RateLimitFilter rateLimitFilter,
+			CorsConfigurationSource corsConfigurationSource) {
 		this.jwtAuthFilter = jwtAuthFilter;
+		this.rateLimitFilter = rateLimitFilter;
 		this.corsConfigurationSource = corsConfigurationSource;
 	}
 
@@ -44,13 +48,20 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 						.requestMatchers(
-								"/auth/**",
+								"/auth/login",
+								"/auth/register",
+								"/auth/refresh",
+								"/public/**",
 								"/actuator/health",
-								"/actuator/info"
+								"/actuator/info",
+								"/swagger-ui/**",
+								"/swagger-ui.html",
+								"/v3/api-docs/**"
 						).permitAll()
 						.anyRequest().authenticated()
 				)
 				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+				.addFilterBefore(rateLimitFilter, JwtAuthFilter.class)
 				.build();
 	}
 }
