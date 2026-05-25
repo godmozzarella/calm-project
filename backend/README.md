@@ -30,42 +30,6 @@ src/main/java/com/calm/
 В каждой feature: `*.java` (модель), `*Repository.java` (Spring Data),
 `*Service.java` (бизнес-логика), `*Controller.java` (REST), `dto/`.
 
-## API (черновик)
-
-| Метод  | Путь                                | Описание                                       | Auth |
-|--------|-------------------------------------|------------------------------------------------|------|
-| POST   | `/api/auth/register`                | Регистрация. Body: `{ email, name, password }` | —    |
-| POST   | `/api/auth/login`                   | Вход. Body: `{ email, password }`              | —    |
-| GET    | `/api/users/me`                     | Текущий пользователь                           | ✅   |
-| PATCH  | `/api/users/me`                     | Обновить профиль (имя, email, пароль, аватар)  | ✅   |
-| GET    | `/api/attacks?from=&to=`            | Список приступов (опц. диапазон)               | ✅   |
-| POST   | `/api/attacks`                      | Создать приступ                                | ✅   |
-| GET    | `/api/attacks/{id}`                 | Получить один                                  | ✅   |
-| PUT    | `/api/attacks/{id}`                 | Обновить                                       | ✅   |
-| DELETE | `/api/attacks/{id}`                 | Удалить                                        | ✅   |
-| GET    | `/api/medications?from=&to=`        | Список препаратов                              | ✅   |
-| POST   | `/api/medications`                  | Создать                                        | ✅   |
-| PUT    | `/api/medications/{id}`             | Обновить                                       | ✅   |
-| DELETE | `/api/medications/{id}`             | Удалить                                        | ✅   |
-| GET    | `/api/medications/overuse?year&month` | Уникальные дни приёма в месяце (для MOH-плитки) | ✅   |
-| GET    | `/api/actuator/health`              | Health-check                                   | —    |
-
-Auth: после `register`/`login` сервер возвращает `{ token, user }`. Фронт кладёт
-`Authorization: Bearer <token>` во все защищённые запросы.
-
-Все коллекции в Mongo фильтруются по `userId` — пользователь видит только свои данные.
-
-## Конфигурация
-
-`src/main/resources/application.yml` берёт настройки из ENV:
-
-| Переменная           | По умолчанию                              | Описание                          |
-|----------------------|-------------------------------------------|-----------------------------------|
-| `MONGO_URI`          | `mongodb://localhost:27017/calm`          | Подключение к Mongo               |
-| `PORT`               | `8080`                                    | HTTP-порт                         |
-| `CALM_JWT_SECRET`    | dev-secret (НЕ для прода)                 | Секрет JWT, ≥ 32 байт             |
-| `CALM_JWT_EXP_MIN`   | `1440` (24 часа)                          | Срок жизни access-токена          |
-| `CALM_CORS_ORIGINS`  | `http://localhost:5173,http://localhost:4173` | Разрешённые origin'ы фронта   |
 
 ## Запуск
 
@@ -90,17 +54,4 @@ API будет доступно на `http://localhost:8080/api`.
 mvn test
 ```
 
-В тестах поднимается embedded MongoDB через `de.flapdoodle.embed.mongo`,
-реальный Mongo не нужен.
 
-## Что ещё надо доделать (после первого green-build)
-
-- Rate-limit на `/auth/*` (брутфорс защиты пока нет).
-- Refresh-токены (сейчас только access).
-- Серверные агрегаты для `/stats` (KPI, паттерны) — пока считаются на фронте.
-- Загрузка/хранение аватаров (S3/GridFS).
-- Серверный PDF-рендер отчёта.
-- Классификация препаратов (`therapeuticClass` / `purpose`) и честная MOH-метрика —
-  поля в модели уже зарезервированы.
-- Docker Compose для bring-up `app + mongo` одной командой.
-- OpenAPI/Swagger.
