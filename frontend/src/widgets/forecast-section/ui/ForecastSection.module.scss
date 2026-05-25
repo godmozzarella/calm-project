@@ -1,0 +1,256 @@
+@use 'app/styles/globals.scss' as *;
+
+.card {
+	background-color: #1c1f24;
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	border-radius: 1rem;
+	padding: 1.25rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+	width: 100%;
+}
+
+.empty,
+.errorText {
+	@include fluid-text(13, 12);
+	color: $fc-secondary;
+	margin: 0;
+	padding: 0.75rem 0;
+	text-align: center;
+}
+
+.errorText { color: $error-color; }
+
+.noLocation {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+	padding: 0.25rem 0;
+}
+
+.noLocationText {
+	@include fluid-text(13, 12);
+	color: $fc-secondary;
+	margin: 0;
+	flex: 1;
+}
+
+.noLocationBtn {
+	@include fluid-text(13, 12);
+	color: $fc-main;
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 0.5rem;
+	padding: 0.4rem 0.875rem;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: background 0.18s ease, border-color 0.18s ease;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.09);
+		border-color: rgba(255, 255, 255, 0.18);
+	}
+}
+
+/* ── Плитки ── */
+.tiles {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 0.625rem;
+}
+
+.tile {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	padding: 0.75rem 0.875rem;
+	border-radius: 0.75rem;
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	background: rgba(255, 255, 255, 0.02);
+	color: $fc-main;
+	cursor: pointer;
+	text-align: left;
+	transition: border-color 0.2s ease, background 0.2s ease;
+
+	&:hover {
+		border-color: rgba(255, 255, 255, 0.14);
+	}
+}
+
+.tileActive {
+	border-color: rgba(255, 255, 255, 0.18) !important;
+	background: rgba(255, 255, 255, 0.04);
+}
+
+.tileDay {
+	@include fluid-text(12, 11);
+	color: $fc-secondary;
+	font-weight: $fw-medium;
+}
+
+.tileRisk {
+	@include fluid-text(14, 13);
+	font-weight: $fw-semibold;
+}
+
+.tilePressure {
+	@include fluid-text(11, 10);
+	color: $fc-secondary;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Цветовые акценты только на тексте — без подсветки фона/бордера */
+.risk_LOW    .tileRisk { color: #7fb88f; }
+.risk_MEDIUM .tileRisk { color: #c79864; }
+.risk_HIGH   .tileRisk { color: #c97070; }
+
+/* ── Подробный блок ── */
+.detail {
+	border-radius: 0.75rem;
+	padding: 1rem 1.125rem;
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	background: rgba(255, 255, 255, 0.015);
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+/* Тонкая подкраска бордера-снизу по уровню риска — вместо яркой заливки */
+.detail_LOW    { border-left: 3px solid rgba(127, 184, 143, 0.55); }
+.detail_MEDIUM { border-left: 3px solid rgba(199, 152, 100, 0.6); }
+.detail_HIGH   { border-left: 3px solid rgba(201, 112, 112, 0.7); }
+
+.detailHead {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 1rem;
+}
+
+.detailDay {
+	@include fluid-text(14, 13);
+	color: $fc-secondary;
+	font-weight: $fw-medium;
+}
+
+.detailRisk {
+	@include fluid-text(15, 13);
+	font-weight: $fw-semibold;
+
+	.detail_LOW    & { color: #7fb88f; }
+	.detail_MEDIUM & { color: #c79864; }
+	.detail_HIGH   & { color: #c97070; }
+}
+
+.reasons {
+	margin: 0;
+	padding-left: 1.125rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+
+	li {
+		@include fluid-text(13, 12);
+		color: $fc-main;
+		line-height: 1.45;
+	}
+}
+
+.reasonsOk {
+	margin: 0;
+	@include fluid-text(13, 12);
+	color: $fc-secondary;
+}
+
+/* ── Метрики ── */
+.metrics {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+	gap: 0.625rem;
+	margin: 0;
+	overflow: visible;
+}
+
+.metric {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0.625rem;
+	background: rgba(0, 0, 0, 0.15);
+	border-radius: 0.5rem;
+	position: relative;
+
+	&[data-tip]:hover::after {
+		content: attr(data-tip);
+		position: absolute;
+		bottom: calc(100% + 0.5rem);
+		left: 50%;
+		transform: translateX(-50%);
+		background: rgba(18, 20, 28, 0.97);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 0.5rem;
+		padding: 0.4rem 0.6rem;
+		white-space: normal;
+		width: 12rem;
+		font-size: 11px;
+		line-height: 1.45;
+		color: rgba(200, 210, 225, 0.9);
+		z-index: 20;
+		pointer-events: none;
+		box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.5);
+	}
+}
+
+.metricIcon {
+	display: flex;
+	color: $fc-secondary;
+	font-size: 1.1rem;
+}
+
+.metricBody {
+	display: flex;
+	flex-direction: column;
+	gap: 0.05rem;
+	min-width: 0;
+}
+
+.metricLabel {
+	@include fluid-text(11, 10);
+	color: $fc-secondary;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.metricValue {
+	@include fluid-text(13, 12);
+	color: $fc-main;
+	font-weight: $fw-semibold;
+	font-variant-numeric: tabular-nums;
+}
+
+.metricSub {
+	@include fluid-text(10, 9);
+	color: $fc-secondary;
+}
+
+.kpIcon {
+	font-size: 1rem;
+	line-height: 1;
+}
+
+/* ── Адаптив ── */
+@media (max-width: 720px) {
+	.tiles   { grid-template-columns: repeat(2, 1fr); }
+	.metrics { grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr)); }
+}
+
+@media (max-width: 480px) {
+	.metrics { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 400px) {
+	.tiles { grid-template-columns: 1fr 1fr; }
+}

@@ -1,0 +1,612 @@
+@use 'app/styles/globals.scss' as *;
+
+/* ── Overlay ── */
+.overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(3px);
+	z-index: 1100;
+	display: flex;
+	align-items: flex-end;
+
+	@media (min-width: 640px) {
+		align-items: center;
+		justify-content: center;
+	}
+}
+
+/* ── Bottom sheet / modal ── */
+.sheet {
+	background: rgba(28, 31, 40, 0.98);
+	border: 1px solid rgba(92, 173, 228, 0.1);
+	border-radius: 1.5rem 1.5rem 0 0;
+	width: 100%;
+	/* vh — фолбэк для браузеров без dvh, иначе шит может уйти выше viewport на iOS Safari */
+	max-height: 92vh;
+	max-height: 92dvh;
+	display: flex;
+	flex-direction: column;
+	animation: slideUp 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+
+	@media (min-width: 640px) {
+		border-radius: 1.5rem;
+		max-width: 520px;
+		max-height: 88vh;
+		max-height: 88dvh;
+	}
+}
+
+@keyframes slideUp {
+	from { transform: translateY(100%); opacity: 0; }
+	to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Handle (mobile) ── */
+.handle {
+	width: 2.5rem;
+	height: 4px;
+	background: rgba(255, 255, 255, 0.15);
+	border-radius: 2px;
+	margin: 0.75rem auto 0;
+	flex-shrink: 0;
+
+	@media (min-width: 640px) { display: none; }
+}
+
+/* ── Header ── */
+.header {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 1rem 1.25rem 0.75rem;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	flex-shrink: 0;
+}
+
+.headerTop {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.title {
+	@include fluid-text(17, 15);
+	font-weight: $fw-semibold;
+	color: $fc-main;
+}
+
+.closeBtn {
+	background: none;
+	border: none;
+	color: $fc-secondary;
+	cursor: pointer;
+	@include fluid-text(16, 14);
+	padding: 0.25rem 0.5rem;
+	border-radius: 0.5rem;
+	transition: color 0.15s ease, background-color 0.15s ease;
+
+	&:hover {
+		color: $fc-main;
+		background: rgba(255, 255, 255, 0.06);
+	}
+}
+
+/* ── Scrollable body ── */
+.body {
+	overflow-y: auto;
+	flex: 1;
+	padding: 0.25rem 1.25rem 0.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	scrollbar-width: none;
+	&::-webkit-scrollbar { display: none; }
+}
+
+.error {
+	@include fluid-text(12, 11);
+	color: $error-color;
+	background: rgba(239, 68, 68, 0.08);
+	border: 1px solid rgba(239, 68, 68, 0.2);
+	border-radius: 0.625rem;
+	padding: 0.5rem 0.875rem;
+}
+
+/* ── Section ── */
+.section {
+	display: flex;
+	width: 100%;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 0.875rem 0;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+	&:last-child { border-bottom: none; }
+}
+
+.sectionLabel {
+	@include fluid-text(11, 10);
+	font-weight: $fw-semibold;
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
+	color: rgba(140, 150, 170, 0.7);
+}
+
+/* ── Preset groups ── */
+.presetGroups {
+	display: flex;
+	flex-direction: column;
+	gap: 0.6rem;
+}
+
+.presetGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+
+.presetGroupLabel {
+	@include fluid-text(10, 9);
+	font-weight: $fw-semibold;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: rgba(140, 150, 170, 0.5);
+}
+
+.presetChips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+}
+
+.presetChip {
+	padding: 0.3rem 0.7rem;
+	border-radius: 2rem;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	background: none;
+	color: $fc-secondary;
+	@include fluid-text(12, 11);
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.06);
+		color: $fc-main;
+	}
+}
+
+.presetChipActive {
+	background: rgba(92, 173, 228, 0.15);
+	border-color: rgba(92, 173, 228, 0.4);
+	color: $fc-contrast;
+}
+
+/* ── Text input ── */
+.textInput {
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 0.625rem;
+	color: $fc-main;
+	padding: 0.5rem 0.75rem;
+	@include fluid-text(14, 12);
+	width: 100%;
+	transition: border-color 0.15s ease;
+
+	&::placeholder { color: rgba(190, 190, 190, 0.35); }
+
+	&:focus {
+		outline: none;
+		border-color: rgba(92, 173, 228, 0.4);
+	}
+}
+
+/* ── Time ── */
+.timeRow {
+	display: flex;
+	gap: 1rem;
+}
+
+.timeField {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	flex: 1;
+	min-width: 0;
+
+	span {
+		@include fluid-text(11, 10);
+		color: $fc-secondary;
+	}
+}
+
+.timeInput {
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 0.625rem;
+	color: $fc-main;
+	padding: 0.5rem 0.75rem;
+	@include fluid-text(14, 12);
+	width: 100%;
+	min-width: 0;
+	cursor: pointer;
+	transition: border-color 0.15s ease;
+	color-scheme: dark;
+
+	&:focus {
+		outline: none;
+		border-color: rgba(92, 173, 228, 0.4);
+	}
+}
+
+/* ── Attack select ── */
+.select {
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 2.5rem;
+	padding: 0.55rem 2.25rem 0.55rem 0.75rem;
+	background-color: rgba(255, 255, 255, 0.05);
+	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23bebebe' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+	background-repeat: no-repeat;
+	background-position: right 0.75rem center;
+	background-size: 0.875rem;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 0.625rem;
+	color: $fc-main;
+	font-family: inherit;
+	@include fluid-text(13, 12);
+	line-height: 1.3;
+	cursor: pointer;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	color-scheme: dark;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+	transition: border-color 0.15s ease, background-color 0.15s ease;
+
+	&:hover {
+		background-color: rgba(255, 255, 255, 0.07);
+	}
+
+	&:focus {
+		outline: none;
+		border-color: rgba(92, 173, 228, 0.4);
+	}
+
+	option {
+		background: rgba(28, 31, 40, 1);
+		color: $fc-main;
+		font-size: 0.875rem;
+		padding: 0.5rem;
+	}
+}
+
+/* ── Textarea ── */
+.textarea {
+	background: rgba(255, 255, 255, 0.04);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 0.75rem;
+	color: $fc-main;
+	padding: 0.75rem;
+	@include fluid-text(13, 12);
+	resize: none;
+	width: 100%;
+	font-family: 'Roboto', Arial, sans-serif;
+	transition: border-color 0.15s ease;
+
+	&::placeholder { color: rgba(190, 190, 190, 0.35); }
+
+	&:focus {
+		outline: none;
+		border-color: rgba(92, 173, 228, 0.3);
+	}
+}
+
+/* ── Footer ── */
+.footer {
+	padding: 0.875rem 1.25rem 1.25rem;
+	border-top: 1px solid rgba(255, 255, 255, 0.06);
+	flex-shrink: 0;
+}
+
+/* ── Step dots ── */
+.stepDots {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.stepDot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.15);
+	transition: background-color 0.2s ease, width 0.2s ease;
+}
+
+.stepDotActive {
+	background: rgba(92, 173, 228, 0.7);
+	width: 16px;
+	border-radius: 3px;
+}
+
+.selectedBadge {
+	margin-left: 0.4rem;
+	@include fluid-text(10, 9);
+	font-weight: $fw-semibold;
+	color: rgba(92, 173, 228, 0.9);
+	background: rgba(92, 173, 228, 0.12);
+	border: 1px solid rgba(92, 173, 228, 0.25);
+	border-radius: 1rem;
+	padding: 0.1rem 0.5rem;
+}
+
+/* ── Step body ── */
+.stepBody {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.stepHint {
+	@include fluid-text(12, 11);
+	color: rgba(140, 150, 170, 0.6);
+	margin: 0;
+}
+
+/* ── Category groups (step 1) ── */
+.categoryGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+.categoryHeader {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.categoryIcon {
+	color: rgba(140, 150, 170, 0.6);
+}
+
+.categoryLabel {
+	@include fluid-text(11, 10);
+	font-weight: $fw-semibold;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: rgba(140, 150, 170, 0.6);
+}
+
+/* ── Chips (step 1) ── */
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+}
+
+.chip {
+	padding: 0.3rem 0.75rem;
+	border-radius: 2rem;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	background: none;
+	color: $fc-secondary;
+	@include fluid-text(12, 11);
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.06);
+		color: $fc-main;
+	}
+}
+
+.chipActive {
+	background: rgba(92, 173, 228, 0.15);
+	border-color: rgba(92, 173, 228, 0.4);
+	color: $fc-contrast;
+}
+
+/* ── Selected summary (step 1) ── */
+.selectedSummary {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	padding: 0.5rem 0.75rem;
+	background: rgba(92, 173, 228, 0.06);
+	border: 1px solid rgba(92, 173, 228, 0.15);
+	border-radius: 0.875rem;
+}
+
+.selectedChip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.25rem 0.6rem;
+	border-radius: 2rem;
+	border: 1px solid rgba(92, 173, 228, 0.35);
+	background: rgba(92, 173, 228, 0.12);
+	color: $fc-contrast;
+	@include fluid-text(12, 11);
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+
+	&:hover {
+		background: rgba(239, 68, 68, 0.15);
+		border-color: rgba(239, 68, 68, 0.35);
+		color: #fca5a5;
+	}
+}
+
+.selectedChipX {
+	@include fluid-text(10, 9);
+	opacity: 0.6;
+}
+
+/* ── Custom medication input (step 1) ── */
+.customSection {
+	margin-top: 0.25rem;
+	padding-top: 0.5rem;
+	border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.customRow {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.customInput {
+	flex: 1;
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 0.625rem;
+	color: $fc-main;
+	padding: 0.5rem 0.75rem;
+	@include fluid-text(13, 12);
+	min-width: 0;
+	transition: border-color 0.15s ease;
+
+	&::placeholder { color: rgba(190, 190, 190, 0.35); }
+
+	&:focus {
+		outline: none;
+		border-color: rgba(92, 173, 228, 0.4);
+	}
+}
+
+.customAddBtn {
+	flex-shrink: 0;
+	padding: 0.5rem 0.9rem;
+	border-radius: 0.625rem;
+	border: 1px solid rgba(92, 173, 228, 0.3);
+	background: rgba(92, 173, 228, 0.1);
+	color: $fc-contrast;
+	@include fluid-text(13, 11);
+	cursor: pointer;
+	transition: background-color 0.15s ease, opacity 0.15s ease;
+
+	&:hover { background: rgba(92, 173, 228, 0.18); }
+
+	&:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+}
+
+/* ── Dosage list (step 2) ── */
+.dosageItem {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.6rem 0;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+	&:last-child { border-bottom: none; }
+}
+
+.dosageMeta {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	flex: 1;
+	min-width: 0;
+}
+
+.dosageName {
+	@include fluid-text(13, 12);
+	color: $fc-main;
+	font-weight: $fw-medium;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.dosageCategory {
+	@include fluid-text(10, 9);
+	color: rgba(140, 150, 170, 0.6);
+}
+
+.dosageInputWrapper {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	flex-shrink: 0;
+}
+
+.dosageInput {
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 0.625rem;
+	color: $fc-main;
+	padding: 0.45rem 0.65rem;
+	@include fluid-text(13, 11);
+	width: 80px;
+	text-align: right;
+	transition: border-color 0.15s ease;
+
+	&::placeholder { color: rgba(190, 190, 190, 0.35); }
+
+	&:focus {
+		outline: none;
+		border-color: rgba(92, 173, 228, 0.4);
+	}
+}
+
+.dosageUnit {
+	@include fluid-text(12, 11);
+	color: rgba(140, 150, 170, 0.7);
+	white-space: nowrap;
+	min-width: 1.8rem;
+}
+
+/* ── Nav buttons ── */
+.navRow {
+	display: flex;
+	gap: 0.6rem;
+	align-items: center;
+}
+
+.backBtn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.75rem;
+	height: 2.75rem;
+	border-radius: 0.875rem;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	background: rgba(255, 255, 255, 0.04);
+	color: $fc-secondary;
+	cursor: pointer;
+	flex-shrink: 0;
+	transition: background-color 0.15s ease, color 0.15s ease;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.08);
+		color: $fc-main;
+	}
+}
+
+.nextBtn {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	padding: 0.8rem;
+	border-radius: 0.875rem;
+	border: none;
+	background: linear-gradient(135deg, rgba(102, 186, 241, 1), rgba(14, 123, 196, 1));
+	color: #fff;
+	@include fluid-text(15, 13);
+	font-weight: $fw-semibold;
+	cursor: pointer;
+	transition: opacity 0.18s ease, transform 0.1s ease;
+
+	&:hover { opacity: 0.9; }
+	&:active { transform: scale(0.98); }
+}

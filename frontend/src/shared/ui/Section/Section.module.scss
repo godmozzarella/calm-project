@@ -1,0 +1,60 @@
+@use 'app/styles/globals.scss' as *;
+
+section {
+	width: 100%;
+}
+
+.container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2rem;
+	width: min(70%, 87.5rem);
+	padding: 3.5rem 0;
+	margin: 0 auto;
+}
+
+.colored {
+	background-color: $secondary-color;
+}
+
+.title {
+	text-align: center;
+	text-wrap: balance;
+	@include fluid-text(32, 24);
+}
+
+.blocks {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
+	gap: 1.5rem;
+	width: 100%;
+	justify-items: stretch;
+	align-items: stretch;
+}
+
+/* Если у секции единственный широкий ребёнок (например, AuthForm),
+   не растягиваем грид-ячейку на ширину минимума 280px. */
+.blocks:has(> :only-child) {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+@media (max-width: 90rem) {
+	.container {
+		width: min(90%, 87.5rem);
+	}
+}
+
+@media (max-width: 48rem) {
+	.container {
+		padding: 2.5rem 0;
+		gap: 1.5rem;
+	}
+
+	.blocks {
+		grid-template-columns: 1fr;
+		gap: 1rem;
+	}
+}

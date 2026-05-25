@@ -1,0 +1,85 @@
+@use 'app/styles/globals.scss' as *;
+
+.card {
+	background: rgba(0, 0, 0, 0.18);
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	border-radius: 0.875rem;
+	padding: 1.125rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+}
+
+.title {
+	@include fluid-text(15, 13);
+	font-weight: $fw-semibold;
+	color: $fc-main;
+	margin: 0;
+}
+
+.empty {
+	@include fluid-text(12, 11);
+	color: $fc-secondary;
+	margin: 0;
+	line-height: 1.5;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+	gap: 0.625rem;
+}
+
+.metric {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	padding: 0.625rem 0.75rem;
+	background: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	border-radius: 0.625rem;
+}
+
+.metricWarn {
+	border-color: rgba(199, 152, 100, 0.35);
+	background: rgba(199, 152, 100, 0.06);
+
+	.metricValue { color: #c79864; }
+}
+
+.metricLabel {
+	@include fluid-text(10, 9);
+	color: $fc-secondary;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	line-height: 1.3;
+}
+
+.metricValue {
+	@include fluid-text(15, 13);
+	font-weight: $fw-semibold;
+	color: $fc-main;
+	font-variant-numeric: tabular-nums;
+}
+
+.metricSub {
+	@include fluid-text(10, 9);
+	color: $fc-secondary;
+}
+
+.insight {
+	@include fluid-text(12, 11);
+	color: $fc-main;
+	line-height: 1.45;
+	margin: 0;
+	padding: 0.6rem 0.75rem;
+	background: rgba(199, 152, 100, 0.08);
+	border-left: 3px solid rgba(199, 152, 100, 0.5);
+	border-radius: 0.5rem;
+}
+
+.footer {
+	@include fluid-text(11, 10);
+	color: $fc-secondary;
+	margin: 0;
+}

@@ -1,0 +1,226 @@
+@use 'app/styles/globals.scss' as *;
+
+.card {
+	display: flex;
+	flex-direction: column;
+	background-color: $block-color;
+	border: 1px solid rgba(92, 173, 228, 0.08);
+	border-radius: 1.25rem;
+	overflow: hidden;
+	height: 100%;
+}
+
+.cardHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 1.125rem 1.25rem 0.875rem;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+	flex-shrink: 0;
+}
+
+.title {
+	@include fluid-text(17, 14);
+	font-weight: $fw-semibold;
+	color: $fc-main;
+}
+
+.addBtn {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	background: none;
+	border: 1px solid rgba(92, 173, 228, 0.25);
+	border-radius: 2rem;
+	color: $fc-contrast;
+	padding: 0.3rem 0.75rem 0.3rem 0.5rem;
+	@include fluid-text(12, 11);
+	font-weight: $fw-semibold;
+	cursor: pointer;
+	transition: background-color 0.18s ease, border-color 0.18s ease;
+
+	&:hover {
+		background-color: rgba(92, 173, 228, 0.08);
+		border-color: rgba(92, 173, 228, 0.45);
+	}
+}
+
+.cardBody {
+	flex: 1;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+
+	&::-webkit-scrollbar { width: 4px; }
+	&::-webkit-scrollbar-track { background: transparent; }
+	&::-webkit-scrollbar-thumb {
+		background: rgba(255, 255, 255, 0.12);
+		border-radius: 2px;
+	}
+}
+
+/* ── Overuse warning ── */
+.overuseWarning {
+	margin: 0.75rem 1rem 0;
+	padding: 0.5rem 0.75rem;
+	background: rgba(239, 68, 68, 0.08);
+	border: 1px solid rgba(239, 68, 68, 0.25);
+	border-radius: 0.625rem;
+	@include fluid-text(11, 10);
+	color: #ef4444;
+	line-height: 1.5;
+}
+
+/* ── Empty state ── */
+.empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	height: 100%;
+	min-height: 140px;
+	padding: 1.5rem;
+	text-align: center;
+}
+
+.emptyText {
+	@include fluid-text(14, 12);
+	color: $fc-secondary;
+	font-weight: $fw-medium;
+}
+
+.emptyHint {
+	@include fluid-text(11, 10);
+	color: rgba(190, 190, 190, 0.4);
+	max-width: 16rem;
+	line-height: 1.5;
+}
+
+/* ── Medication list ── */
+.list {
+	display: flex;
+	flex-direction: column;
+	padding: 0.5rem 0;
+	list-style: none;
+}
+
+.medCard {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	padding: 0.75rem 1.25rem;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+	transition: background-color 0.15s ease;
+
+	&:last-child { border-bottom: none; }
+	&:hover { background-color: rgba(255, 255, 255, 0.02); }
+}
+
+.medTop {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+}
+
+.medMeta {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+	flex: 1;
+}
+
+.medName {
+	@include fluid-text(14, 12);
+	font-weight: $fw-semibold;
+	color: $fc-main;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.medDosage {
+	@include fluid-text(11, 10);
+	color: $fc-contrast;
+	background: rgba(92, 173, 228, 0.12);
+	border: 1px solid rgba(92, 173, 228, 0.2);
+	border-radius: 2rem;
+	padding: 0.1rem 0.5rem;
+	flex-shrink: 0;
+}
+
+.medRight {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-shrink: 0;
+}
+
+.medTime {
+	@include fluid-text(12, 11);
+	color: $fc-secondary;
+}
+
+.deleteBtn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	background: none;
+	border: none;
+	border-radius: 50%;
+	color: rgba(190, 190, 190, 0.3);
+	cursor: pointer;
+	transition: color 0.15s ease, background-color 0.15s ease;
+
+	&:hover {
+		color: $error-color;
+		background-color: rgba(239, 68, 68, 0.08);
+	}
+}
+
+/* ── Attack link ── */
+.attackLink {
+	@include fluid-text(11, 10);
+	color: $fc-contrast;
+	background: rgba(92, 173, 228, 0.07);
+	border-left: 2px solid rgba(92, 173, 228, 0.4);
+	padding: 0.2rem 0.5rem;
+	border-radius: 0 0.375rem 0.375rem 0;
+}
+
+/* ── Effectiveness buttons ── */
+.effectivenessRow {
+	display: flex;
+	gap: 0.35rem;
+}
+
+.effectBtn {
+	padding: 0.2rem 0.6rem;
+	border-radius: 2rem;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	background: none;
+	color: rgba(190, 190, 190, 0.4);
+	@include fluid-text(11, 10);
+	cursor: pointer;
+	transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+	&:hover {
+		color: $fc-secondary;
+		background: rgba(255, 255, 255, 0.04);
+	}
+}
+
+.effectBtnActive {
+	background: rgba(255, 255, 255, 0.05);
+}
+
+/* ── Note ── */
+.note {
+	@include fluid-text(11, 10);
+	color: $fc-secondary;
+	line-height: 1.5;
+}

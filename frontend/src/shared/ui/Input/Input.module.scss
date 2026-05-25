@@ -1,0 +1,134 @@
+@use 'app/styles/globals.scss' as *;
+
+/* ── поле: label + input + error/hint ── */
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	width: 100%;
+}
+
+.label {
+	@include fluid-text(13, 11);
+	font-weight: $fw-medium;
+	color: $fc-secondary;
+	padding-left: 0.75rem;
+	letter-spacing: 0.02em;
+	transition: color 0.2s ease;
+}
+
+.fieldError .label {
+	color: $error-color;
+}
+
+/* ── строка input + иконка справа ── */
+.inputRow {
+	position: relative;
+	width: 100%;
+}
+
+/* ── базовый input ── */
+input {
+	display: block;
+	padding: 0.7rem 1.1rem;
+	border-radius: 0.75rem;
+	@include fluid-text(15, 13);
+	font-family: 'Roboto', Arial, sans-serif;
+	font-weight: $fw-medium;
+	background-color: rgba(23, 25, 29, 0.8);
+	color: $fc-main;
+	border: 1.5px solid rgba(92, 173, 228, 0.1);
+	outline: none;
+	width: 100%;
+	transition:
+		border-color 0.2s ease,
+		box-shadow 0.2s ease,
+		background-color 0.2s ease;
+
+	&::placeholder {
+		color: rgba(190, 190, 190, 0.4);
+	}
+
+	&:focus {
+		border-color: $contrast-color;
+		background-color: rgba(23, 25, 29, 0.95);
+		box-shadow: 0 0 0 3px rgba(92, 173, 228, 0.12);
+	}
+}
+
+input[type='email'] {
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: textfield;
+}
+
+/* ── ошибка — переопределяет через JS-класс ── */
+.inputError {
+	border-color: $error-color !important;
+	box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+
+	&:focus {
+		border-color: $error-color;
+		box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
+	}
+}
+
+/* ── padding для иконки справа ── */
+.withRight {
+	padding-right: 2.8rem;
+}
+
+/* ── правый элемент (toggle пароля) ── */
+.rightElement {
+	position: absolute;
+	right: 0.85rem;
+	top: 50%;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+
+	button {
+		background: none;
+		border: none;
+		padding: 0;
+		display: flex;
+		align-items: center;
+		color: $fc-secondary;
+		cursor: pointer;
+		outline: none;
+		transition: color 0.2s ease;
+
+		svg {
+			font-size: 1.15rem;
+		}
+
+		&:hover {
+			color: $fc-main;
+		}
+	}
+}
+
+/* ── тексты под полем ── */
+.errorText {
+	@include fluid-text(12, 10);
+	color: $error-color;
+	padding-left: 0.75rem;
+	animation: slideDown 0.18s ease;
+}
+
+.hintText {
+	@include fluid-text(12, 10);
+	color: $fc-secondary;
+	padding-left: 0.75rem;
+}
+
+@keyframes slideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}

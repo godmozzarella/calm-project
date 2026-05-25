@@ -1,0 +1,201 @@
+@use 'app/styles/globals.scss' as *;
+
+.footerRoot {
+	position: relative;
+	width: 100%;
+	overflow: hidden;
+
+	&::after {
+		content: '';
+		position: absolute;
+		bottom: -6rem;
+		right: -6rem;
+		width: 42rem;
+		height: 42rem;
+		border-radius: 50%;
+		background: radial-gradient(
+			circle,
+			rgba(92, 173, 228, 0.20) 0%,
+			rgba(92, 143, 210, 0.08) 45%,
+			transparent 68%
+		);
+		animation: glowPulse 5s ease-in-out infinite;
+		pointer-events: none;
+	}
+}
+
+footer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+
+	margin: 5rem auto 1rem auto;
+	padding: 0 1rem;
+	width: min(70%, 87.5rem);
+	position: relative;
+	z-index: 1;
+}
+
+ul {
+	list-style-type: none;
+}
+
+li a {
+	font-weight: $fw-medium;
+	font-family: 'Roboto', Arial, sans-serif;
+	color: $fc-main;
+	@include fluid-text(14, 11);
+	transition: color 0.3s ease;
+
+	&:hover {
+		color: $fc-contrast;
+	}
+}
+
+hr {
+	width: 100%;
+	border: 0;
+	height: 1px;
+	background-color: #555;
+	margin: 1.25rem 0 0.625rem;
+}
+
+.logo {
+	font-family: 'LilyScriptOne', cursive;
+	@include fluid-text(32, 24);
+	color: $fc-logo;
+}
+
+.item1 {
+	display: grid;
+	grid-template-columns: 1.4fr 1fr 1fr;
+	gap: 2.5rem;
+	width: 100%;
+}
+
+.glowBlock {
+	display: none;
+}
+
+@keyframes glowPulse {
+	0%, 100% { opacity: 0.8; }
+	50%       { opacity: 1;   }
+}
+
+.logoBlock {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.slogan {
+	font-family: 'Roboto', Arial, sans-serif;
+	color: $fc-main;
+	font-weight: $fw-medium;
+	@include fluid-text(22, 18);
+}
+
+.tagline {
+	font-family: 'Roboto', Arial, sans-serif;
+	color: $fc-secondary;
+	@include fluid-text(13, 11);
+	line-height: 1.45;
+	max-width: 22rem;
+}
+
+.linksGrid {
+	display: contents;
+}
+
+.linkCol {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+
+	ul {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+}
+
+.colTitle {
+	font-family: 'Roboto', Arial, sans-serif;
+	font-weight: $fw-semibold;
+	@include fluid-text(15, 12);
+	color: $fc-contrast;
+	letter-spacing: 0.02em;
+}
+
+.item2 {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: space-between;
+	gap: 2.5rem;
+}
+
+.bottomLeft {
+	display: flex;
+	align-items: center;
+	gap: 1.25rem;
+}
+
+.languageButton {
+	background-color: $fc-main;
+	color: rgb(22, 22, 22);
+	padding: 0.3125rem 0.625rem;
+	@include fluid-text(12, 9);
+	transition: all 0.3s ease;
+}
+
+.copyright {
+	font-family: 'Roboto', Arial, sans-serif;
+	@include fluid-text(12, 9);
+	color: $fc-secondary;
+}
+
+.socials {
+	display: flex;
+	gap: 1.25rem;
+}
+
+.socialLink svg {
+	@include fluid-text(24, 20);
+}
+
+@media (max-width: 90rem) {
+	footer { width: min(90%, 87.5rem); }
+}
+
+@media (max-width: 64rem) {
+	.item1 {
+		grid-template-columns: 1fr 1fr;
+		row-gap: 2rem;
+	}
+}
+
+@media (max-width: 48rem) {
+	footer { width: 90%; }
+
+	.item1 {
+		grid-template-columns: 1fr;
+		row-gap: 1.5rem;
+	}
+
+	.item2 {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 1rem;
+	}
+
+	.bottomLeft {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.75rem;
+	}
+}
+
+@media (max-width: 27rem) {
+	footer { width: 92%; }
+}

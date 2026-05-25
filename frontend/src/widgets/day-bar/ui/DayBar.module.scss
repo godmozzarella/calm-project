@@ -1,0 +1,234 @@
+@use 'app/styles/globals.scss' as *;
+
+.dayBar {
+	display: flex;
+	align-items: center;
+	gap: 1.5rem;
+	width: 100%;
+	background-color: $secondary-color;
+	padding: 0.875rem 1.75rem;
+	margin: 0 auto;
+}
+
+/* ── Nav arrows ── */
+.navBtn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	border-radius: 50%;
+	background: none;
+	border: none;
+	color: $fc-secondary;
+	cursor: pointer;
+	flex-shrink: 0;
+	transition: background-color 0.18s ease, color 0.18s ease;
+
+	&:hover {
+		background-color: rgba(255, 255, 255, 0.06);
+		color: $fc-main;
+	}
+}
+
+.navBtnDisabled {
+	opacity: 0.2;
+	cursor: default;
+
+	&:hover {
+		background: none;
+		color: $fc-secondary;
+	}
+}
+
+/* ── Big day number block ── */
+.dayNumber {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	line-height: 1;
+	flex-shrink: 0;
+}
+
+.number {
+	@include fluid-text(42, 28);
+	font-weight: $fw-semibold;
+	color: $fc-main;
+	line-height: 1;
+}
+
+.month {
+	@include fluid-text(12, 10);
+	font-weight: $fw-semibold;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: $fc-secondary;
+	margin-top: 0.1rem;
+}
+
+/* ── Center: weekday + label ── */
+.center {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+	flex-shrink: 0;
+}
+
+.weekday {
+	@include fluid-text(20, 15);
+	font-weight: $fw-semibold;
+	color: $fc-main;
+	line-height: 1.2;
+}
+
+.label {
+	@include fluid-text(11, 9);
+	font-weight: $fw-semibold;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	border-radius: 2rem;
+	padding: 0.15rem 0.55rem;
+	width: fit-content;
+}
+
+.labelToday {
+	color: $fc-contrast;
+	background: rgba(92, 173, 228, 0.1);
+	border: 1px solid rgba(92, 173, 228, 0.2);
+}
+
+.labelPast {
+	color: $fc-secondary;
+	background: rgba(190, 190, 190, 0.07);
+	border: 1px solid rgba(190, 190, 190, 0.15);
+}
+
+.returnBtn {
+	background: none;
+	border: none;
+	color: $fc-secondary;
+	cursor: pointer;
+	@include fluid-text(11, 9);
+	padding: 0;
+	text-align: left;
+	transition: color 0.18s ease;
+	width: fit-content;
+
+	&:hover {
+		color: $fc-main;
+	}
+}
+
+.city {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.2rem;
+	@include fluid-text(11, 10);
+	color: $fc-secondary;
+	width: fit-content;
+	max-width: 16rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ── Week strip ── */
+.weekStrip {
+	display: flex;
+	gap: 0.35rem;
+	flex: 1;
+	justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+	.dayBar {
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
+	}
+
+	.weekStrip {
+		display: none;
+	}
+
+	.center {
+		flex: 1;
+		align-items: flex-start;
+	}
+}
+
+@media (max-width: 480px) {
+	.dayBar {
+		padding: 0.65rem 0.875rem;
+	}
+
+	.dayNumber {
+		flex-direction: row;
+		align-items: baseline;
+		gap: 0.3rem;
+	}
+
+	.number {
+		@include fluid-text(28, 22);
+	}
+}
+
+.dayPill {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.2rem;
+	padding: 0.4rem 0.6rem;
+	border-radius: 0.625rem;
+	background: none;
+	border: 1px solid transparent;
+	color: $fc-secondary;
+	cursor: pointer;
+	min-width: 2.75rem;
+	transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+
+	&:hover:not(:disabled) {
+		background-color: rgba(255, 255, 255, 0.05);
+		color: $fc-main;
+	}
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.3;
+	}
+}
+
+.dayPillSelected {
+	background-color: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.12);
+	color: $fc-main;
+
+	.pillNum {
+		color: $fc-main;
+	}
+}
+
+.dayPillToday {
+	.pillNum {
+		color: $fc-contrast;
+	}
+}
+
+.dayPillFuture {
+	opacity: 0.25;
+}
+
+.pillName {
+	@include fluid-text(10, 9);
+	font-weight: $fw-semibold;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	line-height: 1;
+}
+
+.pillNum {
+	@include fluid-text(14, 12);
+	font-weight: $fw-semibold;
+	line-height: 1;
+	color: $fc-secondary;
+	transition: color 0.18s ease;
+}

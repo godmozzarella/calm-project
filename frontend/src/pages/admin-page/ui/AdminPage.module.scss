@@ -1,0 +1,77 @@
+@use 'app/styles/globals.scss' as *;
+
+.page {
+	min-height: 100vh;
+	background: #14161c;
+	padding: 1rem 2rem 4rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	align-items: flex-start;
+}
+
+.back {
+	color: $fc-secondary;
+	text-decoration: none;
+	@include fluid-text(13, 12);
+	transition: color 0.15s ease;
+	padding: 0.25rem 0;
+
+	&:hover { color: $fc-main; }
+}
+
+.title {
+	@include fluid-text(18, 15);
+	font-weight: $fw-semibold;
+	color: $fc-main;
+	margin: 0;
+}
+
+.tabs {
+	display: flex;
+	gap: 0.25rem;
+	background: rgba(23, 25, 29, 0.6);
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	border-radius: 0.75rem;
+	padding: 0.25rem;
+	width: fit-content;
+	max-width: 100%;
+	overflow-x: auto;
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar { display: none; }
+}
+
+.tab {
+	background: none;
+	border: none;
+	color: $fc-secondary;
+	@include fluid-text(13, 12);
+	font-weight: $fw-semibold;
+	padding: 0.45rem 0.9rem;
+	border-radius: 0.5rem;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: background 0.15s ease, color 0.15s ease;
+
+	&:hover { color: $fc-main; }
+}
+
+.tabActive {
+	background: rgba(92, 173, 228, 0.15);
+	color: $fc-contrast;
+}
+
+.content {
+	background: #1c1f24;
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	border-radius: 1rem;
+	padding: 1.5rem;
+	min-height: 20rem;
+	width: 100%;
+}
+
+@media (max-width: 640px) {
+	.page { padding: 1rem; }
+	.content { padding: 1rem; }
+}
