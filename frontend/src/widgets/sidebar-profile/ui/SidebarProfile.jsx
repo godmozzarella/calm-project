@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 import { Input } from '@/shared/ui/Input'
 import { Button } from '@/shared/ui/Button'
@@ -157,11 +157,11 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 								<span className={s.navLabel}>Редактировать профиль</span>
 								<span className={s.navChevron}><ChevronRightIcon fontSize="small" /></span>
 							</button>
-							<button className={s.navItem}>
+							<Link to="/stats" className={s.navItem} onClick={handleClose}>
 								<span className={s.navIcon}><AnalyticsIcon fontSize="small" /></span>
 								<span className={s.navLabel}>Статистика</span>
 								<span className={s.navChevron}><ChevronRightIcon fontSize="small" /></span>
-							</button>
+							</Link>
 						</nav>
 
 						<div className={s.divider} />
