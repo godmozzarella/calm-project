@@ -2,6 +2,9 @@ package com.calm.feature.stats;
 
 import com.calm.feature.attack.Attack;
 import com.calm.feature.attack.AttackRepository;
+import com.calm.feature.dictionary.DictionaryEntry;
+import com.calm.feature.dictionary.DictionaryRepository;
+import com.calm.feature.dictionary.DictionaryType;
 import com.calm.feature.medication.Medication;
 import com.calm.feature.medication.MedicationRepository;
 import com.calm.feature.stats.StatsResponse.*;
@@ -19,23 +22,24 @@ public class StatsService {
 	private static final int OVERUSE_THRESHOLD = 10;
 	private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE;
 
-	private static final Map<String, String> TRIGGER_LABELS = Map.of(
-			"stress", "Стресс", "sleep", "Сон", "food", "Еда",
-			"weather", "Погода", "screen", "Экран", "hormones", "Гормоны", "alcohol", "Алкоголь");
-
-	private static final Map<String, String> SYMPTOM_LABELS = Map.of(
-			"nausea", "Тошнота", "light", "Светобоязнь", "sound", "Звукобоязнь",
-			"aura", "Аура", "dizziness", "Головокружение");
-
 	private static final String[] MONTHS_SHORT =
 			{"янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"};
 
 	private final AttackRepository attackRepo;
 	private final MedicationRepository medicationRepo;
+	private final DictionaryRepository dictionaryRepo;
 
-	public StatsService(AttackRepository attackRepo, MedicationRepository medicationRepo) {
+	public StatsService(AttackRepository attackRepo, MedicationRepository medicationRepo,
+			DictionaryRepository dictionaryRepo) {
 		this.attackRepo = attackRepo;
 		this.medicationRepo = medicationRepo;
+		this.dictionaryRepo = dictionaryRepo;
+	}
+
+	private Map<String, String> labelsOf(DictionaryType type) {
+		return dictionaryRepo.findByTypeOrderByOrderAscLabelAsc(type).stream()
+				.collect(Collectors.toMap(DictionaryEntry::getValue, DictionaryEntry::getLabel,
+						(a, b) -> a));
 	}
 
 	public StatsResponse compute(String userId, String period) {
@@ -211,8 +215,8 @@ public class StatsService {
 
 	private PatternsDto computePatterns(List<Attack> attacks, List<Medication> meds, DateRange range) {
 		return new PatternsDto(
-				topTags(attacks, "triggers", TRIGGER_LABELS, 5),
-				topTags(attacks, "symptoms", SYMPTOM_LABELS, 5),
+				topTags(attacks, "triggers", labelsOf(DictionaryType.TRIGGER), 5),
+				topTags(attacks, "symptoms", labelsOf(DictionaryType.SYMPTOM), 5),
 				zonePatterns(attacks),
 				medStats(meds));
 	}

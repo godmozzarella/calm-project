@@ -10,6 +10,7 @@ import {
 	ATTACKS_CHANGED,
 	MEDICATIONS_CHANGED,
 } from '@/shared/lib/dataEvents'
+import { useDictionaries } from '@/shared/lib/dictionaries'
 
 import {
 	exportAttacksCsv,
@@ -35,6 +36,7 @@ const StatsPage = () => {
 	const [medications, setMedications] = useState([])
 	const [pdfLoading, setPdfLoading] = useState(false)
 	const dashboardRef                = useRef(null)
+	const { symptoms, triggers }      = useDictionaries()
 
 	const loadAttacks = useCallback(() => attackApi.getAll().then(setAttacks).catch(() => {}), [])
 	const loadMeds    = useCallback(() => medicationApi.getAll().then(setMedications).catch(() => {}), [])
@@ -49,7 +51,7 @@ const StatsPage = () => {
 	const hasData = attacks.length > 0 || medications.length > 0
 
 	const handlePrint = () => printDashboard()
-	const handleExportAttacks = () => exportAttacksCsv(attacks)
+	const handleExportAttacks = () => exportAttacksCsv(attacks, { symptoms, triggers })
 	const handleExportMeds    = () => exportMedicationsCsv(medications)
 	const handleDownloadPdf   = async () => {
 		if (!dashboardRef.current || pdfLoading) return

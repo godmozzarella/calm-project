@@ -2,9 +2,10 @@ import { useState, useCallback, useEffect } from 'react'
 
 import { AddIcon, DeleteIcon } from '@/shared/ui/icons'
 import { AddAttackForm, useAddAttack } from '@/features/add-attack'
-import { ATTACK_TYPE_LABELS, SYMPTOM_LABELS, intensityColor } from '@/entities/attack'
+import { ATTACK_TYPE_LABELS, intensityColor } from '@/entities/attack'
 import { attackApi } from '@/shared/api'
 import { subscribe, ATTACKS_CHANGED } from '@/shared/lib/dataEvents'
+import { useDictionaries } from '@/shared/lib/dictionaries'
 
 import s from './AttackSection.module.scss'
 
@@ -39,6 +40,7 @@ const formatRange = attack => {
 
 const AttackSection = ({ date }) => {
 	const [attacks, setAttacks] = useState([])
+	const { getLabel } = useDictionaries()
 
 	const reload = useCallback(
 		() => attackApi.getByDate(date).then(setAttacks),
@@ -105,7 +107,7 @@ const AttackSection = ({ date }) => {
 										<div className={s.chips}>
 											{attack.symptoms.map(sym => (
 												<span key={sym} className={s.chip}>
-													{SYMPTOM_LABELS[sym]}
+													{getLabel('SYMPTOM', sym)}
 												</span>
 											))}
 										</div>

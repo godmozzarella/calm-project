@@ -318,6 +318,20 @@
 	}
 }
 
+/* ── Удаление аккаунта — более явный «опасный» стиль ── */
+.dangerItem {
+	color: rgba(239, 68, 68, 0.95);
+
+	.navIcon {
+		color: rgba(239, 68, 68, 0.85);
+	}
+
+	&:hover {
+		background-color: rgba(239, 68, 68, 0.14) !important;
+		color: rgb(255, 90, 90);
+	}
+}
+
 /* ── Spacer ── */
 .spacer {
 	flex: 1;

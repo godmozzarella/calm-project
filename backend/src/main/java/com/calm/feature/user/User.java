@@ -22,6 +22,9 @@ public class User {
 
 	private String passwordHash;
 
+	/** Роль доступа. Default USER, см. {@link Role}. */
+	private Role role = Role.USER;
+
 	private String avatarUrl;
 
 	// ── Локация для прогноза головной боли ──
@@ -62,6 +65,9 @@ public class User {
 	public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
 	public String getAvatarUrl() { return avatarUrl; }
 	public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+	public Role getRole() { return role == null ? Role.USER : role; }
+	public void setRole(Role role) { this.role = role == null ? Role.USER : role; }
 
 	public Double getLatitude() { return latitude; }
 	public void setLatitude(Double latitude) { this.latitude = latitude; }

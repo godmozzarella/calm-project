@@ -1,0 +1,180 @@
+@use 'app/styles/globals.scss' as *;
+
+.wrap {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.h2 {
+	@include fluid-text(16, 14);
+	color: $fc-main;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.tag {
+	@include fluid-text(11, 10);
+	color: rgba(199, 152, 100, 0.9);
+	background: rgba(199, 152, 100, 0.12);
+	padding: 0.15rem 0.5rem;
+	border-radius: 0.4rem;
+	font-weight: $fw-medium;
+}
+
+.toolbar {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.input {
+	flex: 1 1 12rem;
+	min-width: 0;
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 0.5rem;
+	padding: 0.5rem 0.75rem;
+	color: $fc-main;
+	@include fluid-text(13, 12);
+	outline: none;
+	transition: border-color 0.15s ease;
+
+	&:focus { border-color: rgba(92, 173, 228, 0.4); }
+	&:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.inputInline {
+	width: 100%;
+	background: rgba(255, 255, 255, 0.06);
+	border: 1px solid rgba(92, 173, 228, 0.4);
+	border-radius: 0.35rem;
+	padding: 0.2rem 0.4rem;
+	color: $fc-main;
+	@include fluid-text(13, 12);
+	outline: none;
+}
+
+.btn {
+	background: rgba(92, 173, 228, 0.15);
+	color: $fc-contrast;
+	border: 1px solid rgba(92, 173, 228, 0.25);
+	border-radius: 0.5rem;
+	padding: 0.5rem 0.9rem;
+	@include fluid-text(13, 12);
+	font-weight: $fw-semibold;
+	cursor: pointer;
+	transition: background 0.15s ease;
+
+	&:hover { background: rgba(92, 173, 228, 0.25); }
+	&:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.btnSmall {
+	background: rgba(255, 255, 255, 0.05);
+	color: $fc-main;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 0.4rem;
+	padding: 0.3rem 0.6rem;
+	@include fluid-text(12, 11);
+	cursor: pointer;
+	transition: background 0.15s ease;
+
+	&:hover { background: rgba(255, 255, 255, 0.1); }
+}
+
+.btnDanger {
+	background: rgba(201, 112, 112, 0.1);
+	color: #c97070;
+	border: 1px solid rgba(201, 112, 112, 0.25);
+	border-radius: 0.4rem;
+	padding: 0.3rem 0.6rem;
+	@include fluid-text(12, 11);
+	cursor: pointer;
+	transition: background 0.15s ease;
+
+	&:hover { background: rgba(201, 112, 112, 0.2); }
+}
+
+.table {
+	width: 100%;
+	border-collapse: collapse;
+	@include fluid-text(13, 12);
+
+	th, td {
+		text-align: left;
+		padding: 0.55rem 0.75rem;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+	}
+
+	th {
+		color: $fc-secondary;
+		font-weight: $fw-medium;
+		text-transform: uppercase;
+		@include fluid-text(11, 10);
+		letter-spacing: 0.04em;
+	}
+
+	td { color: $fc-main; }
+}
+
+.badge {
+	display: inline-block;
+	padding: 0.1rem 0.5rem;
+	border-radius: 0.35rem;
+	@include fluid-text(11, 10);
+	background: rgba(255, 255, 255, 0.05);
+	color: $fc-secondary;
+	font-weight: $fw-medium;
+}
+
+.badgeAdmin {
+	background: rgba(92, 173, 228, 0.18);
+	color: $fc-contrast;
+}
+
+.code {
+	font-family: 'SF Mono', Menlo, monospace;
+	@include fluid-text(12, 11);
+	background: rgba(0, 0, 0, 0.25);
+	padding: 0.1rem 0.4rem;
+	border-radius: 0.3rem;
+	color: $fc-secondary;
+}
+
+.editable {
+	cursor: text;
+	border-bottom: 1px dashed transparent;
+
+	&:hover { border-bottom-color: rgba(255, 255, 255, 0.15); }
+}
+
+.muted {
+	color: $fc-secondary;
+	@include fluid-text(12, 11);
+}
+
+.error {
+	color: $error-color;
+	@include fluid-text(12, 11);
+}
+
+.formStack {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	max-width: 32rem;
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+
+	span {
+		color: $fc-secondary;
+		@include fluid-text(12, 11);
+	}
+}

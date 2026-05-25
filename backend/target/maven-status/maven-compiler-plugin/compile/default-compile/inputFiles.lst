@@ -7,6 +7,9 @@
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/config/CorsConfig.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/config/OpenApiConfig.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/config/SecurityConfig.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/admin/AdminDictionaryController.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/admin/AdminUserController.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/admin/dto/UpdateRoleRequest.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/attack/Attack.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/attack/AttackController.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/attack/AttackRepository.java
@@ -20,6 +23,15 @@
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/auth/dto/LoginRequest.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/auth/dto/RefreshRequest.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/auth/dto/RegisterRequest.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/dictionary/DictionaryController.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/dictionary/DictionaryEntry.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/dictionary/DictionaryRepository.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/dictionary/DictionarySeeder.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/dictionary/DictionaryService.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/dictionary/DictionaryType.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/dictionary/dto/CreateDictionaryEntryRequest.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/dictionary/dto/DictionaryEntryDto.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/dictionary/dto/UpdateDictionaryEntryRequest.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/email/EmailService.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/email/ResendEmailService.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/email/SmtpEmailService.java
@@ -49,7 +61,9 @@
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/stats/StatsController.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/stats/StatsResponse.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/stats/StatsService.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/user/AccountDeletionService.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/user/AvatarController.java
+/Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/user/Role.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/user/User.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/user/UserController.java
 /Users/kirillpustovojt/calm-project/backend/src/main/java/com/calm/feature/user/UserRepository.java

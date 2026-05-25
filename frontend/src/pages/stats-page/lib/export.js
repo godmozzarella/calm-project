@@ -4,8 +4,6 @@
 
 import {
 	ATTACK_TYPE_LABELS,
-	SYMPTOM_LABELS,
-	TRIGGER_LABELS,
 	PAIN_ZONE_LABELS,
 } from '@/entities/attack'
 
@@ -41,7 +39,7 @@ const labelsOfZones = pz => {
 	return zones.map(z => PAIN_ZONE_LABELS[z] ?? z).join(', ')
 }
 
-export const exportAttacksCsv = (attacks) => {
+export const exportAttacksCsv = (attacks, { symptoms = {}, triggers = {} } = {}) => {
 	const header = [
 		'id',
 		'startDate',
@@ -65,8 +63,8 @@ export const exportAttacksCsv = (attacks) => {
 		a.ongoing ? 'да' : 'нет',
 		a.intensity ?? '',
 		ATTACK_TYPE_LABELS[a.type] ?? a.type ?? '',
-		labelsOfArray(a.symptoms, SYMPTOM_LABELS),
-		labelsOfArray(a.triggers, TRIGGER_LABELS),
+		labelsOfArray(a.symptoms, symptoms),
+		labelsOfArray(a.triggers, triggers),
 		labelsOfZones(a.painZones),
 		a.note ?? '',
 	])

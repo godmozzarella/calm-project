@@ -3,7 +3,9 @@ import { Route, Routes } from 'react-router-dom'
 import { IndexPage } from '@/pages/index-page'
 import { MainPage } from '@/pages/main-page'
 import { StatsPage } from '@/pages/stats-page'
+import { AdminPage } from '@/pages/admin-page'
 import ProtectedRoute from '@/app/providers/router/ProtectedRoute'
+import AdminRoute from '@/app/providers/router/AdminRoute'
 
 const AppRouter = () => {
 	return (
@@ -23,6 +25,14 @@ const AppRouter = () => {
 					<ProtectedRoute>
 						<StatsPage />
 					</ProtectedRoute>
+				}
+			/>
+			<Route
+				path="/admin"
+				element={
+					<AdminRoute>
+						<AdminPage />
+					</AdminRoute>
 				}
 			/>
 			<Route path="*" element={<div>404 Not found</div>} />

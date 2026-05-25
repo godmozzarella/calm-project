@@ -37,10 +37,10 @@ const BarChart = ({ buckets, metric, onBarClick }) => {
 		})
 		ro.observe(wrapRef.current)
 		return () => ro.disconnect()
-	}, [])
+	}, [buckets.length === 0])
 
 	if (buckets.length === 0) {
-		return <div className={s.empty}>Нет данных для отображения</div>
+		return <div ref={wrapRef} className={s.empty}>Нет данных для отображения</div>
 	}
 
 	const maxCount = buckets.reduce((m, b) => Math.max(m, b.count), 0)

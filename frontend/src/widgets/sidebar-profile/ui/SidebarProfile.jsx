@@ -9,6 +9,7 @@ import {
 	ArrowBackIcon,
 	PersonIcon,
 	AnalyticsIcon,
+	SecurityIcon,
 	LogoutIcon,
 	PhotoCameraIcon,
 	DeleteIcon,
@@ -109,6 +110,25 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 		navigate('/')
 	}
 
+	const handleDeleteAccount = async () => {
+		const confirm1 = window.confirm(
+			'Удалить аккаунт?\n\nВсе ваши приступы, препараты и зоны боли будут безвозвратно удалены.'
+		)
+		if (!confirm1) return
+		const confirm2 = window.prompt('Чтобы подтвердить удаление, введите "УДАЛИТЬ":')
+		if (confirm2?.trim().toUpperCase() !== 'УДАЛИТЬ') return
+
+		try {
+			await userApi.deleteAccount()
+			// Бэк уже снёс пользователя; чистим локальную сессию.
+			await authApi.logout().catch(() => {})
+			clearCurrentUser()
+			navigate('/')
+		} catch (e) {
+			alert(`Не удалось удалить аккаунт: ${e.message || 'ошибка сети'}`)
+		}
+	}
+
 	return (
 		<>
 			<aside className={`${s.sidebar} ${openMenu ? s.active : ''}`}>
@@ -162,6 +182,13 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 								<span className={s.navLabel}>Статистика</span>
 								<span className={s.navChevron}><ChevronRightIcon fontSize="small" /></span>
 							</Link>
+							{user?.role === 'ADMIN' && (
+								<Link to="/admin" className={s.navItem} onClick={handleClose}>
+									<span className={s.navIcon}><SecurityIcon fontSize="small" /></span>
+									<span className={s.navLabel}>Админка</span>
+									<span className={s.navChevron}><ChevronRightIcon fontSize="small" /></span>
+								</Link>
+							)}
 						</nav>
 
 						<div className={s.divider} />
@@ -225,6 +252,10 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 						<button className={`${s.navItem} ${s.logoutItem}`} onClick={handleLogout}>
 							<span className={s.navIcon}><LogoutIcon fontSize="small" /></span>
 							<span className={s.navLabel}>Выйти из аккаунта</span>
+						</button>
+						<button className={`${s.navItem} ${s.dangerItem}`} onClick={handleDeleteAccount}>
+							<span className={s.navIcon}><DeleteIcon fontSize="small" /></span>
+							<span className={s.navLabel}>Удалить аккаунт</span>
 						</button>
 
 						<div className={s.divider} />

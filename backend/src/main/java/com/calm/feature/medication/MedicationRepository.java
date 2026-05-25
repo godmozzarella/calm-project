@@ -10,6 +10,8 @@ public interface MedicationRepository extends MongoRepository<Medication, String
 
 	List<Medication> findByUserIdOrderByDateDescTimeDesc(String userId);
 
+	long deleteByUserId(String userId);
+
 	@Query(value  = "{ 'userId': ?0, 'date': { $gte: ?1, $lte: ?2 } }",
 	       sort   = "{ 'date': 1, 'time': 1 }")
 	List<Medication> findInRange(String userId, LocalDate from, LocalDate to);

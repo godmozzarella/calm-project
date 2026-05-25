@@ -1,5 +1,6 @@
 package com.calm.feature.user.dto;
 
+import com.calm.feature.user.Role;
 import com.calm.feature.user.User;
 
 import java.time.Instant;
@@ -8,6 +9,7 @@ public record UserDto(
 		String id,
 		String email,
 		String name,
+		Role role,
 		String avatarUrl,
 		Double latitude,
 		Double longitude,
@@ -20,6 +22,7 @@ public record UserDto(
 				u.getId(),
 				u.getEmail(),
 				u.getName(),
+				u.getRole(),
 				u.getAvatarUrl(),
 				u.getLatitude(),
 				u.getLongitude(),

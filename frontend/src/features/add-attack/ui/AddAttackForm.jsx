@@ -1,10 +1,11 @@
-import { ATTACK_TYPE_LABELS, SYMPTOM_LABELS, TRIGGER_LABELS, intensityColor } from '@/entities/attack'
+import { useEffect, useState } from 'react'
+
+import { ATTACK_TYPE_LABELS, intensityColor } from '@/entities/attack'
 import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
+import { dictionaryApi } from '@/shared/api'
 import s from './AddAttackForm.module.scss'
 
-const TYPES    = Object.entries(ATTACK_TYPE_LABELS).map(([value, label]) => ({ value, label }))
-const SYMPTOMS = Object.entries(SYMPTOM_LABELS).map(([value, label]) => ({ value, label }))
-const TRIGGERS = Object.entries(TRIGGER_LABELS).map(([value, label]) => ({ value, label }))
+const TYPES = Object.entries(ATTACK_TYPE_LABELS).map(([value, label]) => ({ value, label }))
 
 const todayKey = () => {
 	const d = new Date()
@@ -13,6 +14,15 @@ const todayKey = () => {
 
 const AddAttackForm = ({ open, form, error, onClose, setField, toggleArrayField, onSubmit }) => {
 	useBodyScrollLock(open)
+	const [symptoms, setSymptoms] = useState([])
+	const [triggers, setTriggers] = useState([])
+
+	useEffect(() => {
+		if (!open) return
+		dictionaryApi.getByType('SYMPTOM').then(setSymptoms).catch(() => {})
+		dictionaryApi.getByType('TRIGGER').then(setTriggers).catch(() => {})
+	}, [open])
+
 	if (!open) return null
 
 	const today = todayKey()
@@ -125,7 +135,7 @@ const AddAttackForm = ({ open, form, error, onClose, setField, toggleArrayField,
 					<section className={s.section}>
 						<span className={s.sectionLabel}>Симптомы</span>
 						<div className={s.chips}>
-							{SYMPTOMS.map(({ value, label }) => (
+							{symptoms.map(({ value, label }) => (
 								<button
 									key={value}
 									className={`${s.chip} ${form.symptoms.includes(value) ? s.chipActive : ''}`}
@@ -141,7 +151,7 @@ const AddAttackForm = ({ open, form, error, onClose, setField, toggleArrayField,
 					<section className={s.section}>
 						<span className={s.sectionLabel}>Триггеры</span>
 						<div className={s.chips}>
-							{TRIGGERS.map(({ value, label }) => (
+							{triggers.map(({ value, label }) => (
 								<button
 									key={value}
 									className={`${s.chip} ${form.triggers.includes(value) ? s.chipActive : ''}`}

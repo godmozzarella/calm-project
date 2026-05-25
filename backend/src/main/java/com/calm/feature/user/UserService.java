@@ -3,6 +3,7 @@ package com.calm.feature.user;
 import com.calm.common.exception.ConflictException;
 import com.calm.common.exception.NotFoundException;
 import com.calm.feature.user.dto.UpdateUserRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,10 +14,26 @@ public class UserService {
 
 	private final UserRepository repo;
 	private final PasswordEncoder passwordEncoder;
+	private final String adminEmail;
 
-	public UserService(UserRepository repo, PasswordEncoder passwordEncoder) {
+	public UserService(UserRepository repo, PasswordEncoder passwordEncoder,
+			@Value("${calm.admin-email:}") String adminEmail) {
 		this.repo = repo;
 		this.passwordEncoder = passwordEncoder;
+		this.adminEmail = adminEmail == null ? "" : adminEmail.trim().toLowerCase();
+	}
+
+	/**
+	 * Если email совпадает с {@code CALM_ADMIN_EMAIL} и роль ещё не ADMIN — повышаем.
+	 * Используется при регистрации и при первом логине существующего юзера.
+	 */
+	public User promoteIfPrimaryAdmin(User user) {
+		if (adminEmail.isBlank() || user.getRole() == Role.ADMIN) return user;
+		if (adminEmail.equalsIgnoreCase(user.getEmail())) {
+			user.setRole(Role.ADMIN);
+			return repo.save(user);
+		}
+		return user;
 	}
 
 	public User getById(String id) {
@@ -33,6 +50,9 @@ public class UserService {
 			throw new ConflictException("Пользователь с таким email уже существует");
 		}
 		User user = new User(email, name, passwordEncoder.encode(rawPassword));
+		if (!adminEmail.isBlank() && adminEmail.equalsIgnoreCase(email)) {
+			user.setRole(Role.ADMIN);
+		}
 		return repo.save(user);
 	}
 

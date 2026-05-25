@@ -10,6 +10,8 @@ public interface AttackRepository extends MongoRepository<Attack, String> {
 
 	List<Attack> findByUserIdOrderByStartDateDescStartTimeDesc(String userId);
 
+	long deleteByUserId(String userId);
+
 	/**
 	 * Все приступы пользователя, чей диапазон пересекает [from, to].
 	 * ongoing = true считается «продолжается до сегодня», поэтому условие fuzzy:

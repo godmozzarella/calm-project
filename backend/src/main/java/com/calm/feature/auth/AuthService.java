@@ -42,6 +42,8 @@ public class AuthService {
 		if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
 			throw new BadCredentialsException("invalid credentials");
 		}
+		// Если аккаунт совпадает с CALM_ADMIN_EMAIL, но был создан ДО появления env — повышаем сейчас.
+		user = userService.promoteIfPrimaryAdmin(user);
 		return issueTokenPair(user);
 	}
 
@@ -62,7 +64,7 @@ public class AuthService {
 	}
 
 	private AuthResponse issueTokenPair(User user) {
-		String accessToken = jwtService.issue(user.getId(), user.getEmail());
+		String accessToken = jwtService.issue(user.getId(), user.getEmail(), user.getRole().name());
 		String refreshToken = user.rotateRefreshToken();
 		userRepository.save(user);
 		return new AuthResponse(accessToken, refreshToken, UserDto.from(user));
