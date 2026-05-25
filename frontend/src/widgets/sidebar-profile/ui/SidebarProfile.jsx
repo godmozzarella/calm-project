@@ -86,6 +86,15 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 		? user.name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()
 		: user?.email?.[0]?.toUpperCase() ?? '?'
 
+	// Старые записи в БД хранят абсолютный URL http://localhost:8080/api/...
+	// Нормализуем до относительного пути чтобы работало с любого устройства/IP.
+	// Blob-URL (превью при загрузке) оставляем как есть.
+	const resolveAvatar = url => {
+		if (!url) return null
+		if (url.startsWith('/') || url.startsWith('blob:')) return url
+		try { return new URL(url).pathname } catch { return url }
+	}
+
 	const handleClose = () => {
 		setOpenMenu(false)
 		setTimeout(() => {
@@ -145,7 +154,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 						<div className={s.userSection}>
 							<label htmlFor="quickAvatarUpload" className={s.avatarWrapper}>
 								{user?.avatarUrl ? (
-									<img className={s.avatar} src={user.avatarUrl} alt="Аватар" />
+									<img className={s.avatar} src={resolveAvatar(user.avatarUrl)} alt="Аватар" />
 								) : (
 									<div className={s.avatarPlaceholder}>
 										<span className={s.initials}>{initials}</span>
@@ -292,7 +301,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 								<div className={s.editAvatarSection}>
 									<label htmlFor="editAvatarUpload" className={s.avatarWrapper}>
 										{tempAvatar ? (
-											<img className={s.avatar} src={tempAvatar} alt="Аватар" />
+											<img className={s.avatar} src={resolveAvatar(tempAvatar)} alt="Аватар" />
 										) : (
 											<div className={s.avatarPlaceholder}>
 												<span className={s.initials}>{initials}</span>

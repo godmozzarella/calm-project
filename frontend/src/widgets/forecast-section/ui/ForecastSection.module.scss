@@ -247,7 +247,10 @@
 	.metrics { grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr)); }
 }
 
+@media (max-width: 480px) {
+	.metrics { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 400px) {
-	.tiles   { grid-template-columns: 1fr 1fr; }
-	.metrics { grid-template-columns: repeat(2, 1fr); }
+	.tiles { grid-template-columns: 1fr 1fr; }
 }

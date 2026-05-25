@@ -70,7 +70,9 @@ public class AvatarController {
 		String filename = UUID.randomUUID() + ext;
 		Files.copy(file.getInputStream(), uploadDir.resolve(filename));
 
-		String avatarUrl = baseUrl + "/api/public/avatars/" + filename;
+		// Относительный путь — работает с любого IP/устройства через nginx.
+		// baseUrl оставлен в конструкторе для возможного использования в email-уведомлениях.
+		String avatarUrl = "/api/public/avatars/" + filename;
 
 		User user = userService.getById(principal.getUserId());
 		// Удаляем старый файл если был

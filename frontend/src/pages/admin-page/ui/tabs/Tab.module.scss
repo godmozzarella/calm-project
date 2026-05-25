@@ -102,6 +102,11 @@
 	width: 100%;
 	border-collapse: collapse;
 	@include fluid-text(13, 12);
+	/* display:block позволяет overflow-x:auto работать на самой таблице —
+	   дочерние элементы сохраняют свои table-* display значения */
+	display: block;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
 
 	th, td {
 		text-align: left;
