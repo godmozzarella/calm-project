@@ -33,13 +33,6 @@
 	grid-template-columns: 2fr 1.2fr 1.5fr;
 	gap: 1.25rem;
 	align-items: stretch;
-
-	/* Все три блока одинаковой высоты — определяется зоной боли (≈ SVG-heads + header).
-	   На мобиле блоки стекаются в столбик и пейн-зоны переходят в вертикальную раскладку (головы стек),
-	   поэтому max-height снимаем ниже в @media (max-width: 1024px). */
-	> * {
-		max-height: clamp(22rem, 54vh, 34rem);
-	}
 }
 
 /* ── Forecast row (between top widgets and chart) ── */
@@ -62,12 +55,6 @@
 	   чтобы не оставалась пустая клетка справа */
 	.topRow > :nth-child(3) {
 		grid-column: 1 / -1;
-	}
-
-	/* Снимаем общий max-height: на узких экранах AttackZone уходит в вертикальную раскладку
-	   (головы стек) и не помещается в 34rem — пусть растёт по контенту. */
-	.topRow > * {
-		max-height: none;
 	}
 }
 

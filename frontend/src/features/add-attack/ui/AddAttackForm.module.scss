@@ -4,6 +4,9 @@
 .overlay {
 	position: fixed;
 	inset: 0;
+	/* перебиваем .topRow > * { max-height: clamp(22rem, 54vh, 34rem) } из MainSection.module.scss —
+	   overlay рендерится внутри topRow как сосед .card, и без этого ограничивается по высоте */
+	max-height: none;
 	background: rgba(0, 0, 0, 0.6);
 	backdrop-filter: blur(3px);
 	z-index: 1100;
@@ -34,12 +37,18 @@
 		max-width: 560px;
 		max-height: 88vh;
 		max-height: 88dvh;
+		animation: fadeInModal 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 }
 
 @keyframes slideUp {
 	from { transform: translateY(100%); opacity: 0; }
 	to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes fadeInModal {
+	from { opacity: 0; transform: translateY(16px) scale(0.98); }
+	to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
 /* ── Handle (mobile) ── */
@@ -90,6 +99,7 @@
 .body {
 	overflow-y: auto;
 	flex: 1;
+	min-height: 0; /* без этого flex-ребёнок не сжимается, и .sheet превышает max-height */
 	padding: 0.25rem 1.25rem 0.5rem;
 	display: flex;
 	flex-direction: column;
