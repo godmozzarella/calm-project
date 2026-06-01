@@ -11,6 +11,16 @@
 	width: 100%;
 }
 
+.staleBanner {
+	@include fluid-text(13, 11);
+	background: rgba(245, 158, 11, 0.1);
+	border: 1px solid rgba(245, 158, 11, 0.3);
+	color: #fbbf24;
+	padding: 0.5rem 0.75rem;
+	border-radius: 0.5rem;
+	line-height: 1.4;
+}
+
 .empty,
 .errorText {
 	@include fluid-text(13, 12);

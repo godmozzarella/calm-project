@@ -8,6 +8,8 @@ import com.calm.feature.forecast.provider.RawForecastDay;
 import com.calm.feature.forecast.provider.WeatherProvider;
 import com.calm.feature.forecast.provider.WeatherProviderRegistry;
 import com.calm.feature.forecast.snapshot.ForecastSnapshotService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -40,6 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class ForecastService {
 
+	private static final Logger log = LoggerFactory.getLogger(ForecastService.class);
 	private static final Duration CACHE_TTL = Duration.ofHours(1);
 	private static final int DEFAULT_DAYS_AHEAD = 3;
 
@@ -59,27 +62,49 @@ public class ForecastService {
 		String key = cacheKey(lat, lon);
 		CachedResponse cached = cache.get(key);
 		if (cached != null && cached.isFresh()) {
-			return cached.response;
+			return withFreshness(cached, false);
 		}
 
-		WeatherProvider provider = providers.active();
-		List<RawForecastDay> raw = provider.fetchForecast(lat, lon, DEFAULT_DAYS_AHEAD);
+		try {
+			WeatherProvider provider = providers.active();
+			List<RawForecastDay> raw = provider.fetchForecast(lat, lon, DEFAULT_DAYS_AHEAD);
 
-		Map<LocalDate, Double> kpByDate = noaaKpService.getDailyMaxKp();
-		List<RawForecastDay> enriched = raw.stream()
-				.map(r -> kpByDate.containsKey(r.date()) ? r.withKpIndex(kpByDate.get(r.date())) : r)
-				.toList();
+			Map<LocalDate, Double> kpByDate = noaaKpService.getDailyMaxKp();
+			List<RawForecastDay> enriched = raw.stream()
+					.map(r -> kpByDate.containsKey(r.date()) ? r.withKpIndex(kpByDate.get(r.date())) : r)
+					.toList();
 
-		List<ForecastDayDto> days = enriched.stream().map(ForecastService::toDayDto).toList();
+			List<ForecastDayDto> days = enriched.stream().map(ForecastService::toDayDto).toList();
 
-		ForecastResponse response = new ForecastResponse(provider.getKey(), days);
-		cache.put(key, new CachedResponse(response, Instant.now()));
+			Instant now = Instant.now();
+			ForecastResponse response = new ForecastResponse(provider.getKey(), days, false, now);
+			cache.put(key, new CachedResponse(response, now));
 
-		// Сохраняем снимок «сегодня» для построения корреляций «приступ ↔ погода» в статистике.
-		// Тихий best-effort — если падает, прогноз всё равно отдаём.
-		try { snapshotService.saveTodaySnapshot(lat, lon, days); } catch (Exception ignored) {}
+			// Сохраняем снимок «сегодня» для построения корреляций «приступ ↔ погода» в статистике.
+			// Тихий best-effort — если падает, прогноз всё равно отдаём.
+			try { snapshotService.saveTodaySnapshot(lat, lon, days); } catch (Exception ignored) {}
 
-		return response;
+			return response;
+		} catch (RuntimeException e) {
+			// Внешний API недоступен — пробуем отдать устаревший кэш (TTL уже истёк, но данные есть).
+			// Это лучше пустого экрана: пользователь видит хоть что-то + баннер «данные могут быть устаревшими».
+			if (cached != null) {
+				log.warn("Прогноз погоды недоступен, возвращаем устаревший кэш от {}: {}",
+						cached.at, e.getMessage());
+				return withFreshness(cached, true);
+			}
+			throw e;
+		}
+	}
+
+	/** Создаёт ответ с актуальным флагом stale (кэш мог быть свежим или устаревшим). */
+	private static ForecastResponse withFreshness(CachedResponse cached, boolean stale) {
+		return new ForecastResponse(
+				cached.response.provider(),
+				cached.response.days(),
+				stale,
+				cached.at
+		);
 	}
 
 	public List<GeocodingResult> geocode(String query, int limit) {

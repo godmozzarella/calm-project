@@ -20,6 +20,16 @@ const formatDay = (isoDate, isToday) => {
 	return `${RU_WEEKDAYS[d.getDay()]} · ${d.getDate()} ${RU_MONTHS[d.getMonth()]}`
 }
 
+const formatCachedAt = isoInstant => {
+	if (!isoInstant) return ''
+	const d = new Date(isoInstant)
+	const day = String(d.getDate()).padStart(2, '0')
+	const month = RU_MONTHS[d.getMonth()]
+	const hh = String(d.getHours()).padStart(2, '0')
+	const mm = String(d.getMinutes()).padStart(2, '0')
+	return `${day} ${month}, ${hh}:${mm}`
+}
+
 const ForecastSection = ({ user, onOpenLocationModal }) => {
 	const [data, setData] = useState(null)
 	const [loading, setLoading] = useState(false)
@@ -82,6 +92,11 @@ const ForecastSection = ({ user, onOpenLocationModal }) => {
 
 	return (
 		<section className={s.card}>
+			{data.stale && (
+				<div className={s.staleBanner}>
+					Сервис погоды временно недоступен. Показаны последние актуальные данные{data.cachedAt ? ` на ${formatCachedAt(data.cachedAt)}` : ''}.
+				</div>
+			)}
 			<div className={s.tiles}>
 				{days.map((d, i) => (
 					<button
