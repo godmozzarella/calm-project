@@ -68,6 +68,9 @@ public class ForecastService {
 		try {
 			WeatherProvider provider = providers.active();
 			List<RawForecastDay> raw = provider.fetchForecast(lat, lon, DEFAULT_DAYS_AHEAD);
+			if (raw.isEmpty()) {
+				throw new IllegalStateException("Погодный провайдер вернул пустой прогноз");
+			}
 
 			Map<LocalDate, Double> kpByDate = noaaKpService.getDailyMaxKp();
 			List<RawForecastDay> enriched = raw.stream()

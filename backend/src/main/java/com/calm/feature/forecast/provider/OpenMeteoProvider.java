@@ -63,9 +63,11 @@ public class OpenMeteoProvider implements WeatherProvider {
 			root = http.get().uri(URI.create(url)).retrieve().body(JsonNode.class);
 		} catch (Exception e) {
 			log.warn("Open-Meteo forecast не отвечает: {}", e.getMessage());
-			return Collections.emptyList();
+			throw new IllegalStateException("Open-Meteo forecast недоступен", e);
 		}
-		if (root == null) return Collections.emptyList();
+		if (root == null) {
+			throw new IllegalStateException("Open-Meteo forecast вернул пустой ответ");
+		}
 
 		JsonNode hourly = root.path("hourly");
 		JsonNode daily  = root.path("daily");
@@ -107,6 +109,10 @@ public class OpenMeteoProvider implements WeatherProvider {
 					getOrNull(dailyTempMax, i),
 					getOrNull(dailyWindGusts, i)
 			));
+		}
+
+		if (result.isEmpty()) {
+			throw new IllegalStateException("Open-Meteo forecast не содержит дневных данных");
 		}
 
 		return result;

@@ -85,7 +85,13 @@ const ForecastSection = ({ user, onOpenLocationModal }) => {
 		)
 	}
 
-	if (!data || !data.days?.length) return null
+	if (!data || !data.days?.length) {
+		return (
+			<section className={s.card}>
+				<p className={s.errorText}>Прогноз временно недоступен. Попробуй обновить позже.</p>
+			</section>
+		)
+	}
 
 	const days = data.days.slice(0, 4)
 	const active = days[expanded] ?? days[0]
