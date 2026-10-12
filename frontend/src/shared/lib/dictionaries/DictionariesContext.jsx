@@ -1,8 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 
 import { dictionaryApi } from '@/shared/api'
 import { getToken } from '@/shared/api'
-import { subscribe } from '@/shared/lib/dataEvents'
+import { subscribe, AUTH_CHANGED } from '@/shared/lib/dataEvents'
 
 const Ctx = createContext({
 	symptoms: {},
@@ -18,18 +18,27 @@ export const DictionariesProvider = ({ children }) => {
 	const [symptoms, setSymptoms] = useState({})
 	const [triggers, setTriggers] = useState({})
 	const [medications, setMedications] = useState([]) // полные записи, не мап — нужен category
+	const loadId = useRef(0)
 
 	const load = useCallback(() => {
-		if (!getToken()) return // справочники под аутентификацией; на лендинге не дёргаем
-		dictionaryApi.getByType('SYMPTOM').then(list => setSymptoms(toMap(list))).catch(() => {})
-		dictionaryApi.getByType('TRIGGER').then(list => setTriggers(toMap(list))).catch(() => {})
-		dictionaryApi.getByType('MEDICATION_PRESET').then(setMedications).catch(() => {})
+		const currentLoad = ++loadId.current
+		if (!getToken()) {
+			setSymptoms({})
+			setTriggers({})
+			setMedications([])
+			return
+		}
+		const stillCurrent = () => loadId.current === currentLoad
+		dictionaryApi.getByType('SYMPTOM').then(list => { if (stillCurrent()) setSymptoms(toMap(list)) }).catch(() => {})
+		dictionaryApi.getByType('TRIGGER').then(list => { if (stillCurrent()) setTriggers(toMap(list)) }).catch(() => {})
+		dictionaryApi.getByType('MEDICATION_PRESET').then(list => { if (stillCurrent()) setMedications(list) }).catch(() => {})
 	}, [])
 
 	useEffect(() => { load() }, [load])
 
 	// Когда админ меняет словарь в этой же вкладке — перезагружаем.
 	useEffect(() => subscribe('calm:dictionaries-changed', load), [load])
+	useEffect(() => subscribe(AUTH_CHANGED, load), [load])
 
 	const getLabel = useCallback((type, value) => {
 		if (!value) return value

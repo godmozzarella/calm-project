@@ -21,32 +21,34 @@ public class ForecastSnapshotService {
 	}
 
 	/**
-	 * Сохраняет снимок прогноза на «сегодня» (первый день из ответа) — если ещё нет.
-	 * Идемпотентно: повторный вызов в тот же день для тех же координат ничего не делает.
+	 * Сохраняет первый полученный прогноз для каждого дня и локации.
+	 * Время создания позволяет отличать прогноз до начала дня от снимка в тот же день.
 	 */
-	public void saveTodaySnapshot(double lat, double lon, List<ForecastDayDto> days) {
-		if (days.isEmpty()) return;
-		ForecastDayDto today = days.get(0);
+	public void saveForecastSnapshots(double lat, double lon, List<ForecastDayDto> days) {
 		String key = ForecastSnapshot.makeLocationKey(lat, lon);
+		for (ForecastDayDto day : days) saveIfMissing(key, day);
+	}
 
-		if (repo.findByLocationKeyAndDate(key, today.date()).isPresent()) return;
+	private void saveIfMissing(String key, ForecastDayDto day) {
+		if (repo.findByLocationKeyAndDate(key, day.date()).isPresent()) return;
 
 		ForecastSnapshot snap = new ForecastSnapshot();
 		snap.setLocationKey(key);
-		snap.setDate(today.date());
-		snap.setRisk(today.risk());
-		snap.setScore(today.score());
-		snap.setPressureHpa(today.pressureHpa());
-		snap.setPressureDelta24h(today.pressureDelta24h());
-		snap.setHumidity(today.humidity());
-		snap.setTempMin(today.tempMin());
-		snap.setTempMax(today.tempMax());
-		snap.setWindKmhMax(today.windKmhMax());
-		snap.setKpIndex(today.kpIndex());
+		snap.setDate(day.date());
+		snap.setRisk(day.risk());
+		snap.setScore(day.score());
+		snap.setPressureHpa(day.pressureHpa());
+		snap.setPressureDelta24h(day.pressureDelta24h());
+		snap.setHumidity(day.humidity());
+		snap.setTempMin(day.tempMin());
+		snap.setTempMax(day.tempMax());
+		snap.setWindKmhMax(day.windKmhMax());
+		snap.setKpIndex(day.kpIndex());
+		snap.setTimezone(day.timezone());
 
 		try {
 			repo.save(snap);
-			log.debug("Сохранён снимок прогноза: {} {} risk={}", key, today.date(), today.risk());
+			log.debug("Сохранён снимок прогноза: {} {} risk={}", key, day.date(), day.risk());
 		} catch (DuplicateKeyException e) {
 			// Race condition при параллельных запросах — не страшно, второй проиграл, данные уже есть.
 		}

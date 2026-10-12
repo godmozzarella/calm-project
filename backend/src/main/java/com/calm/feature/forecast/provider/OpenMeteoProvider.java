@@ -1,5 +1,7 @@
 package com.calm.feature.forecast.provider;
 
+import com.calm.config.OutboundHttp;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +10,7 @@ import org.springframework.web.client.RestClient;
 
 import java.net.URI;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +40,7 @@ public class OpenMeteoProvider implements WeatherProvider {
 
 	// Open-Meteo блокирует запросы без User-Agent через 403. Любая внятная строка подходит.
 	private final RestClient http = RestClient.builder()
+			.requestFactory(OutboundHttp.requestFactory())
 			.defaultHeader("Accept", "application/json")
 			.defaultHeader("User-Agent", "Calm-Headache-Tracker/1.0 (+https://calm.local)")
 			.build();
@@ -82,7 +86,8 @@ public class OpenMeteoProvider implements WeatherProvider {
 		List<Double> dailyWindGusts = readDoubleArray(daily.path("wind_gusts_10m_max"));
 
 		List<RawForecastDay> result = new ArrayList<>();
-		LocalDate today = LocalDate.now();
+		ZoneId zone = ZoneId.of(root.path("timezone").asText("UTC"));
+		LocalDate today = LocalDate.now(zone);
 
 		for (int i = 0; i < dailyTimes.size(); i++) {
 			LocalDate date;
@@ -107,7 +112,9 @@ public class OpenMeteoProvider implements WeatherProvider {
 					humidityAvg,
 					getOrNull(dailyTempMin, i),
 					getOrNull(dailyTempMax, i),
-					getOrNull(dailyWindGusts, i)
+					getOrNull(dailyWindGusts, i),
+					null,
+					zone.getId()
 			));
 		}
 

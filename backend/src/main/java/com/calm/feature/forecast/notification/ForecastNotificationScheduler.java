@@ -1,6 +1,7 @@
 package com.calm.feature.forecast.notification;
 
 import com.calm.feature.email.EmailService;
+import com.calm.feature.email.EmailSendResult;
 import com.calm.feature.forecast.ForecastService;
 import com.calm.feature.forecast.RiskLevel;
 import com.calm.feature.forecast.dto.ForecastDayDto;
@@ -12,6 +13,8 @@ import com.calm.feature.user.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -62,7 +65,8 @@ public class ForecastNotificationScheduler {
 			zone = "${calm.notifications.zone:Europe/Moscow}"
 	)
 	public void runMorningDispatch() {
-		List<User> eligible = users.findEligibleForForecastEmails();
+		List<User> eligible = users.findEligibleForForecastEmails(
+				PageRequest.of(0, 200, Sort.by("_id")));
 		if (eligible.isEmpty()) {
 			log.info("Рассылка погодных уведомлений: подписчиков нет, пропускаем");
 			return;
@@ -74,6 +78,8 @@ public class ForecastNotificationScheduler {
 
 		int sent = 0, skippedLowRisk = 0, skippedAlready = 0, errors = 0;
 
+		int page = 0;
+		while (!eligible.isEmpty()) {
 		for (User u : eligible) {
 			if (today.equals(u.getLastNotifiedDate())) {
 				skippedAlready++;
@@ -96,15 +102,18 @@ public class ForecastNotificationScheduler {
 				String subject = renderer.renderSubject(todayForecast);
 				String html = renderer.renderBody(u.getName(), u.getCity(), todayForecast, upcoming);
 
-				if (email.send(u.getEmail(), subject, html)) {
+				if (email.send(u.getEmail(), subject, html) == EmailSendResult.SENT) {
 					u.setLastNotifiedDate(today);
 					users.save(u);
 					sent++;
 				}
 			} catch (Exception e) {
 				errors++;
-				log.warn("Ошибка отправки прогноза пользователю {}: {}", u.getEmail(), e.getMessage());
+				log.warn("Ошибка отправки прогноза ({}): {}", e.getClass().getSimpleName(), e.getMessage());
 			}
+		}
+		page++;
+		eligible = users.findEligibleForForecastEmails(PageRequest.of(page, 200, Sort.by("_id")));
 		}
 
 		log.info("Рассылка погоды: отправлено={}, пропущено(низкий риск)={}, пропущено(уже сегодня)={}, ошибок={}",
@@ -136,7 +145,7 @@ public class ForecastNotificationScheduler {
 		String subject = "[ТЕСТ] " + renderer.renderSubject(today);
 		String html = renderer.renderBody(u.getName(), u.getCity(), today, upcoming);
 
-		if (email.send(u.getEmail(), subject, html)) {
+		if (email.send(u.getEmail(), subject, html) == EmailSendResult.SENT) {
 			return "Письмо отправлено на " + u.getEmail() + ". Проверь почту (возможно в «Спам»).";
 		}
 		return "Не удалось отправить. Проверь настройки email-провайдера в логах бэка.";

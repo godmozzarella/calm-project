@@ -32,6 +32,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 	private final long windowMs;
 
 	private final ConcurrentHashMap<String, Deque<Long>> buckets = new ConcurrentHashMap<>();
+	private static final int MAX_BUCKETS = 10_000;
 
 	public RateLimitFilter(
 			@Value("${calm.rate-limit.auth.max-attempts:10}") int maxAttempts,
@@ -44,7 +45,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		String path = request.getServletPath();
-		return !path.equals("/auth/login") && !path.equals("/auth/register");
+		return !path.equals("/auth/login") && !path.equals("/auth/register")
+				&& !path.equals("/auth/verify-email");
 	}
 
 	@Override
@@ -54,6 +56,18 @@ public class RateLimitFilter extends OncePerRequestFilter {
 		String ip = resolveIp(req);
 		long now = System.currentTimeMillis();
 
+		if (buckets.size() >= MAX_BUCKETS && !buckets.containsKey(ip)) {
+			buckets.entrySet().removeIf(entry -> {
+				Deque<Long> times = entry.getValue();
+				synchronized (times) {
+					return times.isEmpty() || times.peekLast() < now - windowMs;
+				}
+			});
+			if (buckets.size() >= MAX_BUCKETS) {
+				res.sendError(HttpStatus.TOO_MANY_REQUESTS.value());
+				return;
+			}
+		}
 		Deque<Long> bucket = buckets.computeIfAbsent(ip, k -> new ArrayDeque<>());
 
 		synchronized (bucket) {

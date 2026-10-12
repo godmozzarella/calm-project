@@ -1,0 +1,9 @@
+# Use with docker-compose.yml when HTTPS is provided by a private reverse proxy
+# such as Tailscale Serve on the same host. Only the frontend is reachable locally.
+services:
+  backend:
+    ports: !override
+      - "127.0.0.1:8080:8080"
+  frontend:
+    ports: !override
+      - "127.0.0.1:8081:80"

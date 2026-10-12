@@ -1,7 +1,7 @@
 package com.calm.feature.email;
 
 /**
- * Отправка писем пользователям. Реализация выбирается DI'ем (сейчас одна — SMTP).
+ * Отправка писем пользователям. Реализация выбирается DI: SMTP или Resend.
  */
 public interface EmailService {
 
@@ -11,8 +11,7 @@ public interface EmailService {
 	 * @param to       адрес получателя
 	 * @param subject  тема письма
 	 * @param html     тело письма в HTML
-	 * @return true если отправка ушла в SMTP-сервер; false если сервис не сконфигурирован
-	 *         или произошла ошибка (она будет залогирована, исключение не пробрасывается).
+	 * @return исход отправки; исключения провайдера не пробрасываются.
 	 */
-	boolean send(String to, String subject, String html);
+	EmailSendResult send(String to, String subject, String html);
 }

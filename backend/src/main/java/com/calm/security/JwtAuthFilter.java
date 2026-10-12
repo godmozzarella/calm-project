@@ -2,6 +2,9 @@ package com.calm.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
+import com.calm.feature.auth.AuthSessionService;
+import com.calm.feature.user.Role;
+import com.calm.feature.user.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,9 +23,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 	private static final String BEARER_PREFIX = "Bearer ";
 
 	private final JwtService jwtService;
+	private final AuthSessionService sessionService;
+	private final UserRepository users;
 
-	public JwtAuthFilter(JwtService jwtService) {
+	public JwtAuthFilter(JwtService jwtService, AuthSessionService sessionService, UserRepository users) {
 		this.jwtService = jwtService;
+		this.sessionService = sessionService;
+		this.users = users;
 	}
 
 	@Override
@@ -41,8 +48,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 			String userId = claims.getSubject();
 			String email = claims.get("email", String.class);
 			String role = claims.get("role", String.class);
+			String sessionId = claims.get("sessionId", String.class);
+			if (sessionId == null || !sessionService.isActive(sessionId, userId)) {
+				SecurityContextHolder.clearContext();
+				chain.doFilter(req, res);
+				return;
+			}
+			// Admin rights can be revoked while an access token is still valid.
+			// Confirm the current database role before granting an admin request.
+			if ("ADMIN".equals(role) && users.findById(userId)
+					.map(user -> user.getRole() != Role.ADMIN).orElse(true)) {
+				SecurityContextHolder.clearContext();
+				chain.doFilter(req, res);
+				return;
+			}
 
-			AuthenticatedUser principal = new AuthenticatedUser(userId, email, role);
+			AuthenticatedUser principal = new AuthenticatedUser(userId, email, role, sessionId);
 			UsernamePasswordAuthenticationToken auth =
 					new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
 			auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));

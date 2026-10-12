@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { http, userApi } from '@/shared/api'
+import { http, userApi, authApi } from '@/shared/api'
 import { updateCurrentUser } from '@/entities/user'
 
 const makeEditData = user => ({
@@ -74,15 +74,26 @@ export const useEditProfile = ({ user, setUser }) => {
 
     const patch = { name: editData.name, email: editData.email }
 
+		if (editData.email.trim().toLowerCase() !== user.email.trim().toLowerCase() && !editData.password) {
+			setPasswordError('Для смены email введите текущий пароль')
+			return
+		}
+		if (editData.password) patch.currentPassword = editData.password
+
     if (editData.newPassword) {
       if (!editData.password) { setPasswordError('Введите текущий пароль'); return }
-      patch.currentPassword = editData.password
       patch.newPassword     = editData.newPassword
     }
 
     setSaving(true)
     try {
       const updated = await userApi.updateMe(patch)
+			if (editData.newPassword) {
+				await authApi.logout()
+				window.alert('Пароль изменён. Войдите снова.')
+				window.location.assign('/')
+				return
+			}
       const merged = { ...updated, avatarUrl: editData.avatarUrl }
       updateCurrentUser(merged)
       setUser(merged)

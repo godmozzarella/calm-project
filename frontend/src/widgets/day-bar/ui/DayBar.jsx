@@ -1,4 +1,4 @@
-import { ChevronLeftIcon, ChevronRightIcon, LocationOnIcon } from '@/shared/ui/icons'
+import { BackIcon, ChevronLeftIcon, ChevronRightIcon, LocationOnIcon } from '@/shared/ui/icons'
 
 import s from './DayBar.module.scss'
 
@@ -95,7 +95,7 @@ const DayBar = ({ date, setDate, city }) => {
 				)}
 				{!isToday && (
 					<button className={s.returnBtn} onClick={() => setDate(today)}>
-						← к сегодня
+						<BackIcon style={{ fontSize: '1rem' }} /> к сегодня
 					</button>
 				)}
 			</div>

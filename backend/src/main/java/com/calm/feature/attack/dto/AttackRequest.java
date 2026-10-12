@@ -4,6 +4,7 @@ import com.calm.feature.attack.AttackType;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -18,8 +19,8 @@ public record AttackRequest(
 		boolean ongoing,
 		@Min(1) @Max(10) int intensity,
 		@NotNull AttackType type,
-		Set<String> symptoms,
-		Set<String> triggers,
-		Map<String, String> painZones,
-		String note
+		@Size(max = 30) Set<String> symptoms,
+		@Size(max = 30) Set<String> triggers,
+		@Size(max = 30) Map<String, String> painZones,
+		@Size(max = 2000) String note
 ) {}

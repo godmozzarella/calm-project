@@ -163,6 +163,7 @@
 	color: $fc-secondary;
 }
 
+.editBtn,
 .deleteBtn {
 	display: flex;
 	align-items: center;
@@ -175,8 +176,12 @@
 	color: rgba(190, 190, 190, 0.3);
 	cursor: pointer;
 	transition: color 0.15s ease, background-color 0.15s ease;
+	&.editBtn:hover {
+		color: $fc-contrast;
+		background-color: rgba(92, 173, 228, 0.08);
+	}
 
-	&:hover {
+	&.deleteBtn:hover {
 		color: $error-color;
 		background-color: rgba(239, 68, 68, 0.08);
 	}

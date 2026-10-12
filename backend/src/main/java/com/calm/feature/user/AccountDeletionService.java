@@ -2,7 +2,11 @@ package com.calm.feature.user;
 
 import com.calm.common.exception.NotFoundException;
 import com.calm.feature.attack.AttackRepository;
+import com.calm.feature.auth.AuthSessionRepository;
 import com.calm.feature.medication.MedicationRepository;
+import com.calm.feature.risk.RiskPredictionRecordRepository;
+import com.calm.feature.risk.DailyOutcomeRepository;
+import com.calm.feature.risk.SharedModelParticipationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,17 +30,29 @@ public class AccountDeletionService {
 	private final UserRepository userRepository;
 	private final AttackRepository attackRepository;
 	private final MedicationRepository medicationRepository;
+	private final AuthSessionRepository authSessionRepository;
+	private final RiskPredictionRecordRepository predictionRecordRepository;
+	private final DailyOutcomeRepository dailyOutcomeRepository;
+	private final SharedModelParticipationRepository participationRepository;
 	private final Path uploadDir;
 
 	public AccountDeletionService(
 			UserRepository userRepository,
 			AttackRepository attackRepository,
 			MedicationRepository medicationRepository,
+			AuthSessionRepository authSessionRepository,
+			RiskPredictionRecordRepository predictionRecordRepository,
+			DailyOutcomeRepository dailyOutcomeRepository,
+			SharedModelParticipationRepository participationRepository,
 			@Value("${calm.upload-dir:./uploads/avatars}") String uploadDir
 	) {
 		this.userRepository = userRepository;
 		this.attackRepository = attackRepository;
 		this.medicationRepository = medicationRepository;
+		this.authSessionRepository = authSessionRepository;
+		this.predictionRecordRepository = predictionRecordRepository;
+		this.dailyOutcomeRepository = dailyOutcomeRepository;
+		this.participationRepository = participationRepository;
 		this.uploadDir = Paths.get(uploadDir).toAbsolutePath().normalize();
 	}
 
@@ -46,12 +62,16 @@ public class AccountDeletionService {
 
 		long attacks = attackRepository.deleteByUserId(userId);
 		long meds = medicationRepository.deleteByUserId(userId);
+		authSessionRepository.deleteByUserId(userId);
+		predictionRecordRepository.deleteByUserId(userId);
+		dailyOutcomeRepository.deleteByUserId(userId);
+		participationRepository.deleteByUserId(userId);
 
 		// Аватар-файл удаляем best-effort: даже если не получилось — пользователя всё равно сносим.
 		tryDeleteAvatar(user.getAvatarUrl());
 
 		userRepository.delete(user);
-		log.info("Аккаунт {} удалён: приступов={}, препаратов={}", user.getEmail(), attacks, meds);
+		log.info("Аккаунт удалён: приступов={}, препаратов={}", attacks, meds);
 	}
 
 	private void tryDeleteAvatar(String avatarUrl) {

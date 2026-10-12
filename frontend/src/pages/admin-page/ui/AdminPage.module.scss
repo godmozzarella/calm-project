@@ -11,6 +11,9 @@
 }
 
 .back {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
 	color: $fc-secondary;
 	text-decoration: none;
 	@include fluid-text(13, 12);

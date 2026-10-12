@@ -1,0 +1,51 @@
+services:
+  mongo:
+    command: ["mongod", "--auth"]
+
+  backend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment:
+      MONGO_URI: mongodb://calm_app:risk-migration-app-test-only-2026-very-long@mongo:27017/calm_risk_pipeline_test_source?authSource=admin
+      CALM_JWT_SECRET: risk-migration-jwt-test-only-2026-very-long
+      CALM_ADMIN_EMAIL: ""
+      CALM_MONGO_AUTO_INDEX: "true"
+      PORT: 8080
+    ports:
+      - "127.0.0.1:18081:8080"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/actuator/health || exit 1"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  training-worker:
+    image: mongo:7
+    environment:
+      CALM_RISK_TRAINING_TEST_MODE: "YES"
+      CALM_RISK_CONSENT_VERSION: shared-model-pilot-v1
+      CALM_RISK_CONSENT_DIGEST: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      CALM_TRAINING_SOURCE_URI: mongodb://calm_risk_export_reader:risk-migration-export-test-only-2026-very-long@mongo:27017/calm_risk_pipeline_test_source?authSource=admin
+      CALM_TRAINING_MONGO_URI: mongodb://calm_risk_training_writer:risk-migration-train-test-only-2026-very-long@mongo:27017/calm_risk_pipeline_test_training?authSource=admin
+      CALM_TRAINING_HMAC_KEY: integration-only-secret-2026-keep-out-of-production
+      CALM_TRAINING_REBUILD_CONFIRM: "YES"
+      CALM_TRAINING_INTERVAL_SECONDS: "10"
+    volumes:
+      - ./export-shared-risk-training.js:/scripts/export-shared-risk-training.js:ro
+      - ./run-shared-risk-export-loop.sh:/scripts/run-shared-risk-export-loop.sh:ro
+      - ./health-shared-risk-export.sh:/scripts/health-shared-risk-export.sh:ro
+    entrypoint: ["/bin/sh", "/scripts/run-shared-risk-export-loop.sh"]
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/bin/sh", "/scripts/health-shared-risk-export.sh"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+      start_period: 10s

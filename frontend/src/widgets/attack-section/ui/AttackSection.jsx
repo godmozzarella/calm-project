@@ -1,10 +1,10 @@
 import { useState, useCallback, useEffect } from 'react'
 
-import { AddIcon, DeleteIcon } from '@/shared/ui/icons'
+import { AddIcon, DeleteIcon, EditIcon } from '@/shared/ui/icons'
 import { AddAttackForm, useAddAttack } from '@/features/add-attack'
 import { ATTACK_TYPE_LABELS, intensityColor } from '@/entities/attack'
 import { attackApi } from '@/shared/api'
-import { subscribe, ATTACKS_CHANGED } from '@/shared/lib/dataEvents'
+import { subscribe, ATTACKS_CHANGED, OPEN_ATTACK_FORM } from '@/shared/lib/dataEvents'
 import { useDictionaries } from '@/shared/lib/dictionaries'
 
 import s from './AttackSection.module.scss'
@@ -25,9 +25,7 @@ const formatRange = attack => {
 	const endTime = attack.endTime
 
 	if (attack.ongoing) {
-		return sameDay
-			? `${startTime} — сейчас`
-			: `${shortDate(startDate)}, ${startTime} — сейчас`
+		return `${shortDate(startDate)}, ${startTime} — продолжается`
 	}
 	if (!endTime) {
 		return `${shortDate(startDate)}, ${startTime}`
@@ -51,8 +49,9 @@ const AttackSection = ({ date }) => {
 
 	useEffect(() => subscribe(ATTACKS_CHANGED, reload), [reload])
 
-	const { open, form, error, loading, openForm, closeForm, setField, toggleArrayField, submit } =
+	const { open, form, error, loading, editingId, openForm, openEditForm, closeForm, setField, toggleArrayField, submit } =
 		useAddAttack({ date, onSuccess: reload })
+	useEffect(() => subscribe(OPEN_ATTACK_FORM, openForm), [openForm])
 
 	const handleDelete = id => attackApi.delete(id)
 
@@ -94,6 +93,13 @@ const AttackSection = ({ date }) => {
 												{attack.intensity}/10
 											</span>
 											<button
+												className={s.editBtn}
+												onClick={() => openEditForm(attack)}
+												aria-label="Редактировать приступ"
+											>
+												<EditIcon style={{ fontSize: '1rem' }} />
+											</button>
+											<button
 												className={s.deleteBtn}
 												onClick={() => handleDelete(attack.id)}
 												aria-label="Удалить"
@@ -127,6 +133,8 @@ const AttackSection = ({ date }) => {
 				open={open}
 				form={form}
 				error={error}
+				loading={loading}
+				editing={!!editingId}
 				onClose={closeForm}
 				setField={setField}
 				toggleArrayField={toggleArrayField}

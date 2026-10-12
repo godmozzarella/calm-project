@@ -1,8 +1,12 @@
 package com.calm.config;
 
 import com.calm.feature.attack.Attack;
+import com.calm.feature.auth.AuthSession;
 import com.calm.feature.dictionary.DictionaryEntry;
 import com.calm.feature.medication.Medication;
+import com.calm.feature.risk.RiskPredictionRecord;
+import com.calm.feature.risk.DailyOutcome;
+import com.calm.feature.risk.SharedModelParticipation;
 import com.calm.feature.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +34,10 @@ public class MongoIndexInitializer {
 
 	private static final Class<?>[] INDEXED_ENTITIES = {
 			User.class,
+			AuthSession.class,
+			RiskPredictionRecord.class,
+			DailyOutcome.class,
+			SharedModelParticipation.class,
 			Attack.class,
 			Medication.class,
 			DictionaryEntry.class,

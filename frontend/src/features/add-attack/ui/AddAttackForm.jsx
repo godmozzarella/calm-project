@@ -12,7 +12,7 @@ const todayKey = () => {
 	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-const AddAttackForm = ({ open, form, error, onClose, setField, toggleArrayField, onSubmit }) => {
+const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField, toggleArrayField, onSubmit }) => {
 	useBodyScrollLock(open)
 	const [symptoms, setSymptoms] = useState([])
 	const [triggers, setTriggers] = useState([])
@@ -33,7 +33,7 @@ const AddAttackForm = ({ open, form, error, onClose, setField, toggleArrayField,
 				<div className={s.handle} />
 
 				<div className={s.header}>
-					<h2 className={s.title}>Новый приступ</h2>
+					<h2 className={s.title}>{editing ? 'Редактировать приступ' : 'Новый приступ'}</h2>
 					<button className={s.closeBtn} onClick={onClose}>✕</button>
 				</div>
 
@@ -177,7 +177,7 @@ const AddAttackForm = ({ open, form, error, onClose, setField, toggleArrayField,
 				</div>
 
 				<div className={s.footer}>
-					<button className={s.submitBtn} onClick={onSubmit}>
+					<button className={s.submitBtn} onClick={onSubmit} disabled={loading}>
 						Сохранить приступ
 					</button>
 				</div>

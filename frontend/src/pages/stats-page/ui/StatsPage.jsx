@@ -2,9 +2,9 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 
 import { ChartSection } from '@/widgets/chart-section'
-import { ArrowBackIcon, PrintIcon, FileDownloadIcon } from '@/shared/ui/icons'
+import { BackIcon, PrintIcon, FileDownloadIcon } from '@/shared/ui/icons'
 import { getCurrentUser } from '@/entities/user'
-import { attackApi, medicationApi, statsApi } from '@/shared/api'
+import { attackApi, medicationApi, riskApi, statsApi } from '@/shared/api'
 import {
 	subscribe,
 	ATTACKS_CHANGED,
@@ -20,6 +20,7 @@ import {
 } from '../lib/export'
 
 import s from './StatsPage.module.scss'
+import RiskQualityBlock from './RiskQualityBlock'
 
 const todayLong = () => {
 	const d = new Date()
@@ -35,6 +36,8 @@ const StatsPage = () => {
 	const [attacks, setAttacks]       = useState([])
 	const [medications, setMedications] = useState([])
 	const [pdfLoading, setPdfLoading] = useState(false)
+	const [riskQuality, setRiskQuality] = useState(null)
+	const [riskQualityError, setRiskQualityError] = useState(null)
 	const { symptoms, triggers }      = useDictionaries()
 
 	const loadAttacks = useCallback(() => attackApi.getAll().then(setAttacks).catch(() => {}), [])
@@ -43,6 +46,13 @@ const StatsPage = () => {
 	useEffect(() => { setUser(getCurrentUser()) }, [])
 	useEffect(() => { loadAttacks() }, [loadAttacks])
 	useEffect(() => { loadMeds() },    [loadMeds])
+	useEffect(() => {
+		let active = true
+		riskApi.getQuality()
+			.then(data => { if (active) setRiskQuality(data) })
+			.catch(e => { if (active) setRiskQualityError(e.message) })
+		return () => { active = false }
+	}, [])
 
 	useEffect(() => subscribe(ATTACKS_CHANGED,     loadAttacks), [loadAttacks])
 	useEffect(() => subscribe(MEDICATIONS_CHANGED, loadMeds),    [loadMeds])
@@ -93,7 +103,7 @@ const StatsPage = () => {
 
 			<div className={s.topBar}>
 				<Link to="/profile" className={s.backBtn} aria-label="К дневнику">
-					<ArrowBackIcon fontSize="small" />
+					<BackIcon fontSize="small" />
 					<span>К дневнику</span>
 				</Link>
 
@@ -146,6 +156,7 @@ const StatsPage = () => {
 
 			<div className={s.dashboard}>
 				<ChartSection />
+				<RiskQualityBlock quality={riskQuality} error={riskQualityError} />
 			</div>
 
 			<p className={s.disclaimer}>

@@ -10,6 +10,11 @@ spring:
       # на пустой БД, либо вручную через миграции.
       auto-index-creation: false
 
+calm:
+  jwt:
+    secret: ${CALM_JWT_SECRET}
+  public-url: ${CALM_PUBLIC_URL}
+
 logging:
   level:
     com.calm: INFO

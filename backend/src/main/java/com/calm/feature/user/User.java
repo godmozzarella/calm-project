@@ -21,6 +21,11 @@ public class User {
 	private String name;
 
 	private String passwordHash;
+	private boolean emailVerified;
+	@Indexed(sparse = true)
+	private String emailVerificationTokenHash;
+	private Instant emailVerificationExpiresAt;
+	private Instant emailVerificationSentAt;
 
 	/** Роль доступа. Default USER, см. {@link Role}. */
 	private Role role = Role.USER;
@@ -63,6 +68,14 @@ public class User {
 	public void setName(String name) { this.name = name; }
 	public String getPasswordHash() { return passwordHash; }
 	public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+	public boolean isEmailVerified() { return emailVerified; }
+	public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
+	public String getEmailVerificationTokenHash() { return emailVerificationTokenHash; }
+	public void setEmailVerificationTokenHash(String hash) { this.emailVerificationTokenHash = hash; }
+	public Instant getEmailVerificationExpiresAt() { return emailVerificationExpiresAt; }
+	public void setEmailVerificationExpiresAt(Instant expiresAt) { this.emailVerificationExpiresAt = expiresAt; }
+	public Instant getEmailVerificationSentAt() { return emailVerificationSentAt; }
+	public void setEmailVerificationSentAt(Instant sentAt) { this.emailVerificationSentAt = sentAt; }
 	public String getAvatarUrl() { return avatarUrl; }
 	public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
@@ -97,6 +110,6 @@ public class User {
 
 	/** Готов ли пользователь к рассылке: задана локация и не отключены уведомления. */
 	public boolean canReceiveForecastEmails() {
-		return notificationsEnabled && latitude != null && longitude != null;
+		return emailVerified && notificationsEnabled && latitude != null && longitude != null;
 	}
 }

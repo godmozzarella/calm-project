@@ -10,7 +10,7 @@ import {
 	AirIcon,
 	HealingIcon,
 	ArrowForwardIcon,
-	ArrowBackIcon,
+	BackIcon,
 } from '@/shared/ui/icons'
 import s from './AddMedicationForm.module.scss'
 
@@ -48,7 +48,7 @@ const STEP_TITLES = ['Препарат', 'Дозировка', 'Дата и за
 const itemKey = item => `${item.category}::${item.name}`
 
 /* ── Step 1: выбор препаратов ── */
-const StepSelect = ({ selected, isSelected, toggleItem }) => {
+const StepSelect = ({ selected, isSelected, toggleItem, clearSelection, editing }) => {
 	const [customName, setCustomName] = useState('')
 	const { medications } = useDictionaries()
 
@@ -84,14 +84,19 @@ const StepSelect = ({ selected, isSelected, toggleItem }) => {
 							onClick={() => toggleItem(item)}
 							type="button"
 						>
-							{item.name}
+							{item.name}{item.category && item.category !== 'Другое' ? ` · ${item.category}` : ''}
 							<span className={s.selectedChipX}>✕</span>
 						</button>
 					))}
 				</div>
 			)}
 
-			<p className={s.stepHint}>Можно выбрать несколько</p>
+			<p className={s.stepHint}>{editing ? 'Выберите все препараты этого приёма заново' : 'Можно выбрать несколько'}</p>
+			{editing && selected.length > 0 && (
+				<button type="button" className={s.clearSelectionBtn} onClick={clearSelection}>
+					Очистить список и выбрать заново
+				</button>
+			)}
 
 			{allGroups.map(group => {
 				const Icon = CATEGORY_ICONS[group.category]
@@ -210,7 +215,7 @@ const StepMeta = ({ meta, attacks, setMetaField }) => (
 					<option value="">— не привязывать —</option>
 					{attacks.map(a => (
 						<option key={a.id} value={a.id}>
-							{a.startTime}{a.endTime ? ` — ${a.endTime}` : a.ongoing ? ' — сейчас' : ''}
+							{a.startDate} {a.startTime}{a.endTime ? ` — ${a.endTime}` : a.ongoing ? ' — продолжается' : ''}
 							{' · '}{ATTACK_TYPE_LABELS[a.type]}
 							{' · '}{a.intensity}/10
 						</option>
@@ -234,8 +239,8 @@ const StepMeta = ({ meta, attacks, setMetaField }) => (
 
 /* ── Root ── */
 const AddMedicationForm = ({
-	open, step, selected, meta, error, attacks,
-	onClose, toggleItem, isSelected, setItemDosage,
+	open, step, selected, meta, error, attacks, editing, loading,
+	onClose, toggleItem, isSelected, clearSelection, setItemDosage,
 	setMetaField, onNext, onBack, onSubmit,
 }) => {
 	useBodyScrollLock(open)
@@ -250,7 +255,7 @@ const AddMedicationForm = ({
 
 				<div className={s.header}>
 					<div className={s.headerTop}>
-						<h2 className={s.title}>{STEP_TITLES[step - 1]}</h2>
+						<h2 className={s.title}>{editing ? `Редактировать · ${STEP_TITLES[step - 1]}` : STEP_TITLES[step - 1]}</h2>
 						<button className={s.closeBtn} onClick={onClose}>✕</button>
 					</div>
 					<div className={s.stepDots}>
@@ -274,6 +279,8 @@ const AddMedicationForm = ({
 							selected={selected}
 							isSelected={isSelected}
 							toggleItem={toggleItem}
+							clearSelection={clearSelection}
+							editing={editing}
 						/>
 					)}
 					{step === 2 && <StepDosage selected={selected} setItemDosage={setItemDosage} />}
@@ -283,13 +290,14 @@ const AddMedicationForm = ({
 				<div className={s.footer}>
 					<div className={s.navRow}>
 						{step > 1 && (
-							<button className={s.backBtn} onClick={onBack}>
-								<ArrowBackIcon style={{ fontSize: '1.1rem' }} />
+							<button className={s.backBtn} onClick={onBack} aria-label="Предыдущий шаг">
+								<BackIcon style={{ fontSize: '1.25rem' }} />
 							</button>
 						)}
 						<button
 							className={s.nextBtn}
 							onClick={isLastStep ? onSubmit : onNext}
+							disabled={loading}
 						>
 							{isLastStep ? 'Сохранить' : 'Далее'}
 							{!isLastStep && <ArrowForwardIcon style={{ fontSize: '1.1rem' }} />}

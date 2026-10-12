@@ -31,5 +31,6 @@ public record ForecastDayDto(
 		Double tempMin,
 		Double tempMax,
 		Double windKmhMax,
-		Double kpIndex
+		Double kpIndex,
+		String timezone
 ) {}

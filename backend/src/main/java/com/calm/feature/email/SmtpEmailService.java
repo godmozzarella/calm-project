@@ -43,10 +43,10 @@ public class SmtpEmailService implements EmailService {
 	}
 
 	@Override
-	public boolean send(String to, String subject, String html) {
+	public EmailSendResult send(String to, String subject, String html) {
 		if (username == null || username.isBlank()) {
-			log.warn("SMTP не настроен (CALM_SMTP_USER пуст), письмо в '{}' не отправлено", to);
-			return false;
+			log.warn("SMTP не настроен (CALM_SMTP_USER пуст), письмо не отправлено");
+			return EmailSendResult.FAILED;
 		}
 		try {
 			MimeMessage msg = mailSender.createMimeMessage();
@@ -56,13 +56,13 @@ public class SmtpEmailService implements EmailService {
 			helper.setSubject(subject);
 			helper.setText(html, true);
 			mailSender.send(msg);
-			log.info("Письмо отправлено: to='{}', subject='{}'", to, subject);
-			return true;
+			log.info("Письмо отправлено по SMTP");
+			return EmailSendResult.SENT;
 		} catch (Exception e) {
 			Throwable root = e;
 			while (root.getCause() != null) root = root.getCause();
-			log.warn("SMTP: ошибка отправки '{}': {} — {}", to, root.getClass().getSimpleName(), root.getMessage());
-			return false;
+			log.warn("SMTP: ошибка отправки ({}): {}", root.getClass().getSimpleName(), root.getMessage());
+			return EmailSendResult.FAILED;
 		}
 	}
 }

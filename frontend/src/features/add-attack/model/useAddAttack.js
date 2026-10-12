@@ -24,8 +24,29 @@ export const useAddAttack = ({ date, onSuccess }) => {
   const [form,    setForm]    = useState(() => makeEmpty(date))
   const [error,   setError]   = useState('')
   const [loading, setLoading] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [wasOngoing, setWasOngoing] = useState(false)
 
-  const openForm  = () => { setForm(makeEmpty(date)); setError(''); setOpen(true) }
+  const openForm  = () => { setEditingId(null); setWasOngoing(false); setForm(makeEmpty(date)); setError(''); setOpen(true) }
+  const openEditForm = attack => {
+    setEditingId(attack.id)
+    setWasOngoing(attack.ongoing)
+    setForm({
+      intensity: attack.intensity,
+      type: attack.type,
+      startDate: attack.startDate,
+      startTime: attack.startTime?.slice(0, 5) ?? '',
+      endDate: attack.endDate ?? attack.startDate,
+      endTime: attack.endTime?.slice(0, 5) ?? '',
+      ongoing: attack.ongoing,
+      symptoms: [...(attack.symptoms ?? [])],
+      triggers: [...(attack.triggers ?? [])],
+      painZones: attack.painZones ?? {},
+      note: attack.note ?? '',
+    })
+    setError('')
+    setOpen(true)
+  }
   const closeForm = () => setOpen(false)
 
   const setField = (field, value) => setForm(prev => ({ ...prev, [field]: value }))
@@ -49,6 +70,12 @@ export const useAddAttack = ({ date, onSuccess }) => {
     if (form.startDate > todayStr || (form.startDate === todayStr && form.startTime > nowStr)) {
       setError('Начало не может быть в будущем'); return
     }
+    if (!form.ongoing && (!form.endDate || form.endDate < form.startDate)) {
+      setError('Укажите дату конца не раньше начала'); return
+    }
+    if (wasOngoing && !form.ongoing && !form.endTime) {
+      setError('Укажите время окончания приступа'); return
+    }
     if (!form.ongoing && form.endDate && form.endTime) {
       if (form.endDate > todayStr || (form.endDate === todayStr && form.endTime > nowStr)) {
         setError('Конец не может быть в будущем'); return
@@ -60,7 +87,7 @@ export const useAddAttack = ({ date, onSuccess }) => {
 
     setLoading(true)
     try {
-      await attackApi.add({
+      const payload = {
         startDate: form.startDate,
         startTime: form.startTime,
         endDate:   form.ongoing ? null : (form.endDate || form.startDate),
@@ -70,8 +97,11 @@ export const useAddAttack = ({ date, onSuccess }) => {
         type:      form.type,
         symptoms:  form.symptoms,
         triggers:  form.triggers,
+        painZones: form.painZones ?? {},
         note:      form.note.trim(),
-      })
+      }
+      if (editingId) await attackApi.update(editingId, payload)
+      else await attackApi.add(payload)
       setOpen(false)
       onSuccess?.()
     } catch (err) {
@@ -81,5 +111,5 @@ export const useAddAttack = ({ date, onSuccess }) => {
     }
   }
 
-  return { open, form, error, loading, openForm, closeForm, setField, toggleArrayField, submit }
+  return { open, form, error, loading, editingId, openForm, openEditForm, closeForm, setField, toggleArrayField, submit }
 }

@@ -390,6 +390,53 @@
 	margin-top: 0.25rem;
 }
 
+.participationContent {
+	display: flex;
+	flex-direction: column;
+	gap: .75rem;
+	padding: .75rem 1.25rem 1.25rem;
+	@include fluid-text(13, 12);
+	line-height: 1.5;
+	color: $fc-secondary;
+	p { margin: 0; }
+}
+
+.participationOn,
+.participationOff {
+	font-weight: $fw-semibold;
+	color: $fc-main;
+}
+
+.participationNotice {
+	padding: .75rem;
+	border: 1px solid rgba($warning-color, .35);
+	border-radius: .65rem;
+	background: rgba($warning-color, .08);
+	color: $fc-main;
+}
+
+.participationButton,
+.participationButtonSecondary {
+	min-height: 2.75rem;
+	padding: .65rem .85rem;
+	border: 1px solid $contrast-color;
+	border-radius: .65rem;
+	background: $contrast-color;
+	color: $fc-dark;
+	font: inherit;
+	font-weight: $fw-semibold;
+	cursor: pointer;
+	&:focus-visible { outline: 3px solid $fc-main; outline-offset: 2px; }
+	&:disabled { opacity: .6; cursor: wait; }
+}
+
+.participationButtonSecondary {
+	background: transparent;
+	color: $fc-main;
+}
+
+.participationError { color: $error-color; }
+
 /* ── Footer block: socials + copyright ── */
 .footerBlock {
 	display: flex;

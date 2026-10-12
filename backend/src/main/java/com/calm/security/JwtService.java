@@ -29,12 +29,13 @@ public class JwtService {
 		this.ttl = Duration.ofMinutes(expirationMinutes);
 	}
 
-	public String issue(String userId, String email, String role) {
+	public String issue(String userId, String email, String role, String sessionId) {
 		Date now = new Date();
 		return Jwts.builder()
 				.subject(userId)
 				.claim("email", email)
 				.claim("role", role)
+				.claim("sessionId", sessionId)
 				.issuedAt(now)
 				.expiration(new Date(now.getTime() + ttl.toMillis()))
 				.signWith(key)

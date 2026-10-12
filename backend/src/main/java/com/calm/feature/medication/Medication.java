@@ -28,6 +28,8 @@ public class Medication {
 	private String id;
 
 	private String userId;
+	/** Общий идентификатор препаратов, добавленных за один приём. */
+	private String intakeId;
 
 	private String name;
 	private String dosage;
@@ -58,6 +60,8 @@ public class Medication {
 	public void setId(String id) { this.id = id; }
 	public String getUserId() { return userId; }
 	public void setUserId(String userId) { this.userId = userId; }
+	public String getIntakeId() { return intakeId; }
+	public void setIntakeId(String intakeId) { this.intakeId = intakeId; }
 	public String getName() { return name; }
 	public void setName(String name) { this.name = name; }
 	public String getDosage() { return dosage; }

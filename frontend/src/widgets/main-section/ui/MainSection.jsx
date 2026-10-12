@@ -6,6 +6,7 @@ import { AttackZoneSection } from '@/widgets/attack-zone-section'
 import { ChartSection } from '@/widgets/chart-section'
 import { ForecastSection } from '@/widgets/forecast-section'
 import { DayBar, midnight, dateKey } from '@/widgets/day-bar'
+import { DailyOutcome } from '@/widgets/daily-outcome'
 import { subscribe, DATE_SELECTED } from '@/shared/lib/dataEvents'
 
 import s from './MainSection.module.scss'
@@ -27,6 +28,7 @@ const MainSection = ({ user, onOpenLocationModal }) => {
 			<h1 className={s.logo}>Calm</h1>
 
 			<DayBar date={date} setDate={setDate} city={user?.city} />
+			<DailyOutcome date={dateKey(date)} />
 
 			<div className={s.grid}>
 				<div className={s.topRow}>

@@ -9,6 +9,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public record MedicationRequest(
+		String clientId,
+		String intakeId,
 		@NotBlank String name,
 		String dosage,
 		String category,

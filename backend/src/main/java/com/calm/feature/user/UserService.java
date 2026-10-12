@@ -3,37 +3,24 @@ package com.calm.feature.user;
 import com.calm.common.exception.ConflictException;
 import com.calm.common.exception.NotFoundException;
 import com.calm.feature.user.dto.UpdateUserRequest;
-import org.springframework.beans.factory.annotation.Value;
+import com.calm.feature.auth.AuthSessionRepository;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.Locale;
 
 @Service
 public class UserService {
 
 	private final UserRepository repo;
 	private final PasswordEncoder passwordEncoder;
-	private final String adminEmail;
-
-	public UserService(UserRepository repo, PasswordEncoder passwordEncoder,
-			@Value("${calm.admin-email:}") String adminEmail) {
+	private final AuthSessionRepository sessions;
+	public UserService(UserRepository repo, PasswordEncoder passwordEncoder, AuthSessionRepository sessions) {
 		this.repo = repo;
 		this.passwordEncoder = passwordEncoder;
-		this.adminEmail = adminEmail == null ? "" : adminEmail.trim().toLowerCase();
-	}
-
-	/**
-	 * Если email совпадает с {@code CALM_ADMIN_EMAIL} и роль ещё не ADMIN — повышаем.
-	 * Используется при регистрации и при первом логине существующего юзера.
-	 */
-	public User promoteIfPrimaryAdmin(User user) {
-		if (adminEmail.isBlank() || user.getRole() == Role.ADMIN) return user;
-		if (adminEmail.equalsIgnoreCase(user.getEmail())) {
-			user.setRole(Role.ADMIN);
-			return repo.save(user);
-		}
-		return user;
+		this.sessions = sessions;
 	}
 
 	public User getById(String id) {
@@ -42,18 +29,20 @@ public class UserService {
 	}
 
 	public Optional<User> findByEmail(String email) {
-		return repo.findByEmail(email);
+		return repo.findByEmail(normalizeEmail(email));
 	}
 
 	public User create(String email, String name, String rawPassword) {
+		email = normalizeEmail(email);
 		if (repo.existsByEmail(email)) {
 			throw new ConflictException("Пользователь с таким email уже существует");
 		}
 		User user = new User(email, name, passwordEncoder.encode(rawPassword));
-		if (!adminEmail.isBlank() && adminEmail.equalsIgnoreCase(email)) {
-			user.setRole(Role.ADMIN);
+		try {
+			return repo.save(user);
+		} catch (DuplicateKeyException e) {
+			throw new ConflictException("Пользователь с таким email уже существует");
 		}
-		return repo.save(user);
 	}
 
 	public User update(String id, UpdateUserRequest req) {
@@ -62,11 +51,19 @@ public class UserService {
 		if (req.name() != null) user.setName(req.name());
 		if (req.avatarUrl() != null) user.setAvatarUrl(req.avatarUrl());
 
-		if (req.email() != null && !req.email().equals(user.getEmail())) {
-			if (repo.existsByEmail(req.email())) {
+		String newEmail = req.email() == null ? null : normalizeEmail(req.email());
+		if (newEmail != null && !newEmail.equals(user.getEmail())) {
+			if (req.currentPassword() == null || !passwordEncoder.matches(req.currentPassword(), user.getPasswordHash())) {
+				throw new ConflictException("Для смены email введите текущий пароль");
+			}
+			if (repo.existsByEmail(newEmail)) {
 				throw new ConflictException("Email уже занят");
 			}
-			user.setEmail(req.email());
+			user.setEmail(newEmail);
+			user.setEmailVerified(false);
+			user.setEmailVerificationTokenHash(null);
+			user.setEmailVerificationExpiresAt(null);
+			user.setEmailVerificationSentAt(null);
 		}
 
 		if (req.newPassword() != null) {
@@ -88,6 +85,16 @@ public class UserService {
 			user.setNotificationsEnabled(req.notificationsEnabled());
 		}
 
-		return repo.save(user);
+		try {
+			User saved = repo.save(user);
+			if (req.newPassword() != null) sessions.deleteByUserId(id);
+			return saved;
+		} catch (DuplicateKeyException e) {
+			throw new ConflictException("Email уже занят");
+		}
+	}
+
+	private static String normalizeEmail(String email) {
+		return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
 	}
 }

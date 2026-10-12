@@ -62,6 +62,11 @@ input[type='email'] {
 	-moz-appearance: textfield;
 }
 
+// iOS Safari automatically zooms the page when an input uses text smaller than 16px.
+@media (max-width: 640px) {
+	input { font-size: 16px; }
+}
+
 /* ── ошибка — переопределяет через JS-класс ── */
 .inputError {
 	border-color: $error-color !important;

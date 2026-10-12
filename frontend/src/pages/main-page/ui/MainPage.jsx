@@ -7,8 +7,9 @@ import { MainSection } from '@/widgets/main-section'
 import { Button } from '@/shared/ui/Button'
 import { CalendarMonthIcon, MenuIcon } from '@/shared/ui/icons'
 import { getCurrentUser, setCurrentUser } from '@/entities/user'
-import { userApi, getToken } from '@/shared/api'
+import { userApi, getToken, riskApi } from '@/shared/api'
 import { LocationOnboarding } from '@/features/onboarding-location'
+import ConsentPrompt from '@/features/shared-model-consent/ui/ConsentPrompt'
 
 import s from './MainPage.module.scss'
 
@@ -20,6 +21,9 @@ const MainPage = () => {
 	const [user, setUser] = useState(() => getCurrentUser())
 	const [showLocationOnboarding, setShowLocationOnboarding] = useState(false)
 	const [onboardingDismissed, setOnboardingDismissed] = useState(false)
+	const [consentPrompt, setConsentPrompt] = useState(null)
+	const [consentSaving, setConsentSaving] = useState(false)
+	const [consentError, setConsentError] = useState('')
 
 	const hasToken = !!getToken()
 
@@ -30,6 +34,55 @@ const MainPage = () => {
 			setCurrentUser(fresh)
 		}).catch(() => {})
 	}, [hasToken])
+
+	useEffect(() => {
+		if (!hasToken || !user) return
+		let active = true
+		const refreshPrompt = () => {
+			riskApi.getParticipation().then(status => {
+				if (active) setConsentPrompt(current => {
+					if (!status.showConsentPrompt) return null
+					if (current?.currentConsentVersion === status.currentConsentVersion &&
+						current?.currentConsentDigest === status.currentConsentDigest) return current
+					return status
+				})
+			}).catch(() => {})
+		}
+		const onFocus = () => {
+			if (document.visibilityState === 'visible') refreshPrompt()
+		}
+		refreshPrompt()
+		const interval = window.setInterval(refreshPrompt, 60_000)
+		window.addEventListener('focus', onFocus)
+		return () => {
+			active = false
+			window.clearInterval(interval)
+			window.removeEventListener('focus', onFocus)
+		}
+	}, [hasToken, user])
+
+	const decideParticipation = async participate => {
+		if (!consentPrompt || consentSaving) return
+		setConsentSaving(true)
+		setConsentError('')
+		try {
+			if (participate) {
+				await riskApi.joinSharedModelPilot(consentPrompt.currentConsentVersion, consentPrompt.currentConsentDigest)
+			} else {
+				await riskApi.declineSharedModelPilot(consentPrompt.currentConsentVersion, consentPrompt.currentConsentDigest)
+			}
+			setConsentPrompt(null)
+		} catch (error) {
+			try {
+				const latest = await riskApi.getParticipation()
+				setConsentPrompt(latest.showConsentPrompt ? latest : null)
+				if (!latest.showConsentPrompt) return
+			} catch { /* Keep the original save error visible. */ }
+			setConsentError(error.message || 'Не удалось сохранить решение. Попробуйте ещё раз.')
+		} finally {
+			setConsentSaving(false)
+		}
+	}
 
 	useEffect(() => {
 		if (!user || onboardingDismissed) return
@@ -87,6 +140,12 @@ const MainPage = () => {
 					setOnboardingDismissed(true)
 				}}
 				setUser={setUser}
+			/>
+			<ConsentPrompt
+				status={consentPrompt}
+				saving={consentSaving}
+				error={consentError}
+				onDecide={decideParticipation}
 			/>
 		</div>
 	)

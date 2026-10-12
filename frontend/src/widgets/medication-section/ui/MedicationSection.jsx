@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 
-import { AddIcon, DeleteIcon } from '@/shared/ui/icons'
+import { AddIcon, DeleteIcon, EditIcon } from '@/shared/ui/icons'
 import { AddMedicationForm, useAddMedication } from '@/features/add-medication'
 import { EFFECTIVENESS_LABELS, OVERUSE_THRESHOLD } from '@/entities/medication'
 import { ATTACK_TYPE_LABELS } from '@/entities/attack'
@@ -32,9 +32,9 @@ const MedicationSection = ({ date }) => {
 	}, [reload])
 
 	const {
-		open, step, selected, meta, error, loading,
-		openForm, closeForm,
-		toggleItem, isSelected, setItemDosage,
+		open, step, selected, meta, error, loading, editingIntake,
+		openForm, openEditForm, closeForm,
+		toggleItem, isSelected, clearSelection, setItemDosage,
 		setMetaField, nextStep, prevStep, submit,
 	} = useAddMedication({ date, onSuccess: reload })
 
@@ -88,6 +88,14 @@ const MedicationSection = ({ date }) => {
 											<div className={s.medRight}>
 												<span className={s.medTime}>{med.time}</span>
 												<button
+													className={s.editBtn}
+													onClick={() => openEditForm(med, medications)}
+													aria-label="Редактировать приём препаратов"
+													title="Изменить все препараты этого приёма"
+												>
+													<EditIcon style={{ fontSize: '1rem' }} />
+												</button>
+												<button
 													className={s.deleteBtn}
 													onClick={() => handleDelete(med.id)}
 													aria-label="Удалить"
@@ -99,8 +107,8 @@ const MedicationSection = ({ date }) => {
 
 										{attack && (
 											<div className={s.attackLink}>
-												Приступ {attack.startTime}
-												{attack.endTime ? ` — ${attack.endTime}` : attack.ongoing ? ' — сейчас' : ''}
+												Приступ {attack.startDate} {attack.startTime}
+												{attack.endTime ? ` — ${attack.endTime}` : attack.ongoing ? ' — продолжается' : ''}
 												{' · '}{ATTACK_TYPE_LABELS[attack.type]}
 												{' · '}{attack.intensity}/10
 											</div>
@@ -134,10 +142,13 @@ const MedicationSection = ({ date }) => {
 				selected={selected}
 				meta={meta}
 				error={error}
+				loading={loading}
+				editing={!!editingIntake}
 				attacks={attacks}
 				onClose={closeForm}
 				toggleItem={toggleItem}
 				isSelected={isSelected}
+				clearSelection={clearSelection}
 				setItemDosage={setItemDosage}
 				setMetaField={setMetaField}
 				onNext={nextStep}

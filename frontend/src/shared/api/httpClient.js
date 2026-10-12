@@ -1,3 +1,5 @@
+import { isSessionIdle, clearSessionActivity } from '@/shared/lib/sessionActivity'
+
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api'
 
 const TOKEN_KEY         = 'calm_token'
@@ -16,12 +18,14 @@ const authHeaders = () => {
 }
 
 const jsonHeaders = () => ({ 'Content-Type': 'application/json', ...authHeaders() })
+const isPublicAuthPath = path => ['/auth/login', '/auth/register', '/auth/refresh', '/auth/verify-email'].includes(path)
 
 // Идёт ли уже refresh? Все параллельные 401 ждут эту же promise,
 // чтобы не было race condition и лишних запросов на /auth/refresh.
 let refreshPromise = null
 
 const tryRefresh = () => {
+  if (isSessionIdle()) return Promise.resolve(false)
   if (refreshPromise) return refreshPromise
   const rt = getRefreshToken()
   if (!rt) return Promise.resolve(false)
@@ -33,8 +37,12 @@ const tryRefresh = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken: rt }),
       })
-      if (!res.ok) return false
+      if (!res.ok) {
+        // Другая вкладка могла успеть обновить общий refresh-токен.
+        return Boolean(getRefreshToken()) && getRefreshToken() !== rt && !isSessionIdle()
+      }
       const body = await res.json()
+      if (getRefreshToken() !== rt || isSessionIdle()) return false
       setToken(body.token)
       setRefreshToken(body.refreshToken)
       return true
@@ -53,15 +61,29 @@ const tryRefresh = () => {
 const clearSession = () => {
   clearToken()
   clearRefreshToken()
+  clearSessionActivity()
   localStorage.removeItem('calm_current_user')
   window.location.href = '/'
+}
+
+export const expireSessionIfIdle = () => {
+  if (!getToken() || !isSessionIdle()) return false
+  clearSession()
+  return true
+}
+
+const send = (path, options) => {
+  if (!isPublicAuthPath(path) && expireSessionIfIdle()) {
+    return Promise.reject(new Error('Сессия истекла'))
+  }
+  return fetch(BASE + path, options)
 }
 
 const handle = async (res, path, retryFn) => {
   if (res.status === 204) return null
   const body = await res.json().catch(() => ({}))
   if (res.status === 401) {
-    if (path.startsWith('/auth/')) {
+    if (isPublicAuthPath(path)) {
       // Неверные креды — показываем сообщение в форме, не редиректим
       throw new Error(body.message ?? 'Unauthorized')
     }
@@ -75,42 +97,44 @@ const handle = async (res, path, retryFn) => {
   }
   if (res.status === 429) {
     const retryAfter = parseInt(res.headers.get('Retry-After') ?? '60', 10)
-    const err = new Error(body.error ?? body.message ?? 'Слишком много попыток')
+    const err = new Error(body.message ?? body.error ?? 'Слишком много попыток')
     err.retryAfter = retryAfter
     throw err
   }
-  if (!res.ok) throw new Error(body.error ?? body.message ?? `HTTP ${res.status}`)
+  // `error` is usually the generic HTTP title (e.g. "Bad Request"); `message`
+  // carries the useful server explanation intended for the user.
+  if (!res.ok) throw new Error(body.message ?? body.error ?? `HTTP ${res.status}`)
   return body
 }
 
 export const http = {
   get: path => {
-    const go = () => fetch(BASE + path, { headers: authHeaders() })
+    const go = () => send(path, { headers: authHeaders() })
       .then(r => handle(r, path, go))
     return go()
   },
   post: (path, b) => {
-    const go = () => fetch(BASE + path, { method: 'POST', headers: jsonHeaders(), body: JSON.stringify(b) })
+    const go = () => send(path, { method: 'POST', headers: jsonHeaders(), body: JSON.stringify(b) })
       .then(r => handle(r, path, go))
     return go()
   },
   put: (path, b) => {
-    const go = () => fetch(BASE + path, { method: 'PUT', headers: jsonHeaders(), body: JSON.stringify(b) })
+    const go = () => send(path, { method: 'PUT', headers: jsonHeaders(), body: JSON.stringify(b) })
       .then(r => handle(r, path, go))
     return go()
   },
   patch: (path, b) => {
-    const go = () => fetch(BASE + path, { method: 'PATCH', headers: jsonHeaders(), body: JSON.stringify(b) })
-      .then(r => handle(r, path, go))
-    return go()
-  },
-  delete: path => {
-    const go = () => fetch(BASE + path, { method: 'DELETE', headers: authHeaders() })
+    const go = () => send(path, { method: 'PATCH', headers: jsonHeaders(), body: JSON.stringify(b) })
       .then(r => handle(r, path, go))
     return go()
   },
   postForm: (path, formData) => {
-    const go = () => fetch(BASE + path, { method: 'POST', headers: authHeaders(), body: formData })
+    const go = () => send(path, { method: 'POST', headers: authHeaders(), body: formData })
+      .then(r => handle(r, path, go))
+    return go()
+  },
+  delete: path => {
+    const go = () => send(path, { method: 'DELETE', headers: authHeaders() })
       .then(r => handle(r, path, go))
     return go()
   },

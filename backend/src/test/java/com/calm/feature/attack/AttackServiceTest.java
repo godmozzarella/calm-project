@@ -2,6 +2,7 @@ package com.calm.feature.attack;
 
 import com.calm.common.exception.NotFoundException;
 import com.calm.feature.attack.dto.AttackRequest;
+import org.springframework.web.server.ResponseStatusException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -136,5 +137,36 @@ class AttackServiceTest {
 				.isInstanceOf(NotFoundException.class);
 
 		verify(repo, never()).delete(any());
+	}
+
+	@Test
+	void rejectsEndBeforeStartWithoutSaving() {
+		AttackRequest invalid = new AttackRequest(
+				LocalDate.of(2026, 5, 25), LocalTime.of(10, 0),
+				LocalDate.of(2026, 5, 25), LocalTime.of(9, 0),
+				false, 5, AttackType.PRESSING, null, null, null, null);
+		assertThatThrownBy(() -> service.create("user-1", invalid))
+				.isInstanceOf(ResponseStatusException.class)
+				.hasMessageContaining("позже начала");
+		verify(repo, never()).save(any());
+	}
+
+	@Test
+	void editingCanClearSymptomsTriggersAndPainZones() {
+		Attack existing = new Attack();
+		existing.setUserId("user-1");
+		existing.setSymptoms(Set.of("nausea"));
+		existing.setTriggers(Set.of("stress"));
+		existing.setPainZones(Map.of("forehead", "red"));
+		when(repo.findById("attack-1")).thenReturn(Optional.of(existing));
+		when(repo.save(any(Attack.class))).thenAnswer(inv -> inv.getArgument(0));
+		AttackRequest cleared = new AttackRequest(
+				LocalDate.of(2026, 5, 25), LocalTime.of(10, 0),
+				LocalDate.of(2026, 5, 25), LocalTime.of(11, 0),
+				false, 5, AttackType.PRESSING, null, null, null, null);
+		Attack updated = service.update("user-1", "attack-1", cleared);
+		assertThat(updated.getSymptoms()).isEmpty();
+		assertThat(updated.getTriggers()).isEmpty();
+		assertThat(updated.getPainZones()).isEmpty();
 	}
 }

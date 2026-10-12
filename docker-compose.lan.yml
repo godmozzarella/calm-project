@@ -1,0 +1,7 @@
+# LAN-only access to the site. Set CALM_LAN_IP to the Mac's current Wi-Fi IP.
+# API and MongoDB remain loopback-only; nginx reaches the API over Compose network.
+services:
+  frontend:
+    ports: !override
+      - "127.0.0.1:80:80"
+      - "${CALM_LAN_IP:?Set CALM_LAN_IP to the Mac LAN IP}:80:80"

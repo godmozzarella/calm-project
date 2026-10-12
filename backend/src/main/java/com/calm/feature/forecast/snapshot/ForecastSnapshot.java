@@ -39,6 +39,7 @@ public class ForecastSnapshot {
 	private Double tempMax;
 	private Double windKmhMax;
 	private Double kpIndex;
+	private String timezone;
 
 	@CreatedDate
 	private Instant createdAt;
@@ -69,6 +70,8 @@ public class ForecastSnapshot {
 	public void setWindKmhMax(Double windKmhMax) { this.windKmhMax = windKmhMax; }
 	public Double getKpIndex() { return kpIndex; }
 	public void setKpIndex(Double kpIndex) { this.kpIndex = kpIndex; }
+	public String getTimezone() { return timezone; }
+	public void setTimezone(String timezone) { this.timezone = timezone; }
 	public Instant getCreatedAt() { return createdAt; }
 	public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 

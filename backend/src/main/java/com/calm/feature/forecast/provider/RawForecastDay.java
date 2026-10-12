@@ -28,15 +28,16 @@ public record RawForecastDay(
 		Double tempMin,
 		Double tempMax,
 		Double windKmhMax,
-		Double kpIndex
+		Double kpIndex,
+		String timezone
 ) {
 	/** Конструктор без kpIndex — обратная совместимость с OpenMeteoProvider. */
 	public RawForecastDay(LocalDate date, Double pressureHpaAvg, Double pressureDelta24h,
 	                      Double humidityAvg, Double tempMin, Double tempMax, Double windKmhMax) {
-		this(date, pressureHpaAvg, pressureDelta24h, humidityAvg, tempMin, tempMax, windKmhMax, null);
+		this(date, pressureHpaAvg, pressureDelta24h, humidityAvg, tempMin, tempMax, windKmhMax, null, null);
 	}
 
 	public RawForecastDay withKpIndex(Double kp) {
-		return new RawForecastDay(date, pressureHpaAvg, pressureDelta24h, humidityAvg, tempMin, tempMax, windKmhMax, kp);
+		return new RawForecastDay(date, pressureHpaAvg, pressureDelta24h, humidityAvg, tempMin, tempMax, windKmhMax, kp, timezone);
 	}
 }

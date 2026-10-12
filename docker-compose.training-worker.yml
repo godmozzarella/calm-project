@@ -1,0 +1,24 @@
+services:
+  training-worker:
+    image: mongo:7
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env.training-worker
+    environment:
+      CALM_RISK_TRAINING_TEST_MODE: "NO"
+      CALM_TRAINING_REBUILD_CONFIRM: "YES"
+      CALM_TRAINING_INTERVAL_SECONDS: "300"
+    volumes:
+      - ./backend/scripts/export-shared-risk-training.js:/scripts/export-shared-risk-training.js:ro
+      - ./backend/scripts/run-shared-risk-export-loop.sh:/scripts/run-shared-risk-export-loop.sh:ro
+      - ./backend/scripts/health-shared-risk-export.sh:/scripts/health-shared-risk-export.sh:ro
+    entrypoint: ["/bin/sh", "/scripts/run-shared-risk-export-loop.sh"]
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/bin/sh", "/scripts/health-shared-risk-export.sh"]
+      interval: 30s
+      timeout: 5s
+      retries: 2
+      start_period: 60s

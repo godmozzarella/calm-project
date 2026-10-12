@@ -1,0 +1,7 @@
+services:
+  mongo:
+    command: ["mongod", "--auth"]
+
+  backend:
+    environment:
+      MONGO_URI: ${CALM_MONGO_URI:?Set an authenticated MongoDB URI for the backend}

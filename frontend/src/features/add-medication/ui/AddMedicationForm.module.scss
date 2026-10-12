@@ -457,6 +457,16 @@
 	opacity: 0.6;
 }
 
+.clearSelectionBtn {
+	align-self: flex-start;
+	border: 0;
+	background: transparent;
+	color: $fc-contrast;
+	text-decoration: underline;
+	cursor: pointer;
+	@include fluid-text(12, 11);
+}
+
 /* ── Custom medication input (step 1) ── */
 .customSection {
 	margin-top: 0.25rem;

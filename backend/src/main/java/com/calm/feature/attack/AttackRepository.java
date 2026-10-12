@@ -9,6 +9,7 @@ import java.util.List;
 public interface AttackRepository extends MongoRepository<Attack, String> {
 
 	List<Attack> findByUserIdOrderByStartDateDescStartTimeDesc(String userId);
+	boolean existsByUserIdAndStartDate(String userId, LocalDate date);
 
 	long deleteByUserId(String userId);
 

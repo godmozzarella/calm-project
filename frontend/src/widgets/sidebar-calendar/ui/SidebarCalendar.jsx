@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { CloseIcon, ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/icons'
+import { BackIcon, CloseIcon, ChevronLeftIcon, ChevronRightIcon } from '@/shared/ui/icons'
 import { emit, DATE_SELECTED } from '@/shared/lib/dataEvents'
 
 import s from './SidebarCalendar.module.scss'
@@ -237,7 +237,7 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar }) => {
 								onClick={() => setShowMarkPanel(false)}
 								aria-label="Назад"
 							>
-								← назад
+								<BackIcon style={{ fontSize: '1rem' }} /> Назад
 							</button>
 						</div>
 						<div className={s.markList}>
@@ -265,7 +265,7 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar }) => {
 				<div className={s.footer}>
 					{!isViewingCurrentMonth && (
 						<button className={s.todayLink} onClick={goToday}>
-							← К текущему месяцу
+							<BackIcon style={{ fontSize: '1rem' }} /> К текущему месяцу
 						</button>
 					)}
 					<div className={s.legend}>

@@ -1,5 +1,6 @@
 package com.calm.feature.email;
 
+import com.calm.config.OutboundHttp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -47,18 +49,17 @@ public class ResendEmailService implements EmailService {
 		this.fromName = fromName;
 		this.http = RestClient.builder()
 				.baseUrl(API_URL)
+				.requestFactory(OutboundHttp.requestFactory())
 				.defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 				.build();
-		log.info("Email-провайдер: Resend (HTTP API), from='{}', api-key={}",
-				this.fromAddress,
-				apiKey == null || apiKey.isBlank() ? "НЕ ЗАДАН" : "ok (****" + apiKey.substring(Math.max(0, apiKey.length() - 4)) + ")");
+		log.info("Email-провайдер: Resend (HTTP API), настроен={}", apiKey != null && !apiKey.isBlank());
 	}
 
 	@Override
-	public boolean send(String to, String subject, String html) {
+	public EmailSendResult send(String to, String subject, String html) {
 		if (apiKey == null || apiKey.isBlank()) {
-			log.warn("Resend не настроен (CALM_RESEND_API_KEY пуст), письмо в '{}' не отправлено", to);
-			return false;
+			log.warn("Resend не настроен (CALM_RESEND_API_KEY пуст), письмо не отправлено");
+			return EmailSendResult.FAILED;
 		}
 		// Resend требует From в формате "Name <email@host>" или просто "email@host".
 		String from = fromName == null || fromName.isBlank()
@@ -76,11 +77,21 @@ public class ResendEmailService implements EmailService {
 					.retrieve()
 					.body(Map.class);
 			String id = response == null ? null : String.valueOf(response.get("id"));
-			log.info("Письмо отправлено через Resend: to='{}', subject='{}', id={}", to, subject, id);
-			return true;
+			log.info("Письмо отправлено через Resend, id={}", id);
+			return EmailSendResult.SENT;
+		} catch (RestClientResponseException e) {
+			String responseBody = e.getResponseBodyAsString().toLowerCase(java.util.Locale.ROOT);
+			if (e.getStatusCode().value() == 403
+					&& responseBody.contains("only send testing emails")
+					&& responseBody.contains("verify a domain")) {
+				log.warn("Resend отклонил письмо: тестовый режим ограничивает адреса получателей");
+				return EmailSendResult.RECIPIENT_RESTRICTED;
+			}
+			log.error("Resend: ошибка отправки, HTTP {}", e.getStatusCode().value());
+			return EmailSendResult.FAILED;
 		} catch (Exception e) {
-			log.error("Resend: ошибка отправки '{}': {}", to, e.getMessage(), e);
-			return false;
+			log.error("Resend: ошибка отправки ({})", e.getClass().getSimpleName());
+			return EmailSendResult.FAILED;
 		}
 	}
 }

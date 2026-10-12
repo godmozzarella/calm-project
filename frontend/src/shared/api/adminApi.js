@@ -4,6 +4,10 @@ export const adminApi = {
   // ── Пользователи ──
   listUsers: q => http.get(`/admin/users${q ? `?q=${encodeURIComponent(q)}` : ''}`),
   changeRole: (id, role) => http.patch(`/admin/users/${id}/role`, { role }),
+  deleteUser: id => http.delete(`/admin/users/${id}`),
+  getSharedModelParticipation: id => http.get(`/admin/users/${id}/shared-model-participation`),
+  setSharedModelParticipationBlocked: (id, blocked) =>
+    http.patch(`/admin/users/${id}/shared-model-participation`, { blocked }),
 
   // ── Справочники ──
   createEntry: ({ type, value, label, order }) =>

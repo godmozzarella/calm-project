@@ -6,7 +6,7 @@ import { Button } from '@/shared/ui/Button'
 import {
 	CloseIcon,
 	ChevronRightIcon,
-	ArrowBackIcon,
+	BackIcon,
 	PersonIcon,
 	AnalyticsIcon,
 	SecurityIcon,
@@ -27,7 +27,7 @@ import {
 import { useEditProfile } from '@/features/edit-profile'
 import { LocationOnboarding } from '@/features/onboarding-location'
 import { clearCurrentUser, setCurrentUser } from '@/entities/user'
-import { authApi, userApi, forecastApi } from '@/shared/api'
+import { authApi, userApi, forecastApi, riskApi } from '@/shared/api'
 
 import s from './SidebarProfile.module.scss'
 
@@ -40,6 +40,43 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 	const [togglingNotif, setTogglingNotif] = useState(false)
 	const [sendingTest, setSendingTest] = useState(false)
 	const [testMessage, setTestMessage] = useState(null)
+	const [sendingVerification, setSendingVerification] = useState(false)
+	const [participation, setParticipation] = useState(null)
+	const [loadingParticipation, setLoadingParticipation] = useState(false)
+	const [savingParticipation, setSavingParticipation] = useState(false)
+	const [participationError, setParticipationError] = useState('')
+
+	const openParticipation = async () => {
+		setView('participation')
+		setLoadingParticipation(true)
+		setParticipationError('')
+		try {
+			setParticipation(await riskApi.getParticipation())
+		} catch (e) {
+			setParticipationError(e.message || 'Не удалось загрузить статус участия.')
+		} finally {
+			setLoadingParticipation(false)
+		}
+	}
+
+	const changeParticipation = async join => {
+		if (savingParticipation) return
+		setSavingParticipation(true)
+		setParticipationError('')
+		try {
+			const result = join
+				? await riskApi.joinSharedModelPilot(participation.currentConsentVersion, participation.currentConsentDigest)
+				: await riskApi.withdrawSharedModelPilot()
+			setParticipation(result)
+		} catch (e) {
+			setParticipationError(e.message || 'Не удалось сохранить решение.')
+			if (join) {
+				try { setParticipation(await riskApi.getParticipation()) } catch { /* Preserve the save error. */ }
+			}
+		} finally {
+			setSavingParticipation(false)
+		}
+	}
 
 	const toggleNotifications = async () => {
 		if (togglingNotif) return
@@ -67,6 +104,19 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 		} finally {
 			setSendingTest(false)
 			setTimeout(() => setTestMessage(null), 8000)
+		}
+	}
+
+	const resendVerification = async () => {
+		if (sendingVerification) return
+		setSendingVerification(true)
+		try {
+			await authApi.resendVerification()
+			setTestMessage('Ссылка подтверждения отправлена. Проверьте почту.')
+		} catch (e) {
+			setTestMessage(e.message || 'Не удалось отправить ссылку.')
+		} finally {
+			setSendingVerification(false)
 		}
 	}
 
@@ -176,6 +226,11 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 							</label>
 							<p className={s.userName}>{user?.name || 'Пользователь'}</p>
 							<p className={s.userEmail}>{user?.email}</p>
+							{user && !user.emailVerified && (
+								<button type="button" onClick={resendVerification} disabled={sendingVerification}>
+									{sendingVerification ? 'Отправляем…' : 'Подтвердить email — отправить ссылку'}
+								</button>
+							)}
 						</div>
 
 						<div className={s.divider} />
@@ -204,6 +259,11 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 
 						<div className={s.sectionLabel}>Настройки</div>
 						<nav className={s.navSection}>
+							<button className={s.navItem} onClick={openParticipation}>
+								<span className={s.navIcon}><AnalyticsIcon fontSize="small" /></span>
+								<span className={s.navLabel}>Пилот общей модели</span>
+								<span className={s.navChevron}><ChevronRightIcon fontSize="small" /></span>
+							</button>
 							<button
 								className={s.navItem}
 								onClick={() => setLocationModalOpen(true)}
@@ -228,8 +288,10 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 							<button
 								className={s.navItem}
 								onClick={sendTestEmail}
-								disabled={sendingTest || !user?.notificationsEnabled || !user?.latitude}
-								title={!user?.latitude
+								disabled={sendingTest || !user?.emailVerified || !user?.notificationsEnabled || !user?.latitude}
+								title={!user?.emailVerified
+									? 'Сначала подтвердите email'
+									: !user?.latitude
 									? 'Сначала укажи город'
 									: !user?.notificationsEnabled
 										? 'Сначала включи уведомления'
@@ -285,7 +347,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 					<div className={`${s.panel} ${view === 'edit' ? s.panelVisible : s.panelHiddenRight}`}>
 						<div className={s.panelHeader}>
 							<button className={s.iconBtn} onClick={handleBackToMain} aria-label="Назад">
-								<ArrowBackIcon fontSize="small" />
+								<BackIcon fontSize="small" />
 							</button>
 							<span className={s.panelTitle}>Редактирование</span>
 						</div>
@@ -395,6 +457,58 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 								</Button>
 							</form>
 						)}
+					</div>
+
+					{/* ── Shared model pilot participation ── */}
+					<div className={`${s.panel} ${view === 'participation' ? s.panelVisible : s.panelHiddenRight}`}>
+						<div className={s.panelHeader}>
+							<button className={s.iconBtn} onClick={handleBackToMain} aria-label="Назад">
+								<BackIcon fontSize="small" />
+							</button>
+							<span className={s.panelTitle}>Пилот общей модели</span>
+						</div>
+						<div className={s.participationContent}>
+							{loadingParticipation && <p>Загружаем статус…</p>}
+							{!loadingParticipation && participation && (
+								<>
+									<p className={participation.participating ? s.participationOn : s.participationOff}>
+										{participation.adminBlocked
+											? 'Участие отключено администратором'
+											: participation.participating
+											? (participation.consentCurrent ? 'Участие включено' : 'Нужно обновить согласие')
+												: 'Вы не участвуете'}
+									</p>
+									{participation.adminBlocked ? (
+										<p className={s.participationNotice}>Администратор временно запретил участие. Если это ошибка, обратитесь к администратору.</p>
+									) : participation.enrollmentOpen ? (
+										<>
+											{participation.consentText?.map((paragraph, index) => (
+												<p key={index} className={index === participation.consentText.length - 1 ? s.participationNotice : undefined}>{paragraph}</p>
+											))}
+										</>
+									) : (
+										<p className={s.participationNotice}>Набор в пилот пока закрыт. Дневник работает как обычно. Когда условия участия будут готовы, здесь появится возможность принять решение.</p>
+									)}
+									{participation.adminBlocked ? null : participation.participating ? (
+										<>
+											{participation.enrollmentOpen && !participation.consentCurrent && (
+												<button className={s.participationButton} onClick={() => changeParticipation(true)} disabled={savingParticipation}>
+													{savingParticipation ? 'Сохраняем…' : 'Принять новые условия'}
+												</button>
+											)}
+											<button className={s.participationButtonSecondary} onClick={() => changeParticipation(false)} disabled={savingParticipation}>
+												{savingParticipation ? 'Сохраняем…' : 'Отозвать участие'}
+											</button>
+										</>
+									) : participation.enrollmentOpen ? (
+										<button className={s.participationButton} onClick={() => changeParticipation(true)} disabled={savingParticipation}>
+											{savingParticipation ? 'Сохраняем…' : 'Согласиться участвовать'}
+										</button>
+									) : null}
+								</>
+							)}
+							{participationError && <p className={s.participationError} role="alert">{participationError}</p>}
+						</div>
 					</div>
 				</div>
 			</aside>

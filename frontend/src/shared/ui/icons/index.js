@@ -25,7 +25,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircleOutlined'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import BackIcon from './BackIcon'
 import LogoutIcon from '@mui/icons-material/Logout'
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
@@ -74,7 +74,7 @@ export {
 	ErrorOutlineIcon,
 	ChevronRightIcon,
 	ChevronLeftIcon,
-	ArrowBackIcon,
+	BackIcon,
 	LogoutIcon,
 	PhotoCameraIcon,
 	NotificationsNoneIcon,

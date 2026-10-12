@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { medicationApi } from '@/shared/api'
+import { generateId } from '@/shared/lib/generateId'
+import { intakeMembers, planIntakeUpdate } from './intakeEditor'
 
 const nowTime = () => {
   const d = new Date()
@@ -16,8 +18,25 @@ export const useAddMedication = ({ date, onSuccess }) => {
   const [meta,     setMetaState] = useState(() => makeMeta(date))
   const [error,    setError]     = useState('')
   const [loading,  setLoading]   = useState(false)
+  const [editingIntake, setEditingIntake] = useState(null)
+  const [draftIntakeId, setDraftIntakeId] = useState(null)
 
-  const openForm  = () => { setStep(1); setSelected([]); setMetaState(makeMeta(date)); setError(''); setOpen(true) }
+  const openForm  = () => { setEditingIntake(null); setDraftIntakeId(generateId()); setStep(1); setSelected([]); setMetaState(makeMeta(date)); setError(''); setOpen(true) }
+  const openEditForm = (med, medications) => {
+    const members = intakeMembers(med, medications)
+    setEditingIntake(members)
+    setDraftIntakeId(med.intakeId || generateId())
+    setStep(1)
+    setSelected(members.map(m => ({
+      sourceId: m.id,
+      name: m.name,
+      dosage: m.dosage ?? '',
+      category: m.category ?? 'Другое',
+    })))
+    setMetaState({ date: med.date, time: med.time?.slice(0, 5) ?? '', attackId: med.attackId, note: med.note ?? '' })
+    setError('')
+    setOpen(true)
+  }
   const closeForm = () => setOpen(false)
 
   const toggleItem = item => {
@@ -26,11 +45,12 @@ export const useAddMedication = ({ date, onSuccess }) => {
       const key = itemKey(item)
       return prev.some(s => itemKey(s) === key)
         ? prev.filter(s => itemKey(s) !== key)
-        : [...prev, { name: item.name, dosage: item.dosage, category: item.category }]
+        : [...prev, { name: item.name, dosage: item.dosage, category: item.category, clientId: generateId() }]
     })
   }
 
   const isSelected = item => selected.some(s => itemKey(s) === itemKey(item))
+  const clearSelection = () => { setSelected([]); setError('') }
 
   const setItemDosage = (name, category, dosage) =>
     setSelected(prev =>
@@ -45,7 +65,7 @@ export const useAddMedication = ({ date, onSuccess }) => {
       setError(''); setStep(2)
     } else if (step === 2) {
       const empty = selected.find(s => !s.dosage?.trim())
-      if (empty) { setError(`Укажите дозировку для "${empty.name}"`); return }
+      if (empty && !editingIntake) { setError(`Укажите дозировку для "${empty.name}"`); return }
       setError(''); setStep(3)
     }
   }
@@ -54,35 +74,79 @@ export const useAddMedication = ({ date, onSuccess }) => {
 
   const submit = async () => {
     if (!meta.time) { setError('Укажите время приёма'); return }
+    if (!meta.date) { setError('Укажите дату приёма'); return }
 
     setLoading(true)
+    setError('')
     try {
-      await Promise.all(
-        selected.map(item =>
-          medicationApi.add({
+      if (editingIntake) {
+        const { updates, creates, removes } = planIntakeUpdate(editingIntake, selected)
+        const common = {
+          intakeId: draftIntakeId,
+          date: meta.date,
+          time: meta.time,
+          attackId: meta.attackId || null,
+          note: meta.note.trim(),
+        }
+        const updateRequests = updates.map(({ original, item }) => {
+          const sameMedicine = original.name === item.name &&
+            (original.category ?? 'Другое') === item.category
+          return {
+            id: original.id,
+            medication: {
+              ...original,
+              ...common,
+              name: item.name,
+              dosage: item.dosage,
+              category: sameMedicine ? original.category : item.category,
+              effectiveness: sameMedicine && original.dosage === item.dosage ? original.effectiveness : null,
+              therapeuticClass: sameMedicine ? original.therapeuticClass : null,
+              purpose: sameMedicine ? original.purpose : null,
+            },
+          }
+        })
+        const createRequests = creates.map(item => ({
+            ...common,
+            clientId: item.clientId,
+            name: item.name,
+            dosage: item.dosage,
+            category: item.category,
+            effectiveness: null,
+        }))
+        await medicationApi.saveIntake({
+          updates: updateRequests,
+          creates: createRequests,
+          removes: removes.map(m => m.id),
+        })
+      } else {
+        await medicationApi.saveIntake({
+          creates: selected.map(item => ({
+            clientId: item.clientId,
+            intakeId: draftIntakeId,
             name:          item.name,
             dosage:        item.dosage,
+            category:      item.category,
             date:          meta.date,
             time:          meta.time,
             attackId:      meta.attackId || null,
             effectiveness: null,
             note:          meta.note.trim(),
-          })
-        )
-      )
+          })),
+        })
+      }
       setOpen(false)
       onSuccess?.()
     } catch (err) {
-      setError(err.message ?? 'Ошибка сохранения')
+      setError(`Не удалось полностью сохранить приём: ${err.message ?? 'ошибка'}. Повторите сохранение с тем же составом.`)
     } finally {
       setLoading(false)
     }
   }
 
   return {
-    open, step, selected, meta, error, loading,
-    openForm, closeForm,
-    toggleItem, isSelected, setItemDosage,
+    open, step, selected, meta, error, loading, editingIntake,
+    openForm, openEditForm, closeForm,
+    toggleItem, isSelected, clearSelection, setItemDosage,
     setMetaField, nextStep, prevStep, submit,
   }
 }

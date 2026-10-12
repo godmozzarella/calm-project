@@ -8,6 +8,7 @@ import java.time.LocalTime;
 
 public record MedicationDto(
 		String id,
+		String intakeId,
 		String name,
 		String dosage,
 		String category,
@@ -23,6 +24,7 @@ public record MedicationDto(
 	public static MedicationDto from(Medication m) {
 		return new MedicationDto(
 				m.getId(),
+				m.getIntakeId(),
 				m.getName(),
 				m.getDosage(),
 				m.getCategory(),

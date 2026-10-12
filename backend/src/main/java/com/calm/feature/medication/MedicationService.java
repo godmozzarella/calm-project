@@ -1,6 +1,7 @@
 package com.calm.feature.medication;
 
 import com.calm.common.exception.NotFoundException;
+import com.calm.common.exception.ConflictException;
 import com.calm.feature.dictionary.DictionaryEntry;
 import com.calm.feature.dictionary.DictionaryRepository;
 import com.calm.feature.dictionary.DictionaryType;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Objects;
 
 @Service
 public class MedicationService {
@@ -39,6 +41,16 @@ public class MedicationService {
 
 	public Medication create(String userId, MedicationRequest req) {
 		Medication m = new Medication();
+		if (req.clientId() != null && !req.clientId().isBlank()) {
+			Medication existing = repo.findById(req.clientId()).orElse(null);
+			if (existing != null) {
+				if (!existing.getUserId().equals(userId) || !Objects.equals(existing.getIntakeId(), req.intakeId())) {
+					throw new ConflictException("Идентификатор препарата уже используется");
+				}
+				return existing;
+			}
+			m.setId(req.clientId());
+		}
 		m.setUserId(userId);
 		applyRequest(m, req);
 		return repo.save(m);
@@ -51,7 +63,9 @@ public class MedicationService {
 	}
 
 	public void delete(String userId, String id) {
-		Medication m = getOwned(userId, id);
+		Medication m = repo.findById(id).orElse(null);
+		if (m == null) return;
+		if (!m.getUserId().equals(userId)) throw new NotFoundException("Препарат не найден");
 		repo.delete(m);
 	}
 
@@ -65,6 +79,7 @@ public class MedicationService {
 	}
 
 	private void applyRequest(Medication m, MedicationRequest req) {
+		m.setIntakeId(req.intakeId());
 		m.setName(req.name());
 		m.setDosage(req.dosage());
 		m.setCategory(req.category());

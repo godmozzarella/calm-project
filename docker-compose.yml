@@ -4,7 +4,7 @@ services:
     image: mongo:7
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
     volumes:
       - mongo_data:/data/db
     environment:
@@ -24,11 +24,11 @@ services:
       mongo:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     env_file:
       - ./backend/.env
     environment:
-      MONGO_URI: mongodb://mongo:27017/calm
+      MONGO_URI: ${CALM_MONGO_URI:-mongodb://mongo:27017/calm}
       PORT: 8080
     volumes:
       - avatars_data:/app/uploads/avatars
@@ -48,7 +48,7 @@ services:
       backend:
         condition: service_healthy
     ports:
-      - "80:80"
+      - "127.0.0.1:80:80"
 
 volumes:
   mongo_data:

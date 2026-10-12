@@ -1,266 +1,188 @@
 @use 'app/styles/globals.scss' as *;
+@use 'sass:color';
+
+$outline: rgba($contrast-color, .24);
+$muted-surface: rgba($fc-dark, .28);
+$type-caption: .75rem;
+$type-body: .875rem;
+$type-value: 1.125rem;
+$type-title: 1.5rem;
+$type-result: 3rem;
+
+.section {
+	width: 100%;
+	max-width: 1200px;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	color: $fc-main;
+	font-size: $type-body;
+	line-height: 1.45;
+}
+
+.header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1.5rem;
+
+	h1 { font-size: $type-title; line-height: 1.2; font-weight: $fw-semibold; }
+	p { color: $fc-secondary; margin-top: .45rem; line-height: 1.4; }
+}
+
+.confidence {
+	border: 1px solid $outline;
+	border-radius: 2rem;
+	background: $muted-surface;
+	color: $fc-main;
+	font-size: $type-caption;
+	padding: .45rem .75rem;
+	line-height: 1.35;
+	white-space: nowrap;
+}
 
 .card {
-	background-color: #1c1f24;
-	border: 1px solid rgba(255, 255, 255, 0.05);
-	border-radius: 1rem;
-	padding: 1.25rem;
-	display: flex;
-	flex-direction: column;
-	gap: 0.875rem;
-	width: 100%;
-}
-
-.staleBanner {
-	@include fluid-text(13, 11);
-	background: rgba(245, 158, 11, 0.1);
-	border: 1px solid rgba(245, 158, 11, 0.3);
-	color: #fbbf24;
-	padding: 0.5rem 0.75rem;
-	border-radius: 0.5rem;
-	line-height: 1.4;
-}
-
-.empty,
-.errorText {
-	@include fluid-text(13, 12);
-	color: $fc-secondary;
-	margin: 0;
-	padding: 0.75rem 0;
-	text-align: center;
-}
-
-.errorText { color: $error-color; }
-
-.noLocation {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 1rem;
-	flex-wrap: wrap;
-	padding: 0.25rem 0;
-}
-
-.noLocationText {
-	@include fluid-text(13, 12);
-	color: $fc-secondary;
-	margin: 0;
-	flex: 1;
-}
-
-.noLocationBtn {
-	@include fluid-text(13, 12);
-	color: $fc-main;
-	background: rgba(255, 255, 255, 0.05);
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	border-radius: 0.5rem;
-	padding: 0.4rem 0.875rem;
-	cursor: pointer;
-	white-space: nowrap;
-	transition: background 0.18s ease, border-color 0.18s ease;
-
-	&:hover {
-		background: rgba(255, 255, 255, 0.09);
-		border-color: rgba(255, 255, 255, 0.18);
-	}
-}
-
-/* ── Плитки ── */
-.tiles {
-	display: grid;
-	grid-template-columns: repeat(4, 1fr);
-	gap: 0.625rem;
-}
-
-.tile {
-	display: flex;
-	flex-direction: column;
-	gap: 0.25rem;
-	padding: 0.75rem 0.875rem;
-	border-radius: 0.75rem;
-	border: 1px solid rgba(255, 255, 255, 0.06);
-	background: rgba(255, 255, 255, 0.02);
-	color: $fc-main;
-	cursor: pointer;
-	text-align: left;
-	transition: border-color 0.2s ease, background 0.2s ease;
-
-	&:hover {
-		border-color: rgba(255, 255, 255, 0.14);
-	}
-}
-
-.tileActive {
-	border-color: rgba(255, 255, 255, 0.18) !important;
-	background: rgba(255, 255, 255, 0.04);
-}
-
-.tileDay {
-	@include fluid-text(12, 11);
-	color: $fc-secondary;
-	font-weight: $fw-medium;
-}
-
-.tileRisk {
-	@include fluid-text(14, 13);
-	font-weight: $fw-semibold;
-}
-
-.tilePressure {
-	@include fluid-text(11, 10);
-	color: $fc-secondary;
-	font-variant-numeric: tabular-nums;
-}
-
-/* Цветовые акценты только на тексте — без подсветки фона/бордера */
-.risk_LOW    .tileRisk { color: #7fb88f; }
-.risk_MEDIUM .tileRisk { color: #c79864; }
-.risk_HIGH   .tileRisk { color: #c97070; }
-
-/* ── Подробный блок ── */
-.detail {
-	border-radius: 0.75rem;
-	padding: 1rem 1.125rem;
-	border: 1px solid rgba(255, 255, 255, 0.05);
-	background: rgba(255, 255, 255, 0.015);
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-}
-
-/* Тонкая подкраска бордера-снизу по уровню риска — вместо яркой заливки */
-.detail_LOW    { border-left: 3px solid rgba(127, 184, 143, 0.55); }
-.detail_MEDIUM { border-left: 3px solid rgba(199, 152, 100, 0.6); }
-.detail_HIGH   { border-left: 3px solid rgba(201, 112, 112, 0.7); }
-
-.detailHead {
-	display: flex;
-	justify-content: space-between;
-	align-items: baseline;
-	gap: 1rem;
-}
-
-.detailDay {
-	@include fluid-text(14, 13);
-	color: $fc-secondary;
-	font-weight: $fw-medium;
-}
-
-.detailRisk {
-	@include fluid-text(15, 13);
-	font-weight: $fw-semibold;
-
-	.detail_LOW    & { color: #7fb88f; }
-	.detail_MEDIUM & { color: #c79864; }
-	.detail_HIGH   & { color: #c97070; }
-}
-
-.reasons {
-	margin: 0;
-	padding-left: 1.125rem;
-	display: flex;
-	flex-direction: column;
-	gap: 0.25rem;
-
-	li {
-		@include fluid-text(13, 12);
-		color: $fc-main;
-		line-height: 1.45;
-	}
-}
-
-.reasonsOk {
-	margin: 0;
-	@include fluid-text(13, 12);
-	color: $fc-secondary;
-}
-
-/* ── Метрики ── */
-.metrics {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
-	gap: 0.625rem;
-	margin: 0;
-	overflow: visible;
-}
-
-.metric {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding: 0.5rem 0.625rem;
-	background: rgba(0, 0, 0, 0.15);
-	border-radius: 0.5rem;
-	position: relative;
-
-	&[data-tip]:hover::after {
-		content: attr(data-tip);
-		position: absolute;
-		bottom: calc(100% + 0.5rem);
-		left: 50%;
-		transform: translateX(-50%);
-		background: rgba(18, 20, 28, 0.97);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 0.5rem;
-		padding: 0.4rem 0.6rem;
-		white-space: normal;
-		width: 12rem;
-		font-size: 11px;
-		line-height: 1.45;
-		color: rgba(200, 210, 225, 0.9);
-		z-index: 20;
-		pointer-events: none;
-		box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.5);
-	}
-}
-
-.metricIcon {
-	display: flex;
-	color: $fc-secondary;
-	font-size: 1.1rem;
-}
-
-.metricBody {
-	display: flex;
-	flex-direction: column;
-	gap: 0.05rem;
+	background: $block-color;
+	border: 1px solid $outline;
+	border-radius: 1.25rem;
+	padding: 1.125rem;
 	min-width: 0;
 }
 
-.metricLabel {
-	@include fluid-text(11, 10);
-	color: $fc-secondary;
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-}
-
-.metricValue {
-	@include fluid-text(13, 12);
+.stale {
+	border: 1px solid rgba($warning-color, .45);
+	background: rgba($warning-color, .1);
+	border-radius: .75rem;
+	padding: .75rem 1rem;
 	color: $fc-main;
+	line-height: 1.4;
+}
+
+.days {
+	display: grid;
+	grid-template-columns: repeat(var(--day-count), minmax(0, 1fr));
+	gap: .75rem;
+}
+
+.day {
+	--risk: #{$contrast-color};
+	min-height: 128px;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	padding: .75rem;
+	border: 1px solid $outline;
+	border-radius: 1rem;
+	background: $block-color;
+	color: $fc-main;
+	font-size: $type-caption;
+	text-align: left;
+	cursor: pointer;
+	transition: border-color .16s ease, background .16s ease;
+
+	&:hover { border-color: $contrast-color; }
+	&:focus-visible { outline: 3px solid $contrast-color; outline-offset: 3px; }
+	&.selected {
+		border: 2px solid var(--risk);
+		padding: calc(.75rem - 1px);
+		background: color-mix(in srgb, var(--risk) 12%, #{$block-color});
+	}
+}
+
+.level_LOW { --risk: #{$success-color}; }
+.level_MEDIUM { --risk: #{$warning-color}; }
+.level_HIGH { --risk: #{$error-color}; }
+
+.dayName { color: $fc-main; font-size: $type-caption; font-weight: $fw-semibold; }
+.dayDate, .dayPressure { color: $fc-secondary; font-size: $type-caption; line-height: 1.4; }
+.dayDate { margin-top: .1rem; }
+.dayScore {
+	font-size: $type-value;
 	font-weight: $fw-semibold;
+	line-height: 1.1;
+	margin-top: .4rem;
 	font-variant-numeric: tabular-nums;
+	color: var(--risk);
+	small { font-size: $type-caption; color: $fc-secondary; margin-left: .2rem; }
+}
+.dayLevel { font-size: $type-caption; font-weight: $fw-semibold; color: var(--risk); margin-top: .25rem; }
+.day.level_HIGH .dayScore, .day.level_HIGH .dayLevel { color: color.mix($fc-main, $error-color, 60%); }
+.dayPressure { margin-top: auto; padding-top: .5rem; }
+
+.summaryGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.sectionLabel { color: $fc-secondary; font-size: $type-caption; font-weight: $fw-semibold; letter-spacing: .06em; line-height: 1.4; text-transform: uppercase; }
+.dateEyebrow { color: $fc-secondary; font-size: $type-caption; letter-spacing: .06em; text-transform: uppercase; margin-top: 1rem; }
+.scoreLine { display: flex; align-items: baseline; flex-wrap: wrap; gap: .35rem .6rem; margin: .1rem 0 1rem; }
+.scoreLine strong { font-size: $type-result; line-height: 1; font-weight: $fw-semibold; font-variant-numeric: tabular-nums; }
+.scoreLine span { color: $fc-secondary; font-size: $type-caption; }
+.scoreLine b { color: var(--risk); font-size: $type-body; font-weight: $fw-semibold; margin-left: .4rem; }
+.level_HIGH .scoreLine b { color: color.mix($fc-main, $error-color, 60%); }
+
+.scaleTrack {
+	position: relative;
+	display: grid;
+	grid-template-columns: 35fr 30fr 35fr;
+	gap: .25rem;
+	height: .625rem;
+	span { border-radius: .3rem; }
+	span:nth-child(1) { background: $success-color; }
+	span:nth-child(2) { background: $warning-color; }
+	span:nth-child(3) { background: $error-color; }
+	i { position: absolute; top: -.3rem; bottom: -.3rem; width: .25rem; background: $fc-main; border-radius: .25rem; transform: translateX(-50%); box-shadow: 0 0 0 2px $fc-dark; }
+}
+.scaleLabels { display: flex; justify-content: space-between; gap: .5rem; color: $fc-secondary; font-size: $type-caption; margin-top: .45rem; }
+.conclusion { font-size: $type-body; line-height: 1.45; margin-top: 1rem; }
+.ruleNote { color: $fc-secondary; font-size: $type-caption; margin-top: .5rem; }
+.pending { color: $fc-secondary; line-height: 1.5; margin-top: 1rem; }
+
+.factor { --factor-color: #{$success-color}; margin-top: 1rem; }
+.factorStrong { --factor-color: #{$error-color}; }
+.factorMedium { --factor-color: #{$warning-color}; }
+.factorNoticeable { --factor-color: #{$contrast-color}; }
+.factorHead { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; }
+.factorHead strong { font-size: $type-body; font-weight: $fw-semibold; }
+.factorHead b { font-size: $type-caption; color: var(--factor-color); font-weight: $fw-semibold; }
+.factorStrong .factorHead b { color: color.mix($fc-main, $error-color, 60%); }
+.factorNoticeable .factorHead b { color: color.mix($fc-main, $contrast-color, 10%); }
+.factorTrack { height: .5rem; width: 100%; border-radius: 1rem; background: $muted-surface; margin: .5rem 0 .35rem; overflow: hidden; }
+.factorTrack span { display: block; height: 100%; border-radius: inherit; background: var(--factor-color); }
+.factor p { color: $fc-secondary; font-size: $type-caption; line-height: 1.4; }
+.lowData { margin-top: 1.25rem; padding: 1rem; border-radius: .875rem; border: 1px solid $outline; background: $muted-surface; line-height: 1.4; }
+.lowData p { margin-bottom: .75rem; }
+.action { color: $fc-main; background: rgba($contrast-color, .15); border: 1px solid $contrast-color; border-radius: .7rem; padding: .65rem .9rem; min-height: 44px; cursor: pointer; font-size: $type-caption; }
+.action:hover { background: rgba($contrast-color, .25); }
+.action:focus-visible { outline: 3px solid $contrast-color; outline-offset: 3px; }
+
+.weatherGrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem; margin-top: 1.25rem; }
+.weatherTile { background: $muted-surface; border: 1px solid $outline; border-radius: .875rem; padding: .75rem; min-width: 0; display: flex; flex-direction: column; gap: .35rem; }
+.weatherLabel { display: flex; align-items: center; gap: .45rem; color: $fc-secondary; font-size: $type-caption; letter-spacing: .06em; text-transform: uppercase; }
+.weatherLabel i { display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; flex: 0 0 auto; }
+.alertDot { background: $warning-color; }
+.normalDot { background: $success-color; }
+.weatherTile strong { color: $fc-main; font-size: $type-value; font-weight: $fw-semibold; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.weatherTile small { color: $fc-secondary; font-size: $type-caption; line-height: 1.4; }
+
+.advice { list-style: none; counter-reset: tips; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; margin-top: 1.25rem; }
+.advice li { counter-increment: tips; display: flex; align-items: flex-start; gap: .75rem; line-height: 1.45; }
+.advice li::before { content: counter(tips); display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: rgba($contrast-color, .18); color: $fc-main; border: 1px solid $contrast-color; font-size: $type-caption; font-weight: $fw-semibold; flex: 0 0 auto; }
+
+@media (max-width: 1023px) {
+	.summaryGrid { grid-template-columns: 1fr; }
+	.weatherGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.advice { grid-template-columns: 1fr; gap: .85rem; }
 }
 
-.metricSub {
-	@include fluid-text(10, 9);
-	color: $fc-secondary;
-}
-
-.kpIcon {
-	font-size: 1rem;
-	line-height: 1;
-}
-
-/* ── Адаптив ── */
-@media (max-width: 720px) {
-	.tiles   { grid-template-columns: repeat(2, 1fr); }
-	.metrics { grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr)); }
-}
-
-@media (max-width: 480px) {
-	.metrics { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 400px) {
-	.tiles { grid-template-columns: 1fr 1fr; }
+@media (max-width: 639px) {
+	.section { gap: .9rem; }
+	.header { flex-direction: column; gap: .8rem; }
+	.confidence { white-space: normal; }
+	.card { padding: 1rem; }
+	.days { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding: .2rem .2rem .6rem; margin: 0 -.2rem; scrollbar-width: thin; }
+	.day { min-width: 9rem; flex: 0 0 9rem; scroll-snap-align: start; }
+	.header h1 { font-size: 1.25rem; }
+	.scoreLine strong { font-size: 2.625rem; }
+	.weatherGrid { gap: .5rem; }
+	.weatherTile { padding: .7rem; }
 }

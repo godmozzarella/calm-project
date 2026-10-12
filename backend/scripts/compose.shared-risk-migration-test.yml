@@ -1,0 +1,13 @@
+services:
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand('ping').ok"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mongo_data:

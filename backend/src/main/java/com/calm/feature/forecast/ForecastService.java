@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ public class ForecastService {
 
 	private static final Logger log = LoggerFactory.getLogger(ForecastService.class);
 	private static final Duration CACHE_TTL = Duration.ofHours(1);
+	private static final int MAX_CACHE_ENTRIES = 2_048;
 	private static final int DEFAULT_DAYS_AHEAD = 3;
 
 	private final WeatherProviderRegistry providers;
@@ -82,10 +84,11 @@ public class ForecastService {
 			Instant now = Instant.now();
 			ForecastResponse response = new ForecastResponse(provider.getKey(), days, false, now);
 			cache.put(key, new CachedResponse(response, now));
+			trimCache(now);
 
-			// Сохраняем снимок «сегодня» для построения корреляций «приступ ↔ погода» в статистике.
+			// Сохраняем выданные прогнозы до наступления соответствующих дней.
 			// Тихий best-effort — если падает, прогноз всё равно отдаём.
-			try { snapshotService.saveTodaySnapshot(lat, lon, days); } catch (Exception ignored) {}
+			try { snapshotService.saveForecastSnapshots(lat, lon, days); } catch (Exception ignored) {}
 
 			return response;
 		} catch (RuntimeException e) {
@@ -100,11 +103,27 @@ public class ForecastService {
 		}
 	}
 
+	private void trimCache(Instant now) {
+		if (cache.size() <= MAX_CACHE_ENTRIES) return;
+		cache.entrySet().removeIf(entry -> entry.getValue().at.isBefore(now.minus(CACHE_TTL)));
+		while (cache.size() > MAX_CACHE_ENTRIES) {
+			String oldestKey = cache.entrySet().stream()
+					.min(java.util.Comparator.comparing(entry -> entry.getValue().at))
+					.map(Map.Entry::getKey).orElse(null);
+			if (oldestKey == null) break;
+			cache.remove(oldestKey);
+		}
+	}
+
 	/** Создаёт ответ с актуальным флагом stale (кэш мог быть свежим или устаревшим). */
 	private static ForecastResponse withFreshness(CachedResponse cached, boolean stale) {
+		Instant now = Instant.now();
+		List<ForecastDayDto> currentDays = cached.response.days().stream()
+				.filter(day -> !day.date().isBefore(localToday(day, now)))
+				.toList();
 		return new ForecastResponse(
 				cached.response.provider(),
-				cached.response.days(),
+				currentDays,
 				stale,
 				cached.at
 		);
@@ -207,7 +226,8 @@ public class ForecastService {
 				roundOrNull(r.tempMin(), 0),
 				roundOrNull(r.tempMax(), 0),
 				roundOrNull(r.windKmhMax(), 0),
-				roundOrNull(r.kpIndex(), 1)
+				roundOrNull(r.kpIndex(), 1),
+				r.timezone()
 		);
 	}
 
@@ -224,7 +244,17 @@ public class ForecastService {
 
 	private record CachedResponse(ForecastResponse response, Instant at) {
 		boolean isFresh() {
-			return Duration.between(at, Instant.now()).compareTo(CACHE_TTL) < 0;
+			return Duration.between(at, Instant.now()).compareTo(CACHE_TTL) < 0
+					&& startsOnLocalToday(response, Instant.now());
 		}
+	}
+
+	static boolean startsOnLocalToday(ForecastResponse response, Instant now) {
+		return !response.days().isEmpty()
+				&& response.days().get(0).date().equals(localToday(response.days().get(0), now));
+	}
+
+	private static LocalDate localToday(ForecastDayDto day, Instant now) {
+		return LocalDate.ofInstant(now, day.timezone() == null ? ZoneId.of("UTC") : ZoneId.of(day.timezone()));
 	}
 }

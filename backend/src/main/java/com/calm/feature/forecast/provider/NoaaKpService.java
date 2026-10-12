@@ -1,5 +1,7 @@
 package com.calm.feature.forecast.provider;
 
+import com.calm.config.OutboundHttp;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,7 +32,8 @@ public class NoaaKpService {
 			"https://services.swpc.noaa.gov/products/noaa-planetary-k-index-forecast.json";
 	private static final Duration CACHE_TTL = Duration.ofHours(3);
 
-	private final RestClient http = RestClient.builder().baseUrl(KP_URL).build();
+	private final RestClient http = RestClient.builder()
+			.baseUrl(KP_URL).requestFactory(OutboundHttp.requestFactory()).build();
 
 	private volatile Map<LocalDate, Double> cachedKp = Map.of();
 	private volatile Instant cachedAt = Instant.EPOCH;

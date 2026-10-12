@@ -20,7 +20,7 @@ const cycleZone = (zones, zone) => {
 }
 
 const fmtAttack = a =>
-	`${a.startTime}${a.ongoing ? ' — сейчас' : a.endTime ? ` — ${a.endTime}` : ''} · ${a.intensity}/10`
+	`${a.startDate} ${a.startTime}${a.ongoing ? ' — продолжается' : a.endTime ? ` — ${a.endTime}` : ''} · ${a.intensity}/10`
 
 const AttackZoneSection = ({ date }) => {
 	const [attacks,    setAttacks]    = useState([])

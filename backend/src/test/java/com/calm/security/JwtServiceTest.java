@@ -30,12 +30,13 @@ class JwtServiceTest {
 	void issueAndParse_roundtrip() {
 		JwtService svc = new JwtService(VALID_SECRET, 60);
 
-		String token = svc.issue("user-42", "kirill@test.com", "USER");
+		String token = svc.issue("user-42", "kirill@test.com", "USER", "session-1");
 		Claims claims = svc.parse(token);
 
 		assertThat(claims.getSubject()).isEqualTo("user-42");
 		assertThat(claims.get("email", String.class)).isEqualTo("kirill@test.com");
 		assertThat(claims.get("role", String.class)).isEqualTo("USER");
+		assertThat(claims.get("sessionId", String.class)).isEqualTo("session-1");
 	}
 
 	@Test
@@ -44,7 +45,7 @@ class JwtServiceTest {
 		JwtService issuer = new JwtService(VALID_SECRET, 60);
 		JwtService verifier = new JwtService(OTHER_SECRET, 60);
 
-		String token = issuer.issue("user-42", "kirill@test.com", "USER");
+		String token = issuer.issue("user-42", "kirill@test.com", "USER", "session-1");
 
 		assertThatThrownBy(() -> verifier.parse(token))
 				.isInstanceOf(SignatureException.class);
@@ -55,7 +56,7 @@ class JwtServiceTest {
 	void issue_expirationMatchesTtl() {
 		JwtService svc = new JwtService(VALID_SECRET, 30);
 
-		Claims claims = svc.parse(svc.issue("u", "e", "USER"));
+		Claims claims = svc.parse(svc.issue("u", "e", "USER", "session-1"));
 
 		long ttlMs = claims.getExpiration().getTime() - claims.getIssuedAt().getTime();
 		assertThat(ttlMs).isEqualTo(30 * 60 * 1000L);

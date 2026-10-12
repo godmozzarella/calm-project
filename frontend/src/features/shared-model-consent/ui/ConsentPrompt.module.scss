@@ -1,0 +1,110 @@
+@use 'app/styles/globals.scss' as *;
+
+.overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 1200;
+	display: grid;
+	place-items: center;
+	padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+		max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	background: rgba(0, 0, 0, .68);
+	backdrop-filter: blur(3px);
+}
+
+.dialog {
+	width: min(34rem, 100%);
+	max-height: min(88vh, 48rem);
+	max-height: min(88dvh, 48rem);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: clamp(1.25rem, 4vw, 2rem);
+	border: 1px solid rgba(92, 173, 228, .2);
+	border-radius: 1.2rem;
+	background: #1c1f24;
+	box-shadow: 0 1.25rem 4rem rgba(0, 0, 0, .5);
+	color: $fc-main;
+	font-family: 'Roboto', Arial, sans-serif;
+}
+
+.eyebrow {
+	margin: 0 0 .5rem;
+	color: $fc-contrast;
+	font-size: .8rem;
+	font-weight: $fw-semibold;
+}
+
+.title {
+	margin: 0 0 .75rem;
+	color: $fc-main;
+	font-size: clamp(1.25rem, 4vw, 1.6rem);
+	line-height: 1.25;
+}
+
+.summary,
+.terms p {
+	color: $fc-secondary;
+	font-size: .9rem;
+	line-height: 1.55;
+}
+
+.summary { margin: 0 0 1rem; }
+
+.terms {
+	max-height: 34vh;
+	overflow-y: auto;
+	margin-bottom: 1rem;
+	padding: .8rem 1rem;
+	border: 1px solid rgba(255, 255, 255, .1);
+	border-radius: .75rem;
+	background: rgba(255, 255, 255, .025);
+	 p { margin: 0 0 .7rem; }
+	 p:last-child { margin-bottom: 0; }
+}
+
+.actions {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: .7rem;
+}
+
+.acceptButton,
+.declineButton {
+	min-height: 2.9rem;
+	padding: .7rem .8rem;
+	border: 1px solid $contrast-color;
+	border-radius: .7rem;
+	font: inherit;
+	font-size: .9rem;
+	font-weight: $fw-semibold;
+	cursor: pointer;
+	&:focus-visible { outline: 3px solid $fc-main; outline-offset: 3px; }
+	&:disabled { opacity: .6; cursor: wait; }
+}
+
+.acceptButton {
+	background: $contrast-color;
+	color: $fc-dark;
+}
+
+.declineButton {
+	background: transparent;
+	color: $fc-main;
+}
+
+.error {
+	margin: 0 0 .8rem;
+	color: $error-color;
+	font-size: .85rem;
+}
+
+@media (max-width: 480px) {
+	.actions { grid-template-columns: 1fr; }
+}
+
+@media (max-height: 720px) {
+	.overlay { align-items: start; }
+	.dialog { margin-block: auto; }
+}

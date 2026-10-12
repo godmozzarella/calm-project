@@ -6,11 +6,13 @@ import { StatsPage } from '@/pages/stats-page'
 import { AdminPage } from '@/pages/admin-page'
 import ProtectedRoute from '@/app/providers/router/ProtectedRoute'
 import AdminRoute from '@/app/providers/router/AdminRoute'
+import VerifyEmailPage from '@/pages/verify-email-page/VerifyEmailPage'
 
 const AppRouter = () => {
 	return (
 		<Routes>
 			<Route path="/" element={<IndexPage />} />
+			<Route path="/verify-email" element={<VerifyEmailPage />} />
 			<Route
 				path="/profile"
 				element={

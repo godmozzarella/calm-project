@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { BackIcon } from '@/shared/ui/icons'
 
 import UsersTab from './tabs/UsersTab'
 import DictionaryTab from './tabs/DictionaryTab'
@@ -30,7 +31,7 @@ const AdminPage = () => {
 
 	return (
 		<div className={s.page}>
-			<Link to="/profile" className={s.back}>← К дневнику</Link>
+			<Link to="/profile" className={s.back}><BackIcon fontSize="small" />К дневнику</Link>
 
 			<h1 className={s.title}>Админ-панель</h1>
 

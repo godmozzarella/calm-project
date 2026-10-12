@@ -8,6 +8,7 @@ import java.time.Instant;
 public record UserDto(
 		String id,
 		String email,
+		boolean emailVerified,
 		String name,
 		Role role,
 		String avatarUrl,
@@ -21,6 +22,7 @@ public record UserDto(
 		return new UserDto(
 				u.getId(),
 				u.getEmail(),
+				u.isEmailVerified(),
 				u.getName(),
 				u.getRole(),
 				u.getAvatarUrl(),

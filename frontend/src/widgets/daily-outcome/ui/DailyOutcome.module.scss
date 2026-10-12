@@ -1,0 +1,61 @@
+@use 'app/styles/globals.scss' as *;
+
+.card {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	width: calc(100% - 3rem);
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: .75rem 1rem;
+	border: 1px solid rgba($contrast-color, .2);
+	border-radius: .875rem;
+	background: $block-color;
+	color: $fc-main;
+	font-size: .875rem;
+}
+
+.copy {
+	display: flex;
+	flex-direction: column;
+	gap: .2rem;
+	min-width: 0;
+	line-height: 1.4;
+	span { color: $fc-secondary; }
+}
+
+.card button {
+	flex: 0 0 auto;
+	min-height: 2.75rem;
+	padding: .55rem .85rem;
+	border: 1px solid $contrast-color;
+	border-radius: .65rem;
+	background: $contrast-color;
+	color: $fc-dark;
+	font: inherit;
+	font-weight: $fw-semibold;
+	cursor: pointer;
+	&:focus-visible { outline: 3px solid $fc-main; outline-offset: 2px; }
+	&:disabled { opacity: .6; cursor: wait; }
+}
+
+.card button.secondary {
+	background: transparent;
+	color: $fc-main;
+}
+
+.error { color: $error-color !important; }
+.future { color: $fc-secondary; text-align: right; }
+
+@media (max-width: 640px) {
+	.card {
+		align-items: flex-start;
+		flex-direction: column;
+		width: calc(100% - 2rem);
+		padding: .75rem;
+		font-size: .8125rem;
+	}
+	.card button { width: 100%; }
+	.future { text-align: left; }
+}
