@@ -19,6 +19,7 @@ frontend/*.local
 backend/target/
 backend/.mvn/wrapper/maven-wrapper.jar
 backend/HELP.md
+/backend/generated/risk-training/shared-risk-training.csv
 
 # Secrets / env
 .env

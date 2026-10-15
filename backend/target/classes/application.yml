@@ -56,10 +56,12 @@ server:
 
 calm:
   base-url: ${CALM_BASE_URL:http://localhost:8080}
+  public-url: ${CALM_PUBLIC_URL:http://localhost}
   upload-dir: ${CALM_UPLOAD_DIR:./uploads/avatars}
-  # Email первого админа. Аккаунт с этим email получит роль ADMIN автоматически
-  # при регистрации или первом логине. Пустое значение — нет авто-промоушна.
-  admin-email: ${CALM_ADMIN_EMAIL:}
+  risk-pilot:
+    enrollment-open: ${CALM_RISK_PILOT_ENROLLMENT_OPEN:false}
+    approved-consent-version: ${CALM_RISK_PILOT_APPROVED_CONSENT_VERSION:}
+    approved-consent-digest: ${CALM_RISK_PILOT_APPROVED_CONSENT_DIGEST:}
   jwt:
     # ВНИМАНИЕ: в проде должен задаваться через ENV CALM_JWT_SECRET. Минимум 32 байта.
     secret: ${CALM_JWT_SECRET:dev-secret-change-me-please-32bytes-min}

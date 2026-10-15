@@ -19,6 +19,10 @@ printf 'Backup incomplete\n' > "$backup_dir/INCOMPLETE"
 
 compose=(docker compose)
 verify_compose=(docker compose -p "calm-backup-verify-$(date '+%Y%m%d%H%M%S')" -f backend/scripts/compose.shared-risk-auth-test.yml)
+mongo_auth=()
+if [[ -n "${CALM_MONGO_ROOT_PASSWORD:-}" ]]; then
+  mongo_auth=(--username calm_risk_admin --password "$CALM_MONGO_ROOT_PASSWORD" --authenticationDatabase admin)
+fi
 backend_was_running=false
 verify_started=false
 
@@ -47,8 +51,8 @@ backend_was_running=true
 "${compose[@]}" stop backend
 
 manifest_js='const hashes = db.runCommand({dbHash: 1}).collections; print(JSON.stringify({collections: db.getCollectionNames().sort().map(name => ({name, count: db.getCollection(name).countDocuments({}), indexes: db.getCollection(name).getIndexes().map(index => ({name: index.name, key: index.key, unique: index.unique ?? false})).sort((a, b) => a.name.localeCompare(b.name))})), hashes: Object.keys(hashes).sort().map(name => [name, hashes[name]])}))'
-"${compose[@]}" exec -T mongo mongosh --quiet calm --eval "$manifest_js" > "$backup_dir/source-manifest.json"
-"${compose[@]}" exec -T mongo mongodump --quiet --db calm --archive > "$backup_dir/calm.archive"
+"${compose[@]}" exec -T mongo mongosh "${mongo_auth[@]}" --quiet calm --eval "$manifest_js" > "$backup_dir/source-manifest.json"
+"${compose[@]}" exec -T mongo mongodump "${mongo_auth[@]}" --quiet --db calm --archive > "$backup_dir/calm.archive"
 docker run --rm --entrypoint tar -v calm-project_avatars_data:/avatars:ro calm-project-backend \
   -C /avatars -cf - . > "$backup_dir/avatars.tar"
 tar -tf "$backup_dir/avatars.tar" > /dev/null
