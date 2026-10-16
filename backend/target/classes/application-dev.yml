@@ -1,8 +1,0 @@
-spring:
-  data:
-    mongodb:
-      uri: ${MONGO_URI:mongodb://localhost:27017/calm}
-
-logging:
-  level:
-    com.calm: DEBUG
