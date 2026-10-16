@@ -23,6 +23,8 @@ sh backend/scripts/check-prod-training-readiness.sh --release
 
 Для всех операций использовать одинаковые четыре Compose-файла. Последний overlay монтирует новый экспортёр и не меняет работающий локальный worker старой схемы:
 
+Overlay версии 3 также монтирует собственный цикл запуска. CSV-экспорт из `main` рассчитан на поля схемы 2 и для набора версии 3 не запускается; проверять версию 3 через MongoDB-аудит ниже.
+
 ```sh
 docker compose -f docker-compose.yml -f docker-compose.auth.yml \
   -f docker-compose.prod.yml -f docker-compose.training-worker-v3.yml \

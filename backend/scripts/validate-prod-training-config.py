@@ -61,6 +61,11 @@ export_mounts = [item for item in services["training-worker"].get("volumes", [])
 if len(export_mounts) != 1 or not export_mounts[0].get("source", "").endswith(
         "/backend/scripts/export-shared-risk-training-v3.js"):
     fail("Production worker must mount the version 3 exporter")
+loop_mounts = [item for item in services["training-worker"].get("volumes", [])
+               if item.get("target") == "/scripts/run-shared-risk-export-loop.sh"]
+if len(loop_mounts) != 1 or not loop_mounts[0].get("source", "").endswith(
+        "/backend/scripts/run-shared-risk-v3-export-loop.sh"):
+    fail("Production worker must mount the version 3 loop")
 
 root = read_env(".env")
 backend = read_env("backend/.env")
