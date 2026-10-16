@@ -18,7 +18,7 @@ import java.util.Deque;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Sliding-window rate limiter для /auth/login и /auth/register.
+	 * Sliding-window rate limiter для входа, регистрации и ввода email-кода.
  * Не более {@code calm.rate-limit.auth.max-attempts} запросов с одного IP
  * за {@code calm.rate-limit.auth.window-seconds} секунд.
  * При превышении возвращает 429 с заголовком Retry-After.
@@ -46,7 +46,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		String path = request.getServletPath();
 		return !path.equals("/auth/login") && !path.equals("/auth/register")
-				&& !path.equals("/auth/verify-email");
+				&& !path.equals("/auth/verify-email") && !path.equals("/auth/send-verification-code");
 	}
 
 	@Override

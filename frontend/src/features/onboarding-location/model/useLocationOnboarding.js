@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import { userApi, forecastApi } from '@/shared/api'
 import { setCurrentUser } from '@/entities/user'
@@ -21,7 +21,7 @@ export const useLocationOnboarding = ({ setUser }) => {
 	const [geoLocating, setGeoLocating] = useState(false)
 	const [error, setError] = useState(null)
 
-	const search = async q => {
+	const search = useCallback(async q => {
 		setError(null)
 		const trimmed = q.trim()
 		if (trimmed.length < 2) {
@@ -38,7 +38,7 @@ export const useLocationOnboarding = ({ setUser }) => {
 		} finally {
 			setSearching(false)
 		}
-	}
+	}, [])
 
 	const useGeolocation = () => new Promise((resolve, reject) => {
 		setError(null)

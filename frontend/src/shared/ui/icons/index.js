@@ -30,6 +30,7 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
+import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import MedicationIcon from '@mui/icons-material/Medication'
 import LocalPharmacyIcon from '@mui/icons-material/LocalPharmacy'
 import WaterDropIcon from '@mui/icons-material/WaterDrop'
@@ -79,6 +80,7 @@ export {
 	PhotoCameraIcon,
 	NotificationsNoneIcon,
 	DarkModeOutlinedIcon,
+	LightModeOutlinedIcon,
 	MedicationIcon,
 	LocalPharmacyIcon,
 	WaterDropIcon,

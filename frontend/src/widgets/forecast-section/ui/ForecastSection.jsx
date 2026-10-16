@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 
 import { forecastApi, medicationApi, riskApi } from '@/shared/api'
 import { emit, OPEN_ATTACK_FORM, subscribe, ATTACKS_CHANGED, MEDICATIONS_CHANGED } from '@/shared/lib/dataEvents'
+import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
+import { formatPressure } from '@/shared/lib/pressure'
 import { advice, conclusion, dayLabel, helpfulMedication, LEVEL_LABELS, longDate, riskFactors, shortDate, weatherTiles } from './forecastViewModel'
 import s from './ForecastSection.module.scss'
 
@@ -92,7 +94,7 @@ const ForecastSection = ({ user, onOpenLocationModal }) => {
 
 			{!hasLocation && <div className={s.card}><p>Укажите город, чтобы видеть прогноз.</p>{onOpenLocationModal && <button type="button" className={s.action} onClick={onOpenLocationModal}>Указать город</button>}</div>}
 			{hasLocation && loading && !data && <div className={s.card} role="status">Загружаем прогноз…</div>}
-			{hasLocation && error && <div className={s.card} role="alert">{error}</div>}
+			{hasLocation && <ErrorNotice message={error} title="Не удалось загрузить прогноз" />}
 			{hasLocation && !loading && !error && !days.length && <div className={s.card} role="status">Прогноз временно недоступен. Попробуйте обновить позже.</div>}
 
 			{active && <>
@@ -106,7 +108,7 @@ const ForecastSection = ({ user, onOpenLocationModal }) => {
 							<span className={s.dayDate}>{shortDate(day.date)}</span>
 							<span className={s.dayScore}>{dayRisk?.dataAvailable ? dayRisk.score : riskErrors[day.date] ? '—' : '…'}<small>{dayRisk?.dataAvailable ? '/100' : ''}</small></span>
 							<span className={s.dayLevel}>{dayLevel ? LEVEL_LABELS[dayLevel] : dayRisk?.dataAvailable === false ? 'Нет оценки' : 'Ожидаем'}</span>
-							<span className={s.dayPressure}>{day.pressureHpa == null ? 'Давление —' : `${Math.round(day.pressureHpa)} hPa`}</span>
+							<span className={s.dayPressure}>{day.pressureMmHg == null ? 'Давление —' : formatPressure(day.pressureMmHg)}</span>
 						</button>
 					})}
 				</div>
@@ -115,10 +117,12 @@ const ForecastSection = ({ user, onOpenLocationModal }) => {
 					<article className={`${s.card} ${level ? s[`level_${level}`] : ''}`} aria-live="polite">
 						<h2 className={s.sectionLabel}>Итог дня</h2>
 						<p className={s.dateEyebrow}>{longDate(active.date, selectedDay === 0)}</p>
-						{score == null ? <p className={s.pending}>{riskErrors[active.date] || risk?.message || 'Рассчитываем оценку…'}</p> : <>
+						{score == null ? riskErrors[active.date]
+							? <ErrorNotice message={riskErrors[active.date]} title="Не удалось рассчитать оценку" />
+							: <p className={s.pending}>{risk?.message || 'Рассчитываем оценку…'}</p> : <>
 							<div className={s.scoreLine}><strong>{score}</strong><span>из 100</span><b>{LEVEL_LABELS[level]} риск</b></div>
 							<div className={s.scale} role="img" aria-label={`Оценка ${score} из 100, ${LEVEL_LABELS[level].toLowerCase()} риск`}>
-								<div className={s.scaleTrack}><span/><span/><span/><i style={{ left: `${score}%` }}/></div>
+								<div className={s.scaleTrack}><span className={s.scaleFill} style={{ width: `${score}%` }}/><i style={{ left: `clamp(.2rem, ${score}%, calc(100% - .2rem))` }}/></div>
 								<div className={s.scaleLabels}><span>Низкий</span><span>Повышенный</span><span>Высокий</span></div>
 							</div>
 							<p className={s.conclusion}>{conclusion(risk, factors, selectedDay === 0)}</p>

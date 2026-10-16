@@ -19,20 +19,17 @@ public class AuthService {
 	private final AuthSessionService sessionService;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtService jwtService;
-	private final EmailVerificationService emailVerification;
 
 	public AuthService(UserService userService, AuthSessionService sessionService,
-			PasswordEncoder passwordEncoder, JwtService jwtService, EmailVerificationService emailVerification) {
+			PasswordEncoder passwordEncoder, JwtService jwtService) {
 		this.userService = userService;
 		this.sessionService = sessionService;
 		this.passwordEncoder = passwordEncoder;
 		this.jwtService = jwtService;
-		this.emailVerification = emailVerification;
 	}
 
 	public AuthResponse register(RegisterRequest req) {
 		User user = userService.create(req.email(), req.name(), req.password());
-		emailVerification.sendInitial(user);
 		return issueTokenPair(user);
 	}
 

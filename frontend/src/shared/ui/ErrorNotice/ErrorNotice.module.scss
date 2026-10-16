@@ -1,0 +1,19 @@
+@use 'app/styles/globals.scss' as *;
+
+.notice {
+	display: flex;
+	align-items: flex-start;
+	gap: .7rem;
+	padding: .85rem 1rem;
+	border-radius: .75rem;
+	background: $quiet-surface;
+	box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .12);
+	color: $fc-main;
+	font-size: .8125rem;
+	line-height: 1.45;
+}
+
+.icon { color: $error-color; flex: 0 0 auto; font-size: 1.25rem !important; }
+.copy { min-width: 0; }
+.copy strong { display: block; font-size: .8125rem; font-weight: $fw-semibold; }
+.copy p { margin: .15rem 0 0; color: $fc-secondary; overflow-wrap: anywhere; }

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 import s from './ConsentPrompt.module.scss'
+import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 
 const ConsentPrompt = ({ status, saving, error, onDecide }) => {
 	const declineButton = useRef(null)
@@ -48,7 +49,7 @@ const ConsentPrompt = ({ status, saving, error, onDecide }) => {
 				<div className={s.terms}>
 					{status.consentText?.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
 				</div>
-				{error && <p className={s.error} role="alert">{error}</p>}
+				<ErrorNotice message={error} title="Не удалось сохранить выбор" />
 				<div className={s.actions}>
 					<button type="button" className={s.acceptButton} onClick={() => onDecide(true)} disabled={saving}>
 						{saving ? 'Сохраняем…' : 'Согласиться и участвовать'}

@@ -5,6 +5,8 @@ export const ATTACK_TYPE_LABELS = {
 	bursting:  'Распирающая',
 }
 
+export const getAttackTypeLabel = type => ATTACK_TYPE_LABELS[String(type ?? '').toLowerCase()] ?? 'Не указан'
+
 export const SYMPTOM_LABELS = {
 	nausea:    'Тошнота',
 	light:     'Светобоязнь',

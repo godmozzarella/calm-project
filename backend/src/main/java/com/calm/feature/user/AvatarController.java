@@ -52,6 +52,7 @@ public class AvatarController {
 			@AuthenticationPrincipal AuthenticatedUser principal,
 			@RequestParam("file") MultipartFile file
 	) throws IOException {
+		User user = userService.getById(principal.getUserId());
 		if (file.isEmpty()) throw new IllegalArgumentException("Файл пустой");
 		if (file.getSize() > MAX_SIZE_BYTES) throw new IllegalArgumentException("Файл больше 5 МБ");
 
@@ -74,7 +75,6 @@ public class AvatarController {
 		// baseUrl оставлен в конструкторе для возможного использования в email-уведомлениях.
 		String avatarUrl = "/api/public/avatars/" + filename;
 
-		User user = userService.getById(principal.getUserId());
 		// Удаляем старый файл если был
 		deleteOldFile(user.getAvatarUrl());
 		user.setAvatarUrl(avatarUrl);
@@ -86,7 +86,9 @@ public class AvatarController {
 
 	/** Удаление аватара. */
 	@DeleteMapping("/users/me/avatar")
-	public ResponseEntity<Void> deleteAvatar(@AuthenticationPrincipal AuthenticatedUser principal) {
+	public ResponseEntity<Void> deleteAvatar(
+			@AuthenticationPrincipal AuthenticatedUser principal
+	) {
 		User user = userService.getById(principal.getUserId());
 		deleteOldFile(user.getAvatarUrl());
 		user.setAvatarUrl(null);

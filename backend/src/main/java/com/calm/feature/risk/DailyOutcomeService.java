@@ -24,11 +24,11 @@ public class DailyOutcomeService {
 	}
 
 	public DailyOutcomeResponse get(String userId, LocalDate date) {
-		if (attackRepository.existsByUserIdAndStartDate(userId, date)) {
-			return new DailyOutcomeResponse(date, DailyOutcomeResponse.Status.ATTACK_STARTED);
+		if (hasAttack(userId, date)) {
+			return new DailyOutcomeResponse(date, DailyOutcomeResponse.Status.ATTACK_PRESENT);
 		}
 		return new DailyOutcomeResponse(date, outcomeRepository.findByUserIdAndDate(userId, date).isPresent()
-				? DailyOutcomeResponse.Status.NO_ATTACK_STARTED
+				? DailyOutcomeResponse.Status.NO_ATTACK
 				: DailyOutcomeResponse.Status.UNKNOWN);
 	}
 
@@ -44,17 +44,21 @@ public class DailyOutcomeService {
 		if (!date.isBefore(LocalDate.now(zone))) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Можно отмечать только завершившийся день");
 		}
-		if (attackRepository.existsByUserIdAndStartDate(userId, date)) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT, "На этот день уже записано начало приступа");
+		if (hasAttack(userId, date)) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "На этот день уже записан приступ");
 		}
 		DailyOutcome outcome = outcomeRepository.findByUserIdAndDate(userId, date)
 				.orElseGet(() -> new DailyOutcome(userId, date, Instant.now()));
 		outcomeRepository.save(outcome);
-		return new DailyOutcomeResponse(date, DailyOutcomeResponse.Status.NO_ATTACK_STARTED);
+		return new DailyOutcomeResponse(date, DailyOutcomeResponse.Status.NO_ATTACK);
 	}
 
 	public DailyOutcomeResponse clear(String userId, LocalDate date) {
 		outcomeRepository.deleteByUserIdAndDate(userId, date);
 		return get(userId, date);
+	}
+
+	private boolean hasAttack(String userId, LocalDate date) {
+		return attackRepository.findInRange(userId, date, date).stream().anyMatch(a -> a.overlaps(date));
 	}
 }

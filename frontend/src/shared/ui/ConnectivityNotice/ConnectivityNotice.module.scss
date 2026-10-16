@@ -1,0 +1,26 @@
+@use 'app/styles/globals.scss' as *;
+
+.banner {
+	position: fixed;
+	right: max(1rem, env(safe-area-inset-right));
+	bottom: max(1rem, env(safe-area-inset-bottom));
+	z-index: 2000;
+	width: min(23rem, calc(100vw - 2rem));
+	box-shadow: 0 1rem 3rem rgba(0, 0, 0, .35);
+	border-radius: .75rem;
+}
+
+.banner > div { padding-right: 2.5rem; }
+.close {
+	position: absolute;
+	top: .55rem;
+	right: .55rem;
+	width: 2rem;
+	height: 2rem;
+	border: 0;
+	border-radius: .4rem;
+	background: none;
+	color: $fc-secondary;
+	cursor: pointer;
+	&:hover { background: $quiet-surface-raised; color: $fc-main; }
+}

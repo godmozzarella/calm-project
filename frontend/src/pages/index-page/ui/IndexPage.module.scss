@@ -59,27 +59,8 @@ html:has(.indexBody) {
 	line-height: 1;
 	letter-spacing: 0.02em;
 	text-align: center;
-	background: linear-gradient(135deg, #66baf1 0%, #118bde 50%, #0e7bc4 100%);
-	-webkit-background-clip: text;
-	background-clip: text;
-	-webkit-text-fill-color: transparent;
-	filter: drop-shadow(0 0.5rem 1.5rem rgba(17, 139, 222, 0.35));
 	position: relative;
 	z-index: 1;
-}
-
-.containerItem:last-child::before {
-	content: '';
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	width: 28rem;
-	max-width: 90%;
-	aspect-ratio: 1;
-	background: radial-gradient(circle, rgba(17, 139, 222, 0.18) 0%, rgba(17, 139, 222, 0) 65%);
-	pointer-events: none;
-	z-index: 0;
 }
 
 .buttons {
@@ -150,7 +131,7 @@ html:has(.indexBody) {
 
 @media (max-width: 27rem) {
 	.indexBody {
-		margin-top: 4.5rem;
+		margin-top: 5rem;
 	}
 
 	.containerItem:last-child::before {

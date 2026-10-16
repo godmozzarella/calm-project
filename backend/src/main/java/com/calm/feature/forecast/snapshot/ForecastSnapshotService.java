@@ -37,9 +37,10 @@ public class ForecastSnapshotService {
 		snap.setDate(day.date());
 		snap.setRisk(day.risk());
 		snap.setScore(day.score());
-		snap.setPressureHpa(day.pressureHpa());
-		snap.setPressureDelta24h(day.pressureDelta24h());
+		snap.setPressureMmHg(day.pressureMmHg());
+		snap.setPressureDelta24hMmHg(day.pressureDelta24hMmHg());
 		snap.setHumidity(day.humidity());
+		snap.setHumidityDelta24h(day.humidityDelta24h());
 		snap.setTempMin(day.tempMin());
 		snap.setTempMax(day.tempMax());
 		snap.setWindKmhMax(day.windKmhMax());

@@ -48,9 +48,7 @@ public class RiskQualityService {
 		LocalDate from = today.minusDays(WINDOW_DAYS);
 		LocalDate to = today.minusDays(1);
 		Set<LocalDate> attackDays = attackRepo.findInRange(userId, from, to).stream()
-				.map(Attack::getStartDate)
-				.filter(Objects::nonNull)
-				.filter(d -> !d.isBefore(from) && !d.isAfter(to))
+				.flatMap(attack -> from.datesUntil(to.plusDays(1)).filter(attack::overlaps))
 				.collect(Collectors.toSet());
 		Set<LocalDate> noAttackDays = outcomeRepo.findByUserIdAndDateBetween(userId, from, to).stream()
 				.map(DailyOutcome::getDate)

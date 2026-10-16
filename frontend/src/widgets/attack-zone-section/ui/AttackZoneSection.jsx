@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
-import { PAIN_ZONE_LABELS, getZonesByDate, setZonesByDate, toZoneMap } from '@/entities/attack'
+import { formatAttackTime, PAIN_ZONE_LABELS, sortAttacksNewest, toZoneMap } from '@/entities/attack'
 import { attackApi } from '@/shared/api'
+import { EditIcon } from '@/shared/ui/icons'
+import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 import HeadFront from './HeadFront'
 import HeadBack  from './HeadBack'
 import { subscribe, ATTACKS_CHANGED } from '@/shared/lib/dataEvents'
@@ -20,99 +22,79 @@ const cycleZone = (zones, zone) => {
 }
 
 const fmtAttack = a =>
-	`${a.startDate} ${a.startTime}${a.ongoing ? ' — продолжается' : a.endTime ? ` — ${a.endTime}` : ''} · ${a.intensity}/10`
+	`${a.startDate} ${formatAttackTime(a.startTime)}${a.ongoing ? ' — продолжается' : a.endTime ? ` — ${formatAttackTime(a.endTime)}` : ''} · ${a.intensity}/10`
 
 const AttackZoneSection = ({ date }) => {
 	const [attacks,    setAttacks]    = useState([])
 	const [selectedId, setSelectedId] = useState(null)   // null = без привязки
 	const [zones,      setZones]      = useState({})     // { zone: 'green'|'yellow'|'red' }
+	const [editing, setEditing] = useState(false)
+	const [saving, setSaving] = useState(false)
+	const [error, setError] = useState('')
 
-	// Эффект 1: смена даты — перезагрузить приступы, выбрать первый (если есть)
+	// При смене дня сначала показываем текущий приступ, затем самые свежие.
 	useEffect(() => {
 		attackApi.getByDate(date).then(list => {
-			setAttacks(list)
-			setSelectedId(list.length > 0 ? list[0].id : null)
+			const sorted = sortAttacksNewest(list)
+			setAttacks(sorted)
+			setSelectedId(sorted[0]?.id ?? null)
+			setZones(toZoneMap(sorted[0]?.painZones))
+			setEditing(false)
 		})
 	}, [date])
 
 	// Эффект 1b: при внешнем добавлении/удалении приступа — перечитать список
 	useEffect(() => subscribe(ATTACKS_CHANGED, () => {
 		attackApi.getByDate(date).then(list => {
-			setAttacks(list)
-			// Если выбранного приступа больше нет (или раньше не было) — переключаемся на первый.
-			setSelectedId(prev => {
-				if (list.length === 0) return null
-				if (prev != null && list.some(a => a.id === prev)) return prev
-				return list[0].id
-			})
+			const sorted = sortAttacksNewest(list)
+			setAttacks(sorted)
+			const selected = sorted.find(a => a.id === selectedId) ?? sorted[0]
+			setSelectedId(selected?.id ?? null)
+			setZones(toZoneMap(selected?.painZones))
+			if (!selected || selected.id !== selectedId) setEditing(false)
 		})
-	}), [date])
-
-	// Эффект 2: смена выбранного приступа — загрузить зоны из него или из calm_zones
-	useEffect(() => {
-		if (selectedId === null) {
-			setZones(getZonesByDate(date))
-		} else {
-			setAttacks(current => {
-				const attack = current.find(a => a.id === selectedId)
-				if (attack) {
-					setZones(toZoneMap(attack.painZones))
-				} else {
-					// приступ удалён — откат к без привязки
-					setSelectedId(null)
-					setZones(getZonesByDate(date))
-				}
-				return current
-			})
-		}
-	// date здесь нужна только при selectedId===null; attacks намеренно вне deps
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [selectedId])
+	}), [date, selectedId])
 
 	const selectAttack = id => {
 		if (id === selectedId) return
 		setSelectedId(id)
-		if (id === null) {
-			setZones(getZonesByDate(date))
-		} else {
-			const attack = attacks.find(a => a.id === id)
-			setZones(toZoneMap(attack?.painZones))
-		}
+		setZones(toZoneMap(attacks.find(a => a.id === id)?.painZones))
+		setEditing(false)
+		setError('')
 	}
 
-	const saveZones = (next, attackId) => {
-		if (attackId) {
-			const attack = attacks.find(a => a.id === attackId)
-			if (!attack) return
-			attackApi.update(attackId, { ...attack, painZones: next })
-			setAttacks(prev => prev.map(a => a.id === attackId ? { ...a, painZones: next } : a))
-		} else {
-			setZonesByDate(date, next)
-		}
+	const saveZones = async () => {
+		const attack = attacks.find(a => a.id === selectedId)
+		if (!attack || saving) return
+		setSaving(true)
+		setError('')
+		try {
+			await attackApi.update(selectedId, { ...attack, painZones: zones })
+			setEditing(false)
+		} catch (e) {
+			setError(e.message || 'Не удалось сохранить зоны боли.')
+		} finally { setSaving(false) }
 	}
 
 	// Зоны боли привязаны к приступам — без приступа отмечать нечего.
 	const hasAttacks = attacks.length > 0
 
 	const toggleZone = zone => {
-		if (!hasAttacks) return
+		if (!hasAttacks || !editing) return
 		const next = cycleZone(zones, zone)
 		setZones(next)
-		saveZones(next, selectedId)
 	}
 
 	const removeZone = (e, zone) => {
 		e.stopPropagation()
-		if (!hasAttacks) return
+		if (!hasAttacks || !editing) return
 		const { [zone]: _, ...next } = zones
 		setZones(next)
-		saveZones(next, selectedId)
 	}
 
 	const clearAll = () => {
-		if (!hasAttacks) return
+		if (!hasAttacks || !editing) return
 		setZones({})
-		saveZones({}, selectedId)
 	}
 
 	const zoneCount = Object.keys(zones).length
@@ -121,9 +103,14 @@ const AttackZoneSection = ({ date }) => {
 		<div className={s.card}>
 			<div className={s.cardHeader}>
 				<h2 className={s.title}>Зоны боли</h2>
-				{zoneCount > 0 && (
+				{editing && zoneCount > 0 && (
 					<button className={s.clearBtn} onClick={clearAll}>Сбросить</button>
 				)}
+				{hasAttacks && !editing && <button className={s.editBtn} onClick={() => setEditing(true)} aria-label="Редактировать зоны боли"><EditIcon fontSize="small" /></button>}
+				{editing && <div className={s.editActions}>
+					<button onClick={() => { setZones(toZoneMap(attacks.find(a => a.id === selectedId)?.painZones)); setEditing(false); setError('') }} disabled={saving}>Отмена</button>
+					<button onClick={saveZones} disabled={saving}>{saving ? 'Сохраняем…' : 'Готово'}</button>
+				</div>}
 			</div>
 
 			<div className={`${s.cardBody} ${!hasAttacks ? s.cardBodyDisabled : ''}`}>
@@ -140,6 +127,7 @@ const AttackZoneSection = ({ date }) => {
 							{attacks.map(a => (
 								<button
 									key={a.id}
+					aria-pressed={selectedId === a.id}
 									className={`${s.attackPill} ${selectedId === a.id ? s.attackPillActive : ''}`}
 									onClick={() => selectAttack(a.id)}
 								>
@@ -151,14 +139,15 @@ const AttackZoneSection = ({ date }) => {
 				)}
 
 				{/* Head visualizations */}
+				<ErrorNotice message={error} title="Не удалось сохранить зоны боли" />
 				<div className={`${s.headsRow} ${!hasAttacks ? s.headsRowMuted : ''}`} aria-disabled={!hasAttacks}>
 					<div className={s.headView}>
-						<HeadFront zones={zones} onToggle={toggleZone} />
+						<HeadFront zones={zones} onToggle={toggleZone} readOnly={!editing} />
 						<span className={s.headLabel}>Спереди</span>
 					</div>
 					<div className={s.dividerV} />
 					<div className={s.headView}>
-						<HeadBack zones={zones} onToggle={toggleZone} />
+						<HeadBack zones={zones} onToggle={toggleZone} readOnly={!editing} />
 						<span className={s.headLabel}>Сзади</span>
 					</div>
 				</div>
@@ -172,19 +161,20 @@ const AttackZoneSection = ({ date }) => {
 									key={zone}
 									className={`${s.zoneTag} ${s[`zoneTag_${color}`]}`}
 									onClick={() => toggleZone(zone)}
-									title="Нажмите чтобы изменить интенсивность"
+									disabled={!editing}
+									title={editing ? 'Изменить интенсивность' : PAIN_ZONE_LABELS[zone]}
 								>
 									<span className={`${s.zoneDot} ${s[`dot_${color}`]}`} />
 									{PAIN_ZONE_LABELS[zone]}
-									<span className={s.zoneTagX} onClick={e => removeZone(e, zone)}>✕</span>
+									{editing && <span className={s.zoneTagX} onClick={e => removeZone(e, zone)}>✕</span>}
 								</button>
 							))}
 						</div>
-						<p className={s.intensityHint}>Нажмите зону чтобы изменить интенсивность</p>
+						{editing && <p className={s.intensityHint}>Нажмите зону, чтобы изменить интенсивность</p>}
 					</>
 				) : (
 					<>
-						<p className={s.hint}>Нажмите на область чтобы отметить зону боли</p>
+						<p className={s.hint}>{editing ? 'Нажмите на область, чтобы отметить зону боли' : 'Нажмите карандаш, чтобы отметить зоны боли'}</p>
 						<div className={s.legend}>
 							<span className={`${s.legendDot} ${s.dot_green}`}  /> Слабая
 							<span className={`${s.legendDot} ${s.dot_yellow}`} /> Умеренная

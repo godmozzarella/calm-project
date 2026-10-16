@@ -7,16 +7,16 @@ const COLOR = {
 	yellow: { fill: 'rgba(234,179,8,0.33)',  stroke: 'rgba(234,179,8,0.68)',  hover: 'rgba(234,179,8,0.50)' },
 	red:    { fill: 'rgba(239,68,68,0.34)',  stroke: 'rgba(239,68,68,0.72)',  hover: 'rgba(239,68,68,0.52)' },
 }
-const IDLE      = 'rgba(255,255,255,0.04)'
-const IDLE_STR  = 'rgba(255,255,255,0.09)'
-const IDLE_HOV  = 'rgba(255,255,255,0.13)'
-const IDLE_HOVS = 'rgba(255,255,255,0.18)'
+const IDLE      = 'var(--head-idle)'
+const IDLE_STR  = 'var(--head-idle-line)'
+const IDLE_HOV  = 'var(--head-idle-hover)'
+const IDLE_HOVS = 'var(--head-idle-hover-line)'
 
 const c = {
-	base:    'rgba(40,45,62,1)',
-	ear:     'rgba(44,49,68,1)',
-	stroke:  'rgba(92,173,228,0.22)',
-	feature: 'rgba(180,192,215,0.14)',
+	base:    'var(--head-base)',
+	ear:     'var(--head-ear)',
+	stroke:  'var(--head-line)',
+	feature: 'var(--head-feature)',
 }
 
 // zones: { [zoneName]: 'green'|'yellow'|'red' }

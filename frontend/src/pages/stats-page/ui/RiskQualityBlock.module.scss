@@ -1,8 +1,8 @@
 @use 'app/styles/globals.scss' as *;
 
 .card {
-	background: #1b1e25;
-	border: 1px solid rgba(255, 255, 255, 0.07);
+	background: $quiet-surface;
+	border: 1px solid $quiet-line;
 	border-radius: 1rem;
 	padding: 1.25rem;
 	color: $fc-main;
@@ -14,6 +14,6 @@
 .note { margin: 1rem 0 0; }
 .footer { margin: 1rem 0 0; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.65rem; }
-.metric { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; padding: 0.85rem; border-radius: 0.7rem; background: rgba(255, 255, 255, 0.035); }
+.metric { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; padding: 0.85rem; border-radius: 0.7rem; background: $quiet-surface; }
 .metricLabel, .metricDetail { color: $fc-secondary; @include fluid-text(11, 10); }
 .metricValue { color: $fc-main; @include fluid-text(20, 17); }

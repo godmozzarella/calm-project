@@ -3,8 +3,9 @@
  * PDF и печать используют один HTML-шаблон (794px, белый фон, чёрный текст).
  */
 
-import { ATTACK_TYPE_LABELS, PAIN_ZONE_LABELS } from '@/entities/attack'
+import { getAttackTypeLabel, PAIN_ZONE_LABELS } from '@/entities/attack'
 import { EFFECTIVENESS_LABELS } from '@/entities/medication'
+import { roundedPressure } from '@/shared/lib/pressure'
 
 // ── CSV helpers ───────────────────────────────────────────────────────────────
 
@@ -53,7 +54,7 @@ export const exportAttacksCsv = (attacks, { symptoms = {}, triggers = {} } = {})
 		a.endTime ?? '',
 		a.ongoing ? 'да' : 'нет',
 		a.intensity ?? '',
-		ATTACK_TYPE_LABELS[a.type] ?? a.type ?? '',
+		getAttackTypeLabel(a.type),
 		labelsOf(a.symptoms, symptoms),
 		labelsOf(a.triggers, triggers),
 		labelsOfZones(a.painZones),
@@ -164,7 +165,6 @@ const C = {
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 const fmtDate = iso => { if (!iso) return '—'; const p = iso.split('-'); return p.length === 3 ? `${p[2]}.${p[1]}.${p[0].slice(2)}` : iso }
 const fmtTime = t => (t ? String(t).slice(0, 5) : '—')
-const labelOf = (val, dict) => (val != null ? (dict[val] ?? val) : '—')
 const labelsOf = (arr, dict) => (!Array.isArray(arr) || !arr.length ? '—' : arr.map(v => dict[v] ?? v).join(', '))
 const zonesOf = pz => { if (!pz) return '—'; const z = Array.isArray(pz) ? pz : Object.keys(pz); return z.length ? z.map(k => PAIN_ZONE_LABELS[k] ?? k).join(', ') : '—' }
 
@@ -195,8 +195,8 @@ const buildReportHtml = ({ attacks = [], medications = [], kpis, patterns, weath
 	_uidCounter = 0
 
 	const sortByDate = (arr, field) => [...arr].sort((a, b) => (b[field] ?? '').localeCompare(a[field] ?? ''))
-	const A = sortByDate(attacks, 'startDate').slice(0, 100)
-	const M = sortByDate(medications, 'date').slice(0, 100)
+	const A = sortByDate(attacks, 'startDate')
+	const M = sortByDate(medications, 'date')
 
 	// ── KPI
 	const kpiHtml = kpis ? `
@@ -210,7 +210,7 @@ const buildReportHtml = ({ attacks = [], medications = [], kpis, patterns, weath
 	// ── Patterns
 	const topList = (items, dict) => (items ?? []).slice(0, 6).map((t, i) => `
 		<div style="font-size:11px;color:${C.text};padding:4px 0;border-bottom:1px solid ${C.border};display:flex;justify-content:space-between;">
-			<span><span style="color:${C.muted};margin-right:5px;">${i + 1}.</span>${esc(dict[t.value] ?? t.value)}</span>
+			<span><span style="color:${C.muted};margin-right:5px;">${i + 1}.</span>${esc(t.label ?? dict[t.key ?? t.value] ?? t.value ?? t.key)}</span>
 			<span style="color:${C.muted};white-space:nowrap;margin-left:8px;">${t.count} дн.</span>
 		</div>`).join('') || `<div style="font-size:11px;color:${C.muted};">—</div>`
 
@@ -235,8 +235,8 @@ const buildReportHtml = ({ attacks = [], medications = [], kpis, patterns, weath
 			${kpiTile(`${weather.attacksOnElevatedRisk}/${weather.attacksTotal}`, 'Приступов в дни риска')}
 			${kpiTile(weather.avgRiskOnAttackDays ?? '—', 'Ср. риск в дни приступа', riskHigher ? C.amber : C.text)}
 			${kpiTile(weather.avgRiskOnPainFreeDays ?? '—', 'Ср. риск без боли')}
-			${kpiTile(weather.avgPressureOnAttack != null ? `${weather.avgPressureOnAttack} гПа` : '—', 'Давл. в дни приступа', pressLower ? C.amber : C.text)}
-			${kpiTile(weather.avgPressureOnPainFree != null ? `${weather.avgPressureOnPainFree} гПа` : '—', 'Давл. без боли')}
+			${kpiTile(weather.avgPressureOnAttack != null ? roundedPressure(weather.avgPressureOnAttack) : '—', 'Давл. в дни приступа, мм рт. ст.', pressLower ? C.amber : C.text)}
+			${kpiTile(weather.avgPressureOnPainFree != null ? roundedPressure(weather.avgPressureOnPainFree) : '—', 'Давл. без боли, мм рт. ст.')}
 		</div>
 		<div style="font-size:10px;color:${C.muted};">Наблюдений: ${weather.daysCovered} дн.</div>`
 	})() : ''
@@ -288,13 +288,13 @@ const buildReportHtml = ({ attacks = [], medications = [], kpis, patterns, weath
 				fmtTime(a.startTime),
 				a.ongoing ? 'текущий' : fmtTime(a.endTime),
 				a.intensity ?? '—',
-				labelOf(a.type, ATTACK_TYPE_LABELS),
+				getAttackTypeLabel(a.type),
 				zonesOf(a.painZones),
 				labelsOf(a.triggers, triggers),
 				labelsOf(a.symptoms, symptoms),
 			], i % 2 === 1)).join('')}</tbody>
 		</table>
-		${attacks.length > 100 ? `<div style="font-size:10px;color:${C.muted};margin-top:5px;">Показаны последние 100 из ${attacks.length} записей.</div>` : ''}`
+		`
 		: `<div style="font-size:12px;color:${C.muted};">Нет данных</div>`
 
 	// ── Medications table
@@ -311,7 +311,7 @@ const buildReportHtml = ({ attacks = [], medications = [], kpis, patterns, weath
 				EFFECTIVENESS_LABELS[m.effectiveness] ?? '—',
 			], i % 2 === 1)).join('')}</tbody>
 		</table>
-		${medications.length > 100 ? `<div style="font-size:10px;color:${C.muted};margin-top:5px;">Показаны последние 100 из ${medications.length} записей.</div>` : ''}`
+		`
 		: `<div style="font-size:12px;color:${C.muted};">Нет данных</div>`
 
 	const metaItems = [name, email].filter(Boolean)
@@ -388,8 +388,13 @@ export const downloadPdf = async (data, meta) => {
 	document.body.appendChild(el)
 
 	try {
+		// Safari may return an empty canvas when a long report exceeds its pixel limit.
+		const pixelBudget = 12_000_000
+		const rasterScale = Math.min(2,
+			Math.sqrt(pixelBudget / Math.max(el.scrollWidth * el.scrollHeight, 1)),
+			16_000 / Math.max(el.scrollWidth, el.scrollHeight, 1))
 		const canvas = await html2canvas(el, {
-			scale: 2,
+			scale: rasterScale,
 			useCORS: true,
 			logging: false,
 			backgroundColor: '#ffffff',
@@ -397,19 +402,13 @@ export const downloadPdf = async (data, meta) => {
 
 		const imgData = canvas.toDataURL('image/png')
 		const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
-		const pageW = 210
-		const pageH = 297
-		const totalImgH = (canvas.height / canvas.width) * pageW
-
-		pdf.addImage(imgData, 'PNG', 0, 0, pageW, totalImgH, '', 'FAST')
-		let heightLeft = totalImgH - pageH
-		let shift = 0
-		while (heightLeft > 0) {
-			pdf.addPage()
-			shift -= pageH
-			pdf.addImage(imgData, 'PNG', 0, shift, pageW, totalImgH, '', 'FAST')
-			heightLeft -= pageH
-		}
+		const pageW = pdf.internal.pageSize.getWidth()
+		const pageH = pdf.internal.pageSize.getHeight()
+		const margin = 5
+		const scale = Math.min((pageW - margin * 2) / canvas.width, (pageH - margin * 2) / canvas.height)
+		const imageW = canvas.width * scale
+		const imageH = canvas.height * scale
+		pdf.addImage(imgData, 'PNG', (pageW - imageW) / 2, (pageH - imageH) / 2, imageW, imageH, '', 'FAST')
 
 		pdf.save(`calm-report-${new Date().toISOString().slice(0, 10)}.pdf`)
 	} finally {

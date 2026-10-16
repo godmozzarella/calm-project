@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import { ATTACK_TYPE_LABELS, intensityColor } from '@/entities/attack'
 import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
+import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 import { dictionaryApi } from '@/shared/api'
 import s from './AddAttackForm.module.scss'
 
@@ -38,7 +39,7 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 				</div>
 
 				<div className={s.body}>
-					{error && <p className={s.error}>{error}</p>}
+					<ErrorNotice message={error} title="Не удалось сохранить приступ" />
 
 					{/* ── Интенсивность ── */}
 					<section className={s.section}>
@@ -73,6 +74,8 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 									key={value}
 									className={`${s.chip} ${form.type === value ? s.chipActive : ''}`}
 									onClick={() => setField('type', value)}
+					type="button"
+					aria-pressed={form.type === value}
 								>
 									{label}
 								</button>
@@ -120,15 +123,19 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 								</div>
 							)}
 						</div>
-						<label className={s.checkboxRow}>
-							<input
-								type="checkbox"
-								checked={form.ongoing}
-								onChange={e => setField('ongoing', e.target.checked)}
-								className={s.checkbox}
-							/>
+						<button
+							type="button"
+							className={s.ongoingToggle}
+							role="switch"
+							aria-checked={form.ongoing}
+							aria-label="Приступ продолжается"
+							onClick={() => setField('ongoing', !form.ongoing)}
+						>
 							<span>Приступ продолжается</span>
-						</label>
+							<span className={`${s.toggleTrack} ${form.ongoing ? s.toggleTrackActive : ''}`} aria-hidden="true">
+								<span className={s.toggleThumb} />
+							</span>
+						</button>
 					</section>
 
 					{/* ── Симптомы ── */}
@@ -140,6 +147,8 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 									key={value}
 									className={`${s.chip} ${form.symptoms.includes(value) ? s.chipActive : ''}`}
 									onClick={() => toggleArrayField('symptoms', value)}
+					type="button"
+					aria-pressed={form.symptoms.includes(value)}
 								>
 									{label}
 								</button>
@@ -156,6 +165,8 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 									key={value}
 									className={`${s.chip} ${form.triggers.includes(value) ? s.chipActive : ''}`}
 									onClick={() => toggleArrayField('triggers', value)}
+					type="button"
+					aria-pressed={form.triggers.includes(value)}
 								>
 									{label}
 								</button>

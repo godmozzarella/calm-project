@@ -18,7 +18,12 @@ const authHeaders = () => {
 }
 
 const jsonHeaders = () => ({ 'Content-Type': 'application/json', ...authHeaders() })
-const isPublicAuthPath = path => ['/auth/login', '/auth/register', '/auth/refresh', '/auth/verify-email'].includes(path)
+const isPublicAuthPath = path => ['/auth/login', '/auth/register', '/auth/refresh'].includes(path)
+const networkMessage = () => navigator.onLine
+  ? 'Не удалось связаться с сервером. Повторите попытку через минуту.'
+  : 'Нет подключения к интернету. Проверьте соединение и повторите попытку.'
+const reportNetworkError = () => window.dispatchEvent(new Event('calm:network-error'))
+const reportNetworkRestored = () => window.dispatchEvent(new Event('calm:network-restored'))
 
 // Идёт ли уже refresh? Все параллельные 401 ждут эту же promise,
 // чтобы не было race condition и лишних запросов на /auth/refresh.
@@ -37,7 +42,9 @@ const tryRefresh = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken: rt }),
       })
+      reportNetworkRestored()
       if (!res.ok) {
+		if (res.status >= 500) { reportNetworkError(); return null }
         // Другая вкладка могла успеть обновить общий refresh-токен.
         return Boolean(getRefreshToken()) && getRefreshToken() !== rt && !isSessionIdle()
       }
@@ -47,7 +54,8 @@ const tryRefresh = () => {
       setRefreshToken(body.refreshToken)
       return true
     } catch {
-      return false
+      reportNetworkError()
+      return null
     } finally {
       // Освобождаем флаг чуть позже, чтобы все ожидающие точно увидели true/false
       // и успели взять новый токен из localStorage перед своим retry.
@@ -77,6 +85,14 @@ const send = (path, options) => {
     return Promise.reject(new Error('Сессия истекла'))
   }
   return fetch(BASE + path, options)
+    .then(res => { reportNetworkRestored(); return res })
+    .catch(error => {
+      if (error instanceof TypeError) {
+        reportNetworkError()
+        throw new Error(networkMessage())
+      }
+      throw error
+    })
 }
 
 const handle = async (res, path, retryFn) => {
@@ -92,6 +108,7 @@ const handle = async (res, path, retryFn) => {
     if (refreshed && retryFn) {
       return retryFn()
     }
+    if (refreshed === null) throw new Error(networkMessage())
     clearSession()
     throw new Error(body.message ?? 'Unauthorized')
   }
@@ -101,6 +118,7 @@ const handle = async (res, path, retryFn) => {
     err.retryAfter = retryAfter
     throw err
   }
+	if (res.status === 413) throw new Error('Файл слишком большой. Максимальный размер — 5 МБ.')
   // `error` is usually the generic HTTP title (e.g. "Bad Request"); `message`
   // carries the useful server explanation intended for the user.
   if (!res.ok) throw new Error(body.message ?? body.error ?? `HTTP ${res.status}`)
@@ -133,8 +151,12 @@ export const http = {
       .then(r => handle(r, path, go))
     return go()
   },
-  delete: path => {
-    const go = () => send(path, { method: 'DELETE', headers: authHeaders() })
+  delete: (path, body) => {
+    const go = () => send(path, {
+      method: 'DELETE',
+      headers: body ? jsonHeaders() : authHeaders(),
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    })
       .then(r => handle(r, path, go))
     return go()
   },

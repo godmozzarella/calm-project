@@ -1,3 +1,5 @@
+import { formatPressure, formatPressureChange } from '../../../shared/lib/pressure.js'
+
 const MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря']
 const SHORT_MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
 const WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб']
@@ -23,7 +25,7 @@ const kpContribution = kp => kp >= 7 ? 25 : kp >= 5 ? 15 : kp >= 4 ? 10 : 0
 const pressureContribution = delta => {
 	if (delta == null) return 0
 	const absolute = Math.abs(delta)
-	const base = absolute >= 10 ? 60 : absolute >= 7 ? 45 : absolute >= 5 ? 30 : absolute >= 3 ? 15 : 0
+	const base = absolute >= 7.5 ? 60 : absolute >= 5.3 ? 45 : absolute >= 3.8 ? 30 : absolute >= 2.3 ? 15 : 0
 	return Math.round(base * (delta < 0 ? 1 : 0.6))
 }
 const humidityContribution = humidity => humidity > 85 ? 20 : humidity > 75 ? 10 : 0
@@ -33,16 +35,15 @@ const temperatureContribution = (min, max) => {
 	return range > 15 ? 20 : range > 10 ? 10 : 0
 }
 const intensity = points => points >= 25 ? 'Сильно' : points >= 15 ? 'Средне' : points >= 8 ? 'Заметно' : 'Слабо'
-const signed = value => `${value > 0 ? '+' : ''}${value.toFixed(1)}`
 
 export const weatherTiles = inputs => {
-	const pressure = pressureContribution(inputs.pressureDelta24h)
+	const pressure = pressureContribution(inputs.pressureDelta24hMmHg)
 	const humidity = humidityContribution(inputs.humidity)
 	const temperature = temperatureContribution(inputs.tempMin, inputs.tempMax)
 	const kp = kpContribution(inputs.kpIndex)
 	const range = inputs.tempMin != null && inputs.tempMax != null ? inputs.tempMax - inputs.tempMin : null
 	return [
-		{ key: 'pressure', label: 'Давление', value: inputs.pressureHpa == null ? '—' : `${Math.round(inputs.pressureHpa)} hPa`, status: inputs.pressureDelta24h == null ? 'нет данных за сутки' : `${signed(inputs.pressureDelta24h)} за сутки · ${pressure ? (inputs.pressureDelta24h < 0 ? 'падение' : 'рост') : 'без резкого перепада'}`, alert: pressure > 0 },
+		{ key: 'pressure', label: 'Давление', value: formatPressure(inputs.pressureMmHg), status: inputs.pressureDelta24hMmHg == null ? 'нет данных за сутки' : `${formatPressureChange(inputs.pressureDelta24hMmHg)} за сутки · ${pressure ? (inputs.pressureDelta24hMmHg < 0 ? 'падение' : 'рост') : 'без резкого перепада'}`, alert: pressure > 0 },
 		{ key: 'humidity', label: 'Влажность', value: inputs.humidity == null ? '—' : `${Math.round(inputs.humidity)}%`, status: inputs.humidity == null ? 'нет данных' : humidity ? 'повышенная' : 'без повышения', alert: humidity > 0 },
 		{ key: 'temperature', label: 'Температура', value: inputs.tempMin == null || inputs.tempMax == null ? '—' : `${Math.round(inputs.tempMin)}…${Math.round(inputs.tempMax)}°C`, status: range == null ? 'нет данных' : temperature ? `перепад ${Math.round(range)}°C` : 'без резкого перепада', alert: temperature > 0 },
 		{ key: 'wind', label: 'Ветер до', value: inputs.windKmhMax == null ? '—' : `${Math.round(inputs.windKmhMax)} км/ч`, status: inputs.windKmhMax == null ? 'нет данных' : 'максимум за день', alert: false },
@@ -53,7 +54,7 @@ export const weatherTiles = inputs => {
 export const riskFactors = risk => {
 	if (!risk?.dataAvailable) return []
 	const i = risk.inputs || {}
-	const pressure = pressureContribution(i.pressureDelta24h)
+	const pressure = pressureContribution(i.pressureDelta24hMmHg)
 	const humidity = humidityContribution(i.humidity)
 	const temperature = temperatureContribution(i.tempMin, i.tempMax)
 	const kp = kpContribution(i.kpIndex)
@@ -69,7 +70,7 @@ export const riskFactors = risk => {
 		if (reason === 'Есть сигнал риска medication overuse') return sum + 10
 		return sum
 	}, 0) + Math.min(20, (risk.personalFactors || []).length * 5)
-	const pressureText = i.pressureDelta24h == null ? null : `давление ${signed(i.pressureDelta24h)} hPa за сутки`
+	const pressureText = i.pressureDelta24hMmHg == null ? null : `давление ${formatPressureChange(i.pressureDelta24hMmHg)} за сутки`
 	const tempText = i.tempMin == null || i.tempMax == null ? null : `перепад температуры ${Math.round(i.tempMax - i.tempMin)}°C`
 	const weatherFacts = [pressure > 0 ? pressureText : null, temperature > 0 ? tempText : null, humidity > 0 ? `влажность ${Math.round(i.humidity)}%` : null, `погодный риск ${i.weatherScore ?? 0}/100`].filter(Boolean)
 	return [

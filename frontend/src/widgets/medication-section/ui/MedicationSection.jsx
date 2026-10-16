@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { AddIcon, DeleteIcon, EditIcon } from '@/shared/ui/icons'
 import { AddMedicationForm, useAddMedication } from '@/features/add-medication'
 import { EFFECTIVENESS_LABELS, OVERUSE_THRESHOLD } from '@/entities/medication'
-import { ATTACK_TYPE_LABELS } from '@/entities/attack'
+import { formatAttackTime, getAttackTypeLabel, sortAttacksNewest } from '@/entities/attack'
 import { attackApi, medicationApi } from '@/shared/api'
 import { subscribe, ATTACKS_CHANGED, MEDICATIONS_CHANGED } from '@/shared/lib/dataEvents'
 
@@ -19,7 +19,7 @@ const MedicationSection = ({ date }) => {
 	const reload = useCallback(() => {
 		const [year, month] = date.split('-').map(Number)
 		medicationApi.getByDate(date).then(setMedications)
-		attackApi.getByDate(date).then(setAttacks)
+		attackApi.getByDate(date).then(list => setAttacks(sortAttacksNewest(list)))
 		medicationApi.getOveruseDays(year, month).then(setOveruseDays)
 	}, [date])
 
@@ -86,7 +86,7 @@ const MedicationSection = ({ date }) => {
 												)}
 											</div>
 											<div className={s.medRight}>
-												<span className={s.medTime}>{med.time}</span>
+												<span className={s.medTime}>{formatAttackTime(med.time)}</span>
 												<button
 													className={s.editBtn}
 													onClick={() => openEditForm(med, medications)}
@@ -107,9 +107,9 @@ const MedicationSection = ({ date }) => {
 
 										{attack && (
 											<div className={s.attackLink}>
-												Приступ {attack.startDate} {attack.startTime}
-												{attack.endTime ? ` — ${attack.endTime}` : attack.ongoing ? ' — продолжается' : ''}
-												{' · '}{ATTACK_TYPE_LABELS[attack.type]}
+												Приступ {attack.startDate} {formatAttackTime(attack.startTime)}
+												{attack.endTime ? ` — ${formatAttackTime(attack.endTime)}` : attack.ongoing ? ' — продолжается' : ''}
+												{' · '}{getAttackTypeLabel(attack.type)}
 												{' · '}{attack.intensity}/10
 											</div>
 										)}
@@ -119,7 +119,7 @@ const MedicationSection = ({ date }) => {
 												<button
 													key={v}
 													className={`${s.effectBtn} ${med.effectiveness === v ? s.effectBtnActive : ''}`}
-													style={med.effectiveness === v ? { color: EFFECTIVENESS_COLORS[v], borderColor: EFFECTIVENESS_COLORS[v] } : {}}
+													style={med.effectiveness === v ? { color: EFFECTIVENESS_COLORS[v] } : {}}
 													onClick={() => handleEffectiveness(med.id, med.effectiveness === v ? null : v)}
 												>
 													{EFFECTIVENESS_LABELS[v]}

@@ -93,8 +93,8 @@
 
 .labelToday {
 	color: $fc-contrast;
-	background: rgba(92, 173, 228, 0.1);
-	border: 1px solid rgba(92, 173, 228, 0.2);
+	background: $quiet-surface;
+	border: 1px solid $quiet-line;
 }
 
 .labelPast {
@@ -139,8 +139,139 @@
 .weekStrip {
 	display: flex;
 	gap: 0.35rem;
-	flex: 1;
+	flex: 0 1 auto;
 	justify-content: flex-end;
+}
+
+.streak {
+	position: relative;
+	display: inline-flex;
+	flex-shrink: 0;
+	margin-left: auto;
+	padding: 0;
+	border: 1px solid $quiet-line;
+	border-radius: .7rem;
+	background: $quiet-surface;
+	color: $fc-secondary;
+	font-size: .75rem;
+	white-space: nowrap;
+
+	&:has(.streakButton:focus-visible) { outline: 2px solid $fc-contrast; outline-offset: 2px; }
+
+	svg { color: $fc-contrast; font-size: 1.125rem; }
+	strong { color: $fc-contrast; font-weight: $fw-semibold; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.streak:hover { background: $quiet-surface-raised; }
+}
+
+.streakButton {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: .3rem;
+	padding: .4rem .6rem;
+	border: 0;
+	border-radius: inherit;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+
+	&:focus { outline: none; }
+	&:focus-visible { outline: none; }
+}
+
+.streakInfo {
+	position: absolute;
+	z-index: 20;
+	top: calc(100% + .55rem);
+	right: 0;
+	width: min(21rem, calc(100vw - 2rem));
+	padding: 1rem;
+	border: 1px solid $quiet-line;
+	border-radius: .9rem;
+	background: $block-color;
+	color: $fc-main;
+	white-space: normal;
+	box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .18);
+	font-size: .875rem;
+	line-height: 1.45;
+
+	> strong { display: block; margin-bottom: .45rem; font-size: 1rem; }
+	> p { margin: .35rem 0; color: $fc-secondary; }
+}
+
+.streakInfoClose {
+	margin-top: .5rem;
+	padding: .4rem .8rem;
+	border: 0;
+	border-radius: 2rem;
+	background: $fc-contrast;
+	color: $fc-dark;
+	font: inherit;
+	font-weight: $fw-semibold;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+
+	&:focus-visible { outline: 2px solid $fc-main; outline-offset: 2px; }
+}
+
+@media (max-width: 768px) {
+	.streakInfo {
+		position: fixed;
+		z-index: 1200;
+		top: 50%;
+		right: 1rem;
+		left: 1rem;
+		width: auto;
+		max-height: calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		transform: translateY(-50%);
+		padding-bottom: max(1rem, env(safe-area-inset-bottom));
+		-webkit-overflow-scrolling: touch;
+	}
+}
+
+.streakIncreased {
+	strong { animation: streakCount .55s ease-out; }
+	svg { animation: streakIcon .65s ease-out; }
+}
+
+.streakGain {
+	position: absolute;
+	left: 50%;
+	bottom: calc(100% + .15rem);
+	color: $fc-contrast;
+	font-size: .75rem;
+	font-weight: $fw-semibold;
+	pointer-events: none;
+	animation: streakGain 1.6s ease-out forwards;
+}
+
+@keyframes streakCount {
+	0% { opacity: .4; transform: translateY(.35rem); }
+	70% { opacity: 1; transform: translateY(-.08rem); }
+	100% { transform: translateY(0); }
+}
+
+@keyframes streakIcon {
+	0%, 100% { transform: scale(1); }
+	45% { transform: scale(1.2); }
+}
+
+@keyframes streakGain {
+	0% { opacity: 0; transform: translate(-50%, .3rem); }
+	20% { opacity: 1; }
+	75% { opacity: 1; }
+	100% { opacity: 0; transform: translate(-50%, -.35rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.streakIncreased strong, .streakIncreased svg, .streakGain { animation: none; }
 }
 
 @media (max-width: 768px) {
@@ -161,8 +292,12 @@
 
 @media (max-width: 480px) {
 	.dayBar {
-		padding: 0.65rem 0.875rem;
+		padding: 0.65rem 0.5rem;
+		gap: .35rem;
 	}
+	.center { min-width: 0; }
+	.weekday { font-size: .875rem; }
+	.streakButton { padding: .3rem .4rem; }
 
 	.dayNumber {
 		flex-direction: row;

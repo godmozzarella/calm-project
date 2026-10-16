@@ -21,10 +21,11 @@
 
 /* ── Bottom sheet / modal ── */
 .sheet {
-	background: rgba(28, 31, 40, 0.98);
-	border: 1px solid rgba(92, 173, 228, 0.1);
+	background: var(--surface-strong);
+	border: 1px solid $quiet-line;
 	border-radius: 1.5rem 1.5rem 0 0;
 	width: 100%;
+	min-width: 0;
 	/* vh — фолбэк для браузеров без dvh, иначе шит может уйти выше viewport на iOS Safari */
 	max-height: 92vh;
 	max-height: 92dvh;
@@ -55,7 +56,7 @@
 .handle {
 	width: 2.5rem;
 	height: 4px;
-	background: rgba(255, 255, 255, 0.15);
+	background: var(--line-muted);
 	border-radius: 2px;
 	margin: 0.75rem auto 0;
 	flex-shrink: 0;
@@ -69,7 +70,7 @@
 	align-items: center;
 	justify-content: space-between;
 	padding: 1rem 1.25rem 0.75rem;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	border-bottom: 1px solid var(--surface-hover);
 	flex-shrink: 0;
 }
 
@@ -91,7 +92,7 @@
 
 	&:hover {
 		color: $fc-main;
-		background: rgba(255, 255, 255, 0.06);
+		background: var(--surface-hover);
 	}
 }
 
@@ -108,15 +109,6 @@
 	&::-webkit-scrollbar { display: none; }
 }
 
-.error {
-	@include fluid-text(12, 11);
-	color: $error-color;
-	background: rgba(239, 68, 68, 0.08);
-	border: 1px solid rgba(239, 68, 68, 0.2);
-	border-radius: 0.625rem;
-	padding: 0.5rem 0.875rem;
-}
-
 /* ── Section ── */
 .section {
 	display: flex;
@@ -124,7 +116,7 @@
 	flex-direction: column;
 	gap: 0.5rem;
 	padding: 0.875rem 0;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+	border-bottom: 1px solid var(--surface-hover);
 
 	&:last-child { border-bottom: none; }
 }
@@ -134,7 +126,7 @@
 	font-weight: $fw-semibold;
 	letter-spacing: 0.07em;
 	text-transform: uppercase;
-	color: rgba(140, 150, 170, 0.7);
+	color: var(--fc-secondary);
 }
 
 /* ── Intensity ── */
@@ -150,7 +142,7 @@
 	appearance: none;
 	height: 4px;
 	border-radius: 2px;
-	background: linear-gradient(to right, #22c55e 0%, #84cc16 20%, #eab308 45%, #f97316 70%, #ef4444 100%);
+	background: $quiet-surface-raised;
 	outline: none;
 	cursor: pointer;
 	padding: 0 10px;
@@ -166,10 +158,9 @@
 		width: 20px;
 		height: 20px;
 		border-radius: 50%;
-		background: rgba(20, 22, 30, 1);
+		background: $fc-contrast;
 		cursor: pointer;
-		border: 2px solid rgba(255, 255, 255, 0.12);
-		box-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+		border: 0;
 		margin-top: -8px;
 		transition: transform 0.12s ease;
 
@@ -179,7 +170,7 @@
 	&::-moz-range-track {
 		height: 4px;
 		border-radius: 2px;
-		background: linear-gradient(to right, #22c55e 0%, #84cc16 20%, #eab308 45%, #f97316 70%, #ef4444 100%);
+		background: $quiet-surface-raised;
 		border: none;
 	}
 
@@ -187,10 +178,9 @@
 		width: 20px;
 		height: 20px;
 		border-radius: 50%;
-		background: rgba(20, 22, 30, 1);
+		background: $fc-contrast;
 		cursor: pointer;
-		border: 2px solid rgba(255, 255, 255, 0.12);
-		box-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+		border: 0;
 		transition: transform 0.12s ease;
 	}
 
@@ -209,7 +199,7 @@
 	display: flex;
 	justify-content: space-between;
 	@include fluid-text(10, 9);
-	color: rgba(140, 150, 170, 0.5);
+	color: var(--fc-secondary);
 }
 
 /* ── Chips ── */
@@ -220,31 +210,43 @@
 }
 
 .chip {
-	padding: 0.4rem 0.875rem;
-	border-radius: 2rem;
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	background: none;
+	min-height: 2.5rem;
+	padding: 0.45rem 0.875rem;
+	border-radius: 0.75rem;
+	border: 1px solid $quiet-line;
+	background: $quiet-surface;
 	color: $fc-secondary;
 	@include fluid-text(13, 11);
 	cursor: pointer;
+	-webkit-appearance: none;
+	appearance: none;
+	-webkit-tap-highlight-color: transparent;
 	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 
 	&:hover {
-		background: rgba(255, 255, 255, 0.06);
+		background: var(--surface-hover);
 		color: $fc-main;
 	}
+	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: 2px; }
 }
 
 .chipActive {
-	background: rgba(92, 173, 228, 0.15);
-	border-color: rgba(92, 173, 228, 0.4);
-	color: $fc-contrast;
+	background: $quiet-surface-raised;
+	border-color: var(--line-muted);
+	color: $fc-main;
+	box-shadow: inset 0 0 0 1px var(--line-muted);
+}
+
+@media (hover: none) {
+	.chip:hover { background: $quiet-surface; color: $fc-secondary; }
+	.chipActive:hover { background: $quiet-surface-raised; color: $fc-main; }
 }
 
 /* ── Time ── */
 .timeRow {
 	display: flex;
 	gap: 1rem;
+	width: 100%;
 }
 
 .timeField {
@@ -252,6 +254,8 @@
 	flex-direction: column;
 	gap: 0.3rem;
 	flex: 1;
+	min-width: 0;
+	width: 100%;
 
 	span {
 		@include fluid-text(11, 10);
@@ -260,46 +264,110 @@
 }
 
 .timeInput {
-	background: rgba(255, 255, 255, 0.05);
-	border: 1px solid rgba(255, 255, 255, 0.1);
+	background: var(--surface-hover);
+	border: 1px solid -line;
 	border-radius: 0.625rem;
 	color: $fc-main;
 	padding: 0.5rem 0.75rem;
 	@include fluid-text(14, 12);
 	width: 100%;
+	display: block;
+	min-width: 0;
+	box-sizing: border-box;
+	font-size: 16px;
 	cursor: pointer;
 	transition: border-color 0.15s ease;
 
 	&:focus {
 		outline: none;
-		border-color: rgba(92, 173, 228, 0.4);
+		border-color: var(--line-muted);
 	}
+	&:focus-visible { box-shadow: 0 0 0 2px var(--line-muted); }
 
 	/* Chrome time picker dark */
 	color-scheme: dark;
 }
 
-.checkboxRow {
+.ongoingToggle {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
+	justify-content: space-between;
+	gap: 1rem;
+	min-height: 2.75rem;
+	width: 100%;
+	padding: 0;
+	border: 0;
+	border-radius: 0 !important;
+	background: transparent;
+	text-align: left;
 	cursor: pointer;
 	@include fluid-text(13, 11);
 	color: $fc-secondary;
-	width: fit-content;
+
+	&:focus-visible { outline: 2px solid $fc-contrast; outline-offset: 3px; }
 }
 
-.checkbox {
-	width: 1rem;
-	height: 1rem;
-	accent-color: $fc-contrast;
-	cursor: pointer;
+.toggleTrack {
+	position: relative;
+	width: 2.6rem;
+	height: 1.5rem;
+	flex: 0 0 2.6rem;
+	border: 1px solid $quiet-line;
+	border-radius: 2rem;
+	background: $quiet-surface-raised;
+	transition: background-color .18s ease;
 }
+
+.toggleTrackActive {
+	background: $fc-contrast;
+	border-color: $fc-contrast;
+}
+
+.toggleThumb {
+	position: absolute;
+	top: .15rem;
+	left: .15rem;
+	width: 1.1rem;
+	height: 1.1rem;
+	border-radius: 50%;
+	background: var(--toggle-thumb);
+	transition: transform .18s ease;
+
+	.toggleTrackActive & { transform: translateX(1.1rem); }
+}
+
+@media (max-width: 480px) {
+	.timeRow { flex-direction: column; gap: .75rem; width: 100%; }
+	.timeField { width: 100%; min-width: 0; align-items: stretch; }
+	.timeInput {
+		width: 100% !important;
+		max-width: 100%;
+		min-width: 0;
+		align-self: stretch;
+	}
+	.ongoingToggle { width: 100%; min-height: 2.75rem; }
+}
+
+@supports (-webkit-touch-callout: none) {
+	@media (max-width: 480px) {
+		.timeInput {
+			-webkit-appearance: none;
+			appearance: none;
+			text-align: center;
+		}
+
+		.timeInput::-webkit-date-and-time-value {
+			min-width: 100%;
+			text-align: center;
+		}
+	}
+}
+
 
 /* ── Note ── */
 .textarea {
-	background: rgba(255, 255, 255, 0.04);
-	border: 1px solid rgba(255, 255, 255, 0.08);
+	background: var(--surface-hover);
+	border: 1px solid var(--surface-hover);
 	border-radius: 0.75rem;
 	color: $fc-main;
 	padding: 0.75rem;
@@ -309,7 +377,7 @@
 	font-family: 'Roboto', Arial, sans-serif;
 	transition: border-color 0.15s ease;
 
-	&::placeholder { color: rgba(190, 190, 190, 0.35); }
+	&::placeholder { color: color-mix(in srgb, var(--fc-secondary) 55%, transparent); }
 
 	&:focus {
 		outline: none;
@@ -320,22 +388,21 @@
 /* ── Footer ── */
 .footer {
 	padding: 0.875rem 1.25rem 1.25rem;
-	border-top: 1px solid rgba(255, 255, 255, 0.06);
+	border-top: 1px solid var(--surface-hover);
 	flex-shrink: 0;
 }
 
 .submitBtn {
+	@include contrast-button;
 	width: 100%;
-	padding: 0.8rem;
-	border-radius: 0.875rem;
-	border: none;
-	background: linear-gradient(135deg, rgba(102, 186, 241, 1), rgba(14, 123, 196, 1));
-	color: #fff;
 	@include fluid-text(15, 13);
-	font-weight: $fw-semibold;
-	cursor: pointer;
-	transition: opacity 0.18s ease, transform 0.1s ease;
+}
 
-	&:hover { opacity: 0.9; }
-	&:active { transform: scale(0.98); }
+@media (max-width: 640px) {
+	.timeInput, .textarea { font-size: 16px; }
+}
+
+@media (hover: none) {
+	.chip:hover { background: $quiet-surface; color: $fc-secondary; }
+	.chipActive:hover { background: $quiet-surface-raised; color: $fc-main; }
 }

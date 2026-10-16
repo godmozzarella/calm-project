@@ -12,23 +12,23 @@
 }
 
 .grid {
-	stroke: rgba(255, 255, 255, 0.05);
+	stroke: var(--chart-grid);
 	stroke-width: 1;
 }
 
 .baseline {
-	stroke: rgba(255, 255, 255, 0.1);
+	stroke: var(--chart-base);
 	stroke-width: 1;
 }
 
 .yLabel {
-	fill: rgba(140, 150, 170, 0.55);
+	fill: var(--chart-label);
 	font-size: 10px;
 	font-weight: 500;
 }
 
 .xLabel {
-	fill: rgba(140, 150, 170, 0.6);
+	fill: var(--chart-label);
 	font-size: 10px;
 	font-weight: 500;
 }
@@ -69,8 +69,8 @@
 	position: absolute;
 	bottom: calc(100% - 2.25rem);
 	transform: translateX(-50%);
-	background: rgba(20, 22, 30, 0.98);
-	border: 1px solid rgba(92, 173, 228, 0.2);
+	background: var(--surface-overlay);
+	border: 1px solid $quiet-line;
 	border-radius: 0.625rem;
 	padding: 0.5rem 0.75rem;
 	min-width: 9rem;
@@ -96,7 +96,7 @@
 }
 
 .tooltipLabel {
-	color: rgba(140, 150, 170, 0.7);
+	color: var(--tooltip-label);
 }
 
 .tooltipValue {

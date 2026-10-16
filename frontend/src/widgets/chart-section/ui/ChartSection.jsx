@@ -8,6 +8,7 @@ import {
 	emit,
 	ATTACKS_CHANGED,
 	MEDICATIONS_CHANGED,
+	OUTCOMES_CHANGED,
 } from '@/shared/lib/dataEvents'
 
 import BarChart from './BarChart'
@@ -33,8 +34,6 @@ const ChartSection = ({ showPatterns = true, statsLink = false }) => {
 		statsApi.getSummary(period).then(data => {
 			setBuckets(data.buckets ?? [])
 			setKpis(data.kpis ?? EMPTY_KPIS)
-			// server returns longestStreak, KpiTiles expects streak
-			setKpis({ ...data.kpis, streak: data.kpis.longestStreak })
 			setPatterns(data.patterns ?? EMPTY_PATTERNS)
 			setWeather(data.weather ?? null)
 		}).catch(() => {})
@@ -43,6 +42,7 @@ const ChartSection = ({ showPatterns = true, statsLink = false }) => {
 	useEffect(() => { load() }, [load])
 	useEffect(() => subscribe(ATTACKS_CHANGED,     load), [load])
 	useEffect(() => subscribe(MEDICATIONS_CHANGED, load), [load])
+	useEffect(() => subscribe(OUTCOMES_CHANGED, load), [load])
 
 	const handleBarClick = dateKey => {
 		if (!dateKey) return

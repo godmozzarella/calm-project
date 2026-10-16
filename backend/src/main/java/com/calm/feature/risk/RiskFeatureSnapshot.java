@@ -3,9 +3,10 @@ package com.calm.feature.risk;
 /** Минимальный снимок числовых входов, известных алгоритму на момент выдачи оценки. */
 public record RiskFeatureSnapshot(
 		Integer weatherScore,
-		Double pressureHpa,
-		Double pressureDelta24h,
+		Double pressureMmHg,
+		Double pressureDelta24hMmHg,
 		Double humidity,
+		Double humidityDelta24h,
 		Double tempMin,
 		Double tempMax,
 		Double windKmhMax,
@@ -24,7 +25,8 @@ public record RiskFeatureSnapshot(
 	public static RiskFeatureSnapshot from(RiskPredictionResponse.RiskInputs inputs, RiskHistoryFeatures history) {
 		if (inputs == null) return null;
 		return new RiskFeatureSnapshot(
-				inputs.weatherScore(), inputs.pressureHpa(), inputs.pressureDelta24h(), inputs.humidity(),
+				inputs.weatherScore(), inputs.pressureMmHg(), inputs.pressureDelta24hMmHg(), inputs.humidity(),
+				inputs.humidityDelta24h(),
 				inputs.tempMin(), inputs.tempMax(), inputs.windKmhMax(), inputs.kpIndex(),
 				inputs.attacksLast3Days(), inputs.attacksLast7Days(), inputs.medicationDaysLast7Days(),
 				inputs.overuseRisk(), inputs.historyDays(), inputs.historyAttackDays(),

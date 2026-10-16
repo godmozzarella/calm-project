@@ -18,3 +18,46 @@
 		#{$maxSize * 1rem}
 	);
 }
+
+@mixin button-shine {
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+
+	&::after {
+		content: '';
+		position: absolute;
+		z-index: 1;
+		inset: -60% auto -60% -45%;
+		width: 30%;
+		transform: translateX(-250%) skewX(-22deg);
+		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .28), transparent);
+		mix-blend-mode: screen;
+		opacity: .7;
+		transition: transform .65s ease;
+		pointer-events: none;
+	}
+
+	&:focus-visible::after { transform: translateX(650%) skewX(-22deg); }
+	@media (hover: hover) { &:hover::after { transform: translateX(650%) skewX(-22deg); } }
+}
+
+@mixin contrast-button {
+	@include button-shine;
+	min-height: 2.85rem;
+	padding: .7rem 1rem;
+	border: 1px solid transparent;
+	border-radius: 2rem;
+	background: rgba(92, 173, 228, 1);
+	color: rgba(23, 25, 29, 1);
+	font-size: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+	transition: background-color .2s ease, transform .1s ease;
+
+	@media (hover: hover) { &:hover:not(:disabled) { filter: brightness(1.08); } }
+	&:active:not(:disabled) { transform: scale(.985); }
+	&:focus-visible { outline: 2px solid rgba(212, 212, 212, 1); outline-offset: 2px; }
+	&:disabled { opacity: .55; cursor: not-allowed; }
+}

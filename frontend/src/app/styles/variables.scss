@@ -4,22 +4,25 @@ $fw-light: 300;
 $fw-medium: 500;
 $fw-semibold: 600;
 
-$fc-logo: rgba(17, 139, 222, 1);
-$fc-main: rgba(212, 212, 212, 1);
-$fc-secondary: rgba(190, 190, 190, 1);
-$fc-contrast: rgba(92, 173, 228, 1);
-$fc-dark: rgba(23, 25, 29, 1);
+$fc-logo: var(--fc-logo);
+$fc-main: var(--fc-main);
+$fc-secondary: var(--fc-secondary);
+$fc-contrast: var(--fc-contrast);
+$fc-dark: var(--fc-dark);
 
  /* ОБЩИЕ */
-$main-color: rgb(33, 37, 45);
-$secondary-color: rgba(23, 23, 23, 1);
-$contrast-color: rgba(92, 173, 228, 1);
-$block-color: rgba(54, 61, 83, 1);
+$main-color: var(--main-color);
+$secondary-color: var(--secondary-color);
+$contrast-color: var(--contrast-color);
+$block-color: var(--block-color);
+$quiet-surface: var(--quiet-surface);
+$quiet-surface-raised: var(--quiet-surface-raised);
+$quiet-line: var(--quiet-line);
 
 /* СТАТУСЫ */
-$error-color: rgba(239, 68, 68, 1);
-$success-color: rgba(34, 197, 94, 1);
-$warning-color: rgba(234, 179, 8, 1);
+$error-color: var(--error-color);
+$success-color: var(--success-color);
+$warning-color: var(--warning-color);
 
 /* РАЗМЕРЫ */
 $margin-top-body: 6.75rem; //108px

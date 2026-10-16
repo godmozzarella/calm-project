@@ -1,0 +1,26 @@
+@use 'app/styles/globals.scss' as *;
+
+.toast {
+	position: fixed;
+	top: max(1rem, env(safe-area-inset-top));
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 2100;
+	width: min(25rem, calc(100vw - 2rem));
+	box-shadow: 0 1rem 3rem rgba(0, 0, 0, .3);
+	border-radius: .75rem;
+}
+.toast > div { padding-right: 2.5rem; }
+.close {
+	position: absolute;
+	top: .55rem;
+	right: .55rem;
+	width: 2rem;
+	height: 2rem;
+	border: 0;
+	border-radius: .4rem;
+	background: none;
+	color: $fc-secondary;
+	cursor: pointer;
+	&:hover { background: $quiet-surface-raised; color: $fc-main; }
+}

@@ -160,8 +160,8 @@ const BarChart = ({ buckets, metric, onBarClick }) => {
 										cx={x + drawW / 2}
 										cy={y - 9}
 										r={7.5}
-										fill="rgba(28,31,40,0.95)"
-										stroke="rgba(255,255,255,0.18)"
+										fill="var(--chart-badge-bg)"
+										stroke="var(--chart-badge-line)"
 									/>
 									<text
 										x={x + drawW / 2}

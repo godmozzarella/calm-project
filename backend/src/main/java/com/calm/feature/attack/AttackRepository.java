@@ -15,13 +15,13 @@ public interface AttackRepository extends MongoRepository<Attack, String> {
 
 	/**
 	 * Все приступы пользователя, чей диапазон пересекает [from, to].
-	 * ongoing = true считается «продолжается до сегодня», поэтому условие fuzzy:
-	 * either endDate >= from OR ongoing = true.
+	 * A missing end date on an old non-ongoing entry covers its start day only.
 	 */
 	@Query("""
 			{ 'userId': ?0,
 			  'startDate': { $lte: ?2 },
-			  $or: [ { 'endDate': { $gte: ?1 } }, { 'ongoing': true } ]
+			  $or: [ { 'endDate': { $gte: ?1 } }, { 'ongoing': true },
+			         { 'startDate': { $gte: ?1 } } ]
 			}""")
 	List<Attack> findInRange(String userId, LocalDate from, LocalDate to);
 }

@@ -14,6 +14,7 @@ public record StatsResponse(
 			int total,
 			double avgIntensity,
 			int longestStreak,
+			int currentStreak,
 			int overuseDays,
 			boolean overuseRisk
 	) {}
@@ -49,8 +50,8 @@ public record StatsResponse(
 	 * @param attacksOnElevatedRisk — из них в дни с risk = MEDIUM или HIGH
 	 * @param avgRiskOnAttackDays   — средний риск-скор в дни с приступом (0–100)
 	 * @param avgRiskOnPainFreeDays — средний риск-скор в дни без приступа (0–100)
-	 * @param avgPressureOnAttack   — среднее давление, гПа, в дни приступа (или null)
-	 * @param avgPressureOnPainFree — среднее давление, гПа, в дни без приступа (или null)
+	 * @param avgPressureOnAttack   — среднее давление, мм рт. ст., в дни приступа (или null)
+	 * @param avgPressureOnPainFree — среднее давление, мм рт. ст., в дни без приступа (или null)
 	 *
 	 * <p>Если {@code daysCovered} меньше ~7, корреляция статистически бесполезна — фронт показывает «недостаточно данных».
 	 */

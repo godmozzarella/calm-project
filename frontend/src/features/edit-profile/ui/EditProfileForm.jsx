@@ -25,6 +25,7 @@ const EditProfileForm = props => {
 	return (
 		<>
 			<form
+				autoComplete="off"
 				onSubmit={e => {
 					e.preventDefault()
 					handleSaveChanges()
@@ -91,6 +92,7 @@ const EditProfileForm = props => {
 				<Input
 					type="password"
 					id="password"
+					autoComplete="off"
 					value={editData.password}
 					onChange={handleInputChange}
 					placeholder="Пароль"
@@ -98,6 +100,7 @@ const EditProfileForm = props => {
 				<Input
 					type="password"
 					id="newPassword"
+					autoComplete="new-password"
 					value={editData.newPassword}
 					onChange={handleInputChange}
 					pattern={PASSWORD_PATTERN}

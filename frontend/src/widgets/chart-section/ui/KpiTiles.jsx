@@ -19,7 +19,7 @@ const pluralDays = n => {
 }
 
 const KpiTiles = ({ kpis }) => {
-	const { total, avgIntensity, streak, overuseDays, overuseRisk } = kpis
+	const { total, avgIntensity, longestStreak = 0, overuseDays, overuseRisk } = kpis
 
 	const intensityFmt = avgIntensity > 0 ? avgIntensity.toFixed(1) : '—'
 	const intensityColr = avgIntensity > 0 ? intensityColor(Math.round(avgIntensity)) : null
@@ -44,9 +44,9 @@ const KpiTiles = ({ kpis }) => {
 			</div>
 
 			<div className={s.tile}>
-				<span className={s.label}>Серия без боли</span>
-				<span className={s.value}>{streak}</span>
-				<span className={s.sub}>{pluralDays(streak)} подряд</span>
+				<span className={s.label}>Макс. серия без приступов</span>
+				<span className={s.value}>{longestStreak}</span>
+				<span className={s.sub}>{pluralDays(longestStreak)} за период</span>
 			</div>
 
 			<div className={`${s.tile} ${overuseRisk ? s.tileWarn : ''}`}>

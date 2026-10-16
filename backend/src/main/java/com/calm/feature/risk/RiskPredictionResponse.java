@@ -16,9 +16,10 @@ public record RiskPredictionResponse(
 ) {
 	public record RiskInputs(
 			Integer weatherScore,
-			Double pressureHpa,
-			Double pressureDelta24h,
+			Double pressureMmHg,
+			Double pressureDelta24hMmHg,
 			Double humidity,
+			Double humidityDelta24h,
 			Double tempMin,
 			Double tempMax,
 			Double windKmhMax,

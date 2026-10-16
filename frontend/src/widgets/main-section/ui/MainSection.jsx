@@ -19,7 +19,9 @@ const MainSection = ({ user, onOpenLocationModal }) => {
 		if (typeof key !== 'string') return
 		const [y, m, d] = key.split('-').map(Number)
 		if (!y || !m || !d) return
-		setDate(midnight(new Date(y, m - 1, d)))
+		const requested = midnight(new Date(y, m - 1, d))
+		if (requested > midnight()) return
+		setDate(requested)
 		window.scrollTo({ top: 0, behavior: 'smooth' })
 	}), [])
 
@@ -27,8 +29,8 @@ const MainSection = ({ user, onOpenLocationModal }) => {
 		<main className={s.main}>
 			<h1 className={s.logo}>Calm</h1>
 
-			<DayBar date={date} setDate={setDate} city={user?.city} />
-			<DailyOutcome date={dateKey(date)} />
+			<DayBar date={date} setDate={setDate} city={user?.city} userId={user?.id} />
+			{dateKey(date) === dateKey(midnight()) && <DailyOutcome />}
 
 			<div className={s.grid}>
 				<div className={s.topRow}>

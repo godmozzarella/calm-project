@@ -1,8 +1,8 @@
 @use 'app/styles/globals.scss' as *;
 @use 'sass:color';
 
-$outline: rgba($contrast-color, .24);
-$muted-surface: rgba($fc-dark, .28);
+$outline: $quiet-line;
+$muted-surface: $quiet-surface;
 $type-caption: .75rem;
 $type-body: .875rem;
 $type-value: 1.125rem;
@@ -32,7 +32,6 @@ $type-result: 3rem;
 }
 
 .confidence {
-	border: 1px solid $outline;
 	border-radius: 2rem;
 	background: $muted-surface;
 	color: $fc-main;
@@ -51,8 +50,7 @@ $type-result: 3rem;
 }
 
 .stale {
-	border: 1px solid rgba($warning-color, .45);
-	background: rgba($warning-color, .1);
+	background: $quiet-surface;
 	border-radius: .75rem;
 	padding: .75rem 1rem;
 	color: $fc-main;
@@ -82,12 +80,12 @@ $type-result: 3rem;
 	cursor: pointer;
 	transition: border-color .16s ease, background .16s ease;
 
-	&:hover { border-color: $contrast-color; }
+	&:hover { background: $quiet-surface-raised; }
 	&:focus-visible { outline: 3px solid $contrast-color; outline-offset: 3px; }
 	&.selected {
-		border: 2px solid var(--risk);
-		padding: calc(.75rem - 1px);
-		background: color-mix(in srgb, var(--risk) 12%, #{$block-color});
+		border-color: $outline;
+		background: $quiet-surface-raised;
+		box-shadow: inset 0 -3px 0 var(--risk);
 	}
 }
 
@@ -108,7 +106,7 @@ $type-result: 3rem;
 	small { font-size: $type-caption; color: $fc-secondary; margin-left: .2rem; }
 }
 .dayLevel { font-size: $type-caption; font-weight: $fw-semibold; color: var(--risk); margin-top: .25rem; }
-.day.level_HIGH .dayScore, .day.level_HIGH .dayLevel { color: color.mix($fc-main, $error-color, 60%); }
+.day.level_HIGH .dayScore, .day.level_HIGH .dayLevel { color: color-mix(in srgb, var(--fc-main) 60%, var(--error-color)); }
 .dayPressure { margin-top: auto; padding-top: .5rem; }
 
 .summaryGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
@@ -118,19 +116,15 @@ $type-result: 3rem;
 .scoreLine strong { font-size: $type-result; line-height: 1; font-weight: $fw-semibold; font-variant-numeric: tabular-nums; }
 .scoreLine span { color: $fc-secondary; font-size: $type-caption; }
 .scoreLine b { color: var(--risk); font-size: $type-body; font-weight: $fw-semibold; margin-left: .4rem; }
-.level_HIGH .scoreLine b { color: color.mix($fc-main, $error-color, 60%); }
+.level_HIGH .scoreLine b { color: color-mix(in srgb, var(--fc-main) 60%, var(--error-color)); }
 
 .scaleTrack {
 	position: relative;
-	display: grid;
-	grid-template-columns: 35fr 30fr 35fr;
-	gap: .25rem;
-	height: .625rem;
-	span { border-radius: .3rem; }
-	span:nth-child(1) { background: $success-color; }
-	span:nth-child(2) { background: $warning-color; }
-	span:nth-child(3) { background: $error-color; }
-	i { position: absolute; top: -.3rem; bottom: -.3rem; width: .25rem; background: $fc-main; border-radius: .25rem; transform: translateX(-50%); box-shadow: 0 0 0 2px $fc-dark; }
+	height: .5rem;
+	border-radius: 1rem;
+	background: $muted-surface;
+	.scaleFill { display: block; height: 100%; border-radius: inherit; background: color-mix(in srgb, var(--contrast-color) 72%, transparent); }
+	i { position: absolute; top: -.2rem; bottom: -.2rem; width: .125rem; border-radius: .125rem; background: $fc-contrast; transform: translateX(-50%); }
 }
 .scaleLabels { display: flex; justify-content: space-between; gap: .5rem; color: $fc-secondary; font-size: $type-caption; margin-top: .45rem; }
 .conclusion { font-size: $type-body; line-height: 1.45; margin-top: 1rem; }
@@ -144,16 +138,14 @@ $type-result: 3rem;
 .factorHead { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; }
 .factorHead strong { font-size: $type-body; font-weight: $fw-semibold; }
 .factorHead b { font-size: $type-caption; color: var(--factor-color); font-weight: $fw-semibold; }
-.factorStrong .factorHead b { color: color.mix($fc-main, $error-color, 60%); }
-.factorNoticeable .factorHead b { color: color.mix($fc-main, $contrast-color, 10%); }
+.factorStrong .factorHead b { color: color-mix(in srgb, var(--fc-main) 60%, var(--error-color)); }
+.factorNoticeable .factorHead b { color: color-mix(in srgb, var(--fc-main) 10%, var(--contrast-color)); }
 .factorTrack { height: .5rem; width: 100%; border-radius: 1rem; background: $muted-surface; margin: .5rem 0 .35rem; overflow: hidden; }
 .factorTrack span { display: block; height: 100%; border-radius: inherit; background: var(--factor-color); }
 .factor p { color: $fc-secondary; font-size: $type-caption; line-height: 1.4; }
 .lowData { margin-top: 1.25rem; padding: 1rem; border-radius: .875rem; border: 1px solid $outline; background: $muted-surface; line-height: 1.4; }
 .lowData p { margin-bottom: .75rem; }
-.action { color: $fc-main; background: rgba($contrast-color, .15); border: 1px solid $contrast-color; border-radius: .7rem; padding: .65rem .9rem; min-height: 44px; cursor: pointer; font-size: $type-caption; }
-.action:hover { background: rgba($contrast-color, .25); }
-.action:focus-visible { outline: 3px solid $contrast-color; outline-offset: 3px; }
+.action { @include contrast-button; min-height: 44px; font-size: $type-caption; }
 
 .weatherGrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem; margin-top: 1.25rem; }
 .weatherTile { background: $muted-surface; border: 1px solid $outline; border-radius: .875rem; padding: .75rem; min-width: 0; display: flex; flex-direction: column; gap: .35rem; }
@@ -166,7 +158,7 @@ $type-result: 3rem;
 
 .advice { list-style: none; counter-reset: tips; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; margin-top: 1.25rem; }
 .advice li { counter-increment: tips; display: flex; align-items: flex-start; gap: .75rem; line-height: 1.45; }
-.advice li::before { content: counter(tips); display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: rgba($contrast-color, .18); color: $fc-main; border: 1px solid $contrast-color; font-size: $type-caption; font-weight: $fw-semibold; flex: 0 0 auto; }
+.advice li::before { content: counter(tips); display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: $quiet-surface-raised; color: $fc-contrast; font-size: $type-caption; font-weight: $fw-semibold; flex: 0 0 auto; }
 
 @media (max-width: 1023px) {
 	.summaryGrid { grid-template-columns: 1fr; }

@@ -1,0 +1,7 @@
+@use 'app/styles/globals.scss' as *;
+
+.page { max-width: 32.5rem; margin: 10vh auto; padding: 1.5rem; color: $fc-main; }
+.page h1 { font-size: 1.5rem; margin: 0 0 1.25rem; }
+.status { padding: .9rem 1rem; border-radius: .75rem; background: $quiet-surface; line-height: 1.5; }
+.help { color: $fc-secondary; line-height: 1.5; margin: 1rem 0; }
+.link { display: inline-block; color: $fc-contrast; margin-top: 1rem; }

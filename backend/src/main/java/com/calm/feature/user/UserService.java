@@ -61,9 +61,10 @@ public class UserService {
 			}
 			user.setEmail(newEmail);
 			user.setEmailVerified(false);
-			user.setEmailVerificationTokenHash(null);
+			user.setEmailVerificationCodeHash(null);
 			user.setEmailVerificationExpiresAt(null);
 			user.setEmailVerificationSentAt(null);
+			user.setEmailVerificationAttempts(0);
 		}
 
 		if (req.newPassword() != null) {
@@ -82,6 +83,9 @@ public class UserService {
 			if (req.city() != null) user.setCity(req.city());
 		}
 		if (req.notificationsEnabled() != null) {
+			if (req.notificationsEnabled() && !user.isEmailVerified()) {
+				throw new ConflictException("Сначала подтвердите email, чтобы включить уведомления");
+			}
 			user.setNotificationsEnabled(req.notificationsEnabled());
 		}
 

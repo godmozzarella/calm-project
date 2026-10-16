@@ -12,8 +12,8 @@
 	flex-direction: column;
 	gap: 0.25rem;
 	padding: 0.875rem 1rem;
-	background: rgba(23, 25, 29, 0.5);
-	border: 1px solid rgba(255, 255, 255, 0.05);
+	background: $quiet-surface;
+	border: 1px solid $quiet-line;
 	border-radius: 0.875rem;
 	min-width: 0;
 	transition: border-color 0.18s ease, background-color 0.18s ease;
@@ -42,8 +42,7 @@
 }
 
 .tileWarn {
-	background: rgba(239, 68, 68, 0.08);
-	border-color: rgba(239, 68, 68, 0.35);
+	background: $quiet-surface-raised;
 
 	.value { color: $error-color; }
 	.sub   { color: rgba(252, 165, 165, 0.85); }

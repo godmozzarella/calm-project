@@ -49,15 +49,24 @@ class FirstReleaseFlowTest {
 		mvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content(loginRequest))
 				.andExpect(status().isOk()).andExpect(jsonPath("$.user.role").value("USER"));
 
+		verifyNoInteractions(email);
+		mvc.perform(patch("/users/me").header("Authorization", "Bearer " + firstToken)
+				.contentType(MediaType.APPLICATION_JSON).content("{\"notificationsEnabled\":true}"))
+				.andExpect(status().isConflict());
+		mvc.perform(post("/auth/send-verification-code").header("Authorization", "Bearer " + firstToken))
+				.andExpect(status().isNoContent());
 		var emailHtml = org.mockito.ArgumentCaptor.forClass(String.class);
 		verify(email).send(eq(firstEmail), any(), emailHtml.capture());
-		Matcher link = Pattern.compile("#token=([A-Za-z0-9_-]{43})").matcher(emailHtml.getValue());
-		assertThat(link.find()).isTrue();
-		mvc.perform(post("/auth/verify-email").contentType(MediaType.APPLICATION_JSON)
-				.content("{\"token\":\"" + link.group(1) + "\"}"))
+		Matcher code = Pattern.compile("<strong>(\\d{4})</strong>").matcher(emailHtml.getValue());
+		assertThat(code.find()).isTrue();
+		mvc.perform(post("/auth/verify-email").header("Authorization", "Bearer " + firstToken)
+				.contentType(MediaType.APPLICATION_JSON).content("{\"code\":\"" + code.group(1) + "\"}"))
 				.andExpect(status().isNoContent());
 		mvc.perform(get("/users/me").header("Authorization", "Bearer " + firstToken))
 				.andExpect(status().isOk()).andExpect(jsonPath("$.emailVerified").value(true));
+		mvc.perform(patch("/users/me").header("Authorization", "Bearer " + firstToken)
+				.contentType(MediaType.APPLICATION_JSON).content("{\"notificationsEnabled\":true}"))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.notificationsEnabled").value(true));
 
 		String attackBody = """
 				{"startDate":"2026-05-25","startTime":"10:00","endDate":"2026-05-25",

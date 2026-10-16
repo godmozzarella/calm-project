@@ -104,7 +104,7 @@
   const now = new Date()
   const todayByZone = new Map()
   const latestByUserDay = new Map()
-  const attackDays = new Set()
+  const attacksByUser = new Map()
   const noAttackDays = new Set()
 
   if (userIds.length > 0) {
@@ -113,9 +113,13 @@
       const key = dateKey(outcome.date)
       if (key) noAttackDays.add(`${outcome.userId}\u001f${key}`)
     }
-    for (const attack of source.attacks.find({ userId: { $in: userIds } }, { userId: 1, startDate: 1 }).toArray()) {
-      const key = dateKey(attack.startDate)
-      if (key) attackDays.add(`${attack.userId}\u001f${key}`)
+    for (const attack of source.attacks.find({ userId: { $in: userIds } },
+      { userId: 1, startDate: 1, endDate: 1, ongoing: 1 }).toArray()) {
+      const start = dateKey(attack.startDate)
+      if (!start) continue
+      const end = dateKey(attack.endDate) ?? (attack.ongoing ? null : start)
+      if (!attacksByUser.has(attack.userId)) attacksByUser.set(attack.userId, [])
+      attacksByUser.get(attack.userId).push({ start, end })
     }
 
     const predictions = source.risk_prediction_records.find({ userId: { $in: userIds } }).toArray()
@@ -151,6 +155,43 @@
         latestByUserDay.set(key, { prediction, day, issuedAt, userId: prediction.userId })
       }
     }
+
+    // Add automatic inputs even when the user never opened the forecast screen.
+    phase = 'select automatically captured inputs'
+    const snapshots = source.risk_training_input_snapshots.find({ userId: { $in: userIds } }).toArray()
+    for (const snapshot of snapshots) {
+      const day = dateKey(snapshot.targetDate)
+      if (!day || !snapshot.capturedAt || !snapshot.timezone ||
+          snapshot.featureSchemaVersion !== featureSchemaVersion ||
+          snapshot.scoringVersion !== scoringVersion ||
+          !validHistoryFeatures(snapshot.features)) continue
+      let today = todayByZone.get(snapshot.timezone)
+      if (!today) {
+        try {
+          today = localDateKey(now, snapshot.timezone)
+          todayByZone.set(snapshot.timezone, today)
+        } catch (_) { continue }
+      }
+      if (day >= today) continue
+      let dayStart
+      try { dayStart = localDayStart(day, snapshot.timezone) }
+      catch (_) { continue }
+      const capturedAt = new Date(snapshot.capturedAt)
+      if (Number.isNaN(capturedAt.getTime()) || capturedAt >= dayStart) continue
+      const key = `${snapshot.userId}\u001f${day}`
+      const previous = latestByUserDay.get(key)
+      if (previous && previous.issuedAt >= capturedAt) continue
+      latestByUserDay.set(key, {
+        userId: snapshot.userId, day, issuedAt: capturedAt,
+        prediction: {
+          score: snapshot.baselineScore,
+          level: snapshot.baselineLevel,
+          scoringVersion: snapshot.scoringVersion,
+          featureSchemaVersion: snapshot.featureSchemaVersion,
+          features: snapshot.features,
+        },
+      })
+    }
   }
 
   const examples = []
@@ -158,8 +199,9 @@
   const includedParticipants = new Set()
   for (const { prediction, day, userId } of latestByUserDay.values()) {
     const key = `${userId}\u001f${day}`
-    const attackStarted = attackDays.has(key)
-    if (!attackStarted && !noAttackDays.has(key)) continue
+    const attackCount = (attacksByUser.get(userId) ?? [])
+      .filter(attack => attack.start <= day && (attack.end == null || attack.end >= day)).length
+    if (attackCount === 0 && !noAttackDays.has(key)) continue
 
     const features = prediction.features
     examples.push({
@@ -167,7 +209,9 @@
       generation: null,
       participantKey: participantKey(userId),
       targetDate: day,
-      outcome: attackStarted ? 1 : 0,
+      outcome: attackCount > 0 ? 1 : 0,
+      outcomeDefinition: 'attack-present-anytime-v1',
+      attackCount,
       baselineScore: prediction.score,
       baselineLevel: prediction.level,
       scoringVersion: prediction.scoringVersion,
@@ -220,10 +264,11 @@
     consentDigest,
     featureSchemaVersion,
     scoringVersion,
+    outcomeDefinition: 'attack-present-anytime-v1',
     exampleCount: examples.length,
     participantCount: includedParticipants.size,
-    outcomeDays: { attackStarted: examples.filter(e => e.outcome === 1).length,
-      noAttackStarted: examples.filter(e => e.outcome === 0).length },
+    outcomeDays: { attackPresent: examples.filter(e => e.outcome === 1).length,
+      noAttack: examples.filter(e => e.outcome === 0).length },
   }, { upsert: true })
 
   // Publish the completed generation first; remove rows and offline artifacts built from old data.

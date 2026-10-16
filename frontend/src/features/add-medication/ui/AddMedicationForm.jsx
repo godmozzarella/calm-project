@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { MEDICATION_PRESETS } from '@/entities/medication'
-import { ATTACK_TYPE_LABELS } from '@/entities/attack'
+import { formatAttackTime, getAttackTypeLabel } from '@/entities/attack'
 import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
+import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 import { useDictionaries } from '@/shared/lib/dictionaries'
 import {
 	MedicationIcon,
@@ -114,6 +115,7 @@ const StepSelect = ({ selected, isSelected, toggleItem, clearSelection, editing 
 										key={`${group.category}-${item.name}`}
 										className={`${s.chip} ${isSelected(fullItem) ? s.chipActive : ''}`}
 										onClick={() => toggleItem(fullItem)}
+									aria-pressed={isSelected(fullItem)}
 										type="button"
 									>
 										{item.name}
@@ -215,8 +217,8 @@ const StepMeta = ({ meta, attacks, setMetaField }) => (
 					<option value="">— не привязывать —</option>
 					{attacks.map(a => (
 						<option key={a.id} value={a.id}>
-							{a.startDate} {a.startTime}{a.endTime ? ` — ${a.endTime}` : a.ongoing ? ' — продолжается' : ''}
-							{' · '}{ATTACK_TYPE_LABELS[a.type]}
+							{a.startDate} {formatAttackTime(a.startTime)}{a.endTime ? ` — ${formatAttackTime(a.endTime)}` : a.ongoing ? ' — продолжается' : ''}
+							{' · '}{getAttackTypeLabel(a.type)}
 							{' · '}{a.intensity}/10
 						</option>
 					))}
@@ -272,7 +274,7 @@ const AddMedicationForm = ({
 				</div>
 
 				<div className={s.body}>
-					{error && <p className={s.error}>{error}</p>}
+					<ErrorNotice message={error} title="Не удалось сохранить препарат" />
 
 					{step === 1 && (
 						<StepSelect

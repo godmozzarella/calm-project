@@ -28,6 +28,7 @@ const makeExamples = (participantCount, daysPerParticipant = 10) => Array.from(
 			participantKey,
 			targetDate: new Date(Date.UTC(2026, 0, 1 + dayIndex)).toISOString().slice(0, 10),
 			outcome,
+			outcomeDefinition: 'attack-present-anytime-v1',
 			baselineScore: outcome ? 15 : 75,
 			baselineLevel: outcome ? 'LOW' : 'HIGH',
 			scoringVersion: 'personal-rules-v1',
@@ -48,7 +49,7 @@ const makeCollection = rows => ({
 
 const evaluate = (rows, { generatedAt = new Date(), withdrawnUser = null,
 	consentVersion = 'shared-model-pilot-v1', featureSchemaVersion = 2,
-	scoringVersion = 'personal-rules-v1' } = {}) => {
+	scoringVersion = 'personal-rules-v1', outcomeDefinition = 'attack-present-anytime-v1' } = {}) => {
 	const candidates = makeCollection([])
 	const evaluations = makeCollection([])
 	const liveModels = makeCollection([{ _id: 'active', version: 'unchanged' }])
@@ -74,7 +75,8 @@ const evaluate = (rows, { generatedAt = new Date(), withdrawnUser = null,
 		db: {
 			getName: () => 'calm_risk_training',
 			export_metadata: makeCollection([{ _id: 'active', generation: 'active-generation', generatedAt,
-				consentVersion, consentDigest: 'a'.repeat(64), featureSchemaVersion, scoringVersion }]),
+				consentVersion, consentDigest: 'a'.repeat(64), featureSchemaVersion, scoringVersion,
+				outcomeDefinition }]),
 			training_examples: makeCollection(rows),
 			risk_model_candidates: candidates,
 			risk_model_evaluations: evaluations,
@@ -134,6 +136,7 @@ test('refuses an export from another consent or feature version', () => {
 		{ consentVersion: 'old-consent' },
 		{ featureSchemaVersion: 0 },
 		{ scoringVersion: 'old-rules' },
+		{ outcomeDefinition: 'attack-starts-only-v1' },
 	]) {
 		assert.throws(() => evaluate(makeExamples(30), options), /incompatible/)
 	}

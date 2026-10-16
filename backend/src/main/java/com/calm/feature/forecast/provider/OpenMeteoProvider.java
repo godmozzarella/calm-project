@@ -104,12 +104,16 @@ public class OpenMeteoProvider implements WeatherProvider {
 			Double pressureDelta = pressureAvg != null
 					? deltaVsPreviousDay(hourlyTimes, hourlyPressure, date, pressureAvg)
 					: null;
+			Double humidityDelta = humidityAvg != null
+					? deltaVsPreviousDay(hourlyTimes, hourlyHumidity, date, humidityAvg)
+					: null;
 
 			result.add(new RawForecastDay(
 					date,
 					pressureAvg,
 					pressureDelta,
 					humidityAvg,
+					humidityDelta,
 					getOrNull(dailyTempMin, i),
 					getOrNull(dailyTempMax, i),
 					getOrNull(dailyWindGusts, i),

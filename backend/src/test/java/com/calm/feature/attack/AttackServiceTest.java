@@ -2,6 +2,8 @@ package com.calm.feature.attack;
 
 import com.calm.common.exception.NotFoundException;
 import com.calm.feature.attack.dto.AttackRequest;
+import com.calm.feature.risk.DailyOutcome;
+import com.calm.feature.risk.DailyOutcomeRepository;
 import org.springframework.web.server.ResponseStatusException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -84,6 +88,25 @@ class AttackServiceTest {
 		assertThat(saved.isOngoing()).isTrue();
 		assertThat(saved.getEndDate()).isNull();
 		assertThat(saved.getEndTime()).isNull();
+	}
+
+	@Test
+	void create_clearsQuietConfirmationsAcrossAttackInterval() {
+		var outcomes = mock(DailyOutcomeRepository.class);
+		var withOutcomes = new AttackService(repo, outcomes);
+		var start = LocalDate.of(2026, 5, 25);
+		var end = start.plusDays(2);
+		var spanning = new AttackRequest(start, LocalTime.of(10, 0), end, LocalTime.of(11, 0),
+				false, 5, AttackType.PRESSING, null, null, null, null);
+		when(repo.save(any(Attack.class))).thenAnswer(inv -> inv.getArgument(0));
+		when(outcomes.findByUserIdAndDateBetween("user-1", start, end)).thenReturn(List.of(
+				new DailyOutcome("user-1", start, Instant.now()),
+				new DailyOutcome("user-1", start.plusDays(1), Instant.now()),
+				new DailyOutcome("user-1", end, Instant.now())));
+		withOutcomes.create("user-1", spanning);
+		verify(outcomes).deleteByUserIdAndDate("user-1", start);
+		verify(outcomes).deleteByUserIdAndDate("user-1", start.plusDays(1));
+		verify(outcomes).deleteByUserIdAndDate("user-1", end);
 	}
 
 	@Test

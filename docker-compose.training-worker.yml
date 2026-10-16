@@ -12,6 +12,7 @@ services:
       CALM_TRAINING_INTERVAL_SECONDS: "300"
     volumes:
       - ./backend/scripts/export-shared-risk-training.js:/scripts/export-shared-risk-training.js:ro
+      - ./backend/scripts/inspect-shared-risk-data.js:/scripts/inspect-shared-risk-data.js:ro
       - ./backend/scripts/run-shared-risk-export-loop.sh:/scripts/run-shared-risk-export-loop.sh:ro
       - ./backend/scripts/health-shared-risk-export.sh:/scripts/health-shared-risk-export.sh:ro
     entrypoint: ["/bin/sh", "/scripts/run-shared-risk-export-loop.sh"]

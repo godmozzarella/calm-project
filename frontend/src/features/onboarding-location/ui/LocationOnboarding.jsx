@@ -6,11 +6,12 @@ import { CloseIcon, LocationOnIcon, SearchIcon } from '@/shared/ui/icons'
 import { useLocationOnboarding } from '../model/useLocationOnboarding'
 
 import s from './LocationOnboarding.module.scss'
+import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 
 const LocationOnboarding = ({ open, onClose, setUser }) => {
 	const {
 		results, searching, saving, geoLocating, error,
-		search, useGeolocation, save,
+		search, useGeolocation: locateByBrowser, save,
 	} = useLocationOnboarding({ setUser })
 
 	const [draft, setDraft] = useState('')
@@ -20,16 +21,16 @@ const LocationOnboarding = ({ open, onClose, setUser }) => {
 		if (!open) return
 		const id = setTimeout(() => search(draft), 350)
 		return () => clearTimeout(id)
-	}, [draft, open])
+	}, [draft, open, search])
 
 	if (!open) return null
 
 	const handleGeo = async () => {
 		try {
-			const loc = await useGeolocation()
+			const loc = await locateByBrowser()
 			await save(loc)
 			onClose?.()
-		} catch {}
+		} catch { /* The onboarding form shows the error from its state. */ }
 	}
 
 	const handlePick = async candidate => {
@@ -41,7 +42,7 @@ const LocationOnboarding = ({ open, onClose, setUser }) => {
 				country: candidate.country,
 			})
 			onClose?.()
-		} catch {}
+		} catch { /* The onboarding form shows the error from its state. */ }
 	}
 
 	return (
@@ -110,7 +111,7 @@ const LocationOnboarding = ({ open, onClose, setUser }) => {
 					</ul>
 				)}
 
-				{error && <p className={s.error}>{error}</p>}
+				<ErrorNotice message={error} title="Не удалось определить город" />
 				{saving && <p className={s.hint}>Сохраняем...</p>}
 
 				<button type="button" className={s.skipBtn} onClick={onClose}>
