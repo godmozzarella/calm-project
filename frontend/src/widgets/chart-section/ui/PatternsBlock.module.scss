@@ -12,8 +12,8 @@
 	flex-direction: column;
 	gap: 0.75rem;
 	padding: 1rem 1.125rem;
-	background: rgba(23, 25, 29, 0.5);
-	border: 1px solid rgba(255, 255, 255, 0.05);
+	background: $quiet-surface;
+	border: 1px solid $quiet-line;
 	border-radius: 0.875rem;
 	min-width: 0;
 }
@@ -191,7 +191,7 @@
 	font-weight: $fw-semibold;
 	padding: 0.2rem 0.55rem;
 	border-radius: 2rem;
-	border: 1px solid;
+	background: $quiet-surface-raised;
 	white-space: nowrap;
 }
 

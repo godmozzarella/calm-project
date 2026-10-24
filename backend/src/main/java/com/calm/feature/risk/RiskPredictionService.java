@@ -15,6 +15,7 @@ import com.calm.feature.user.User;
 import com.calm.feature.user.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -36,7 +37,8 @@ public class RiskPredictionService {
 
 	private static final int MIN_HISTORY_DAYS_FOR_PERSONAL = 30;
 	private static final int MIN_ATTACK_DAYS_FOR_PERSONAL = 5;
-	private static final int FEATURE_SCHEMA_VERSION = 2;
+	private static final int FEATURE_SCHEMA_VERSION = 3;
+	private static final int TRAINING_SCHEMA_VERSION = 3;
 	private static final String SCORING_VERSION = "personal-rules-v1";
 	private static final int MOH_THRESHOLD_TRIPTAN_OPIOID = 10;
 	private static final int MOH_THRESHOLD_SIMPLE_NSAID = 15;
@@ -48,6 +50,8 @@ public class RiskPredictionService {
 	private final ForecastSnapshotService snapshotService;
 	private final ForecastService forecastService;
 	private final RiskPredictionRecordRepository predictionRecordRepo;
+	private final RiskTrainingInputSnapshotRepository trainingInputRepo;
+	private final SharedModelParticipationRepository participationRepo;
 
 	public RiskPredictionService(
 			UserRepository userRepo,
@@ -56,7 +60,9 @@ public class RiskPredictionService {
 			DictionaryRepository dictionaryRepo,
 			ForecastSnapshotService snapshotService,
 			ForecastService forecastService,
-			RiskPredictionRecordRepository predictionRecordRepo) {
+			RiskPredictionRecordRepository predictionRecordRepo,
+			RiskTrainingInputSnapshotRepository trainingInputRepo,
+			SharedModelParticipationRepository participationRepo) {
 		this.userRepo = userRepo;
 		this.attackRepo = attackRepo;
 		this.medicationRepo = medicationRepo;
@@ -64,6 +70,8 @@ public class RiskPredictionService {
 		this.snapshotService = snapshotService;
 		this.forecastService = forecastService;
 		this.predictionRecordRepo = predictionRecordRepo;
+		this.trainingInputRepo = trainingInputRepo;
+		this.participationRepo = participationRepo;
 	}
 
 	public RiskPredictionResponse predictToday(String userId) {
@@ -81,6 +89,15 @@ public class RiskPredictionService {
 	}
 
 	public RiskPredictionResponse predict(String userId, LocalDate date) {
+		return predict(userId, date, true);
+	}
+
+	/** Автоматический сбор входов без сохранения пользовательского просмотра прогноза. */
+	public void captureTrainingInput(String userId, LocalDate date) {
+		predict(userId, date, false);
+	}
+
+	private RiskPredictionResponse predict(String userId, LocalDate date, boolean recordUserPrediction) {
 		User user = userRepo.findById(userId).orElse(null);
 		if (user == null || user.getLatitude() == null || user.getLongitude() == null) {
 			return unavailable(date, "Укажи город, чтобы рассчитать персональный риск.");
@@ -149,9 +166,10 @@ public class RiskPredictionService {
 				personalFactors,
 				new RiskPredictionResponse.RiskInputs(
 						w.score(),
-						w.pressureHpa(),
-						w.pressureDelta24h(),
+						w.pressureMmHg(),
+						w.pressureDelta24hMmHg(),
 						w.humidity(),
+						w.humidityDelta24h(),
 						w.tempMin(),
 						w.tempMax(),
 						w.windKmhMax(),
@@ -164,8 +182,41 @@ public class RiskPredictionService {
 						personal.historyAttackDays()
 				)
 		);
-		recordFuturePrediction(userId, date, w.timezone(), result, historyAttacks);
+		captureTrainingSnapshot(user, date, w.timezone(), result, historyAttacks, recentMeds);
+		if (recordUserPrediction) recordFuturePrediction(userId, date, w.timezone(), result, historyAttacks);
 		return result;
+	}
+
+	private void captureTrainingSnapshot(User user, LocalDate date, String timezone,
+			RiskPredictionResponse result, List<Attack> historyAttacks, List<Medication> recentMeds) {
+		if (timezone == null || timezone.isBlank()) return;
+		boolean consented = participationRepo.findByUserId(user.getId())
+				.filter(p -> p.isParticipating() && !p.isAdminBlocked()
+						&& SharedModelConsentPolicy.VERSION.equals(p.getConsentVersion())
+						&& SharedModelConsentPolicy.DIGEST.equals(p.getConsentDigest()))
+				.isPresent();
+		if (!consented) return;
+		Optional<RiskTrainingInputSnapshot> previous = trainingInputRepo.findByUserIdAndTargetDate(user.getId(), date);
+		if (previous.filter(snapshot -> snapshot.getFeatureSchemaVersion() >= TRAINING_SCHEMA_VERSION).isPresent()) return;
+		try {
+			ZoneId zone = ZoneId.of(timezone);
+			Instant capturedAt = Instant.now();
+			LocalDate captureDate = LocalDate.ofInstant(capturedAt, zone);
+			if (!date.equals(captureDate.plusDays(1))) return;
+			RiskHistoryFeatures history = RiskHistoryFeatures.from(historyAttacks, date,
+					captureDate);
+			RiskTrainingInputSnapshot snapshot = new RiskTrainingInputSnapshot(user.getId(), date, capturedAt,
+					timezone, ForecastSnapshot.makeLocationKey(user.getLatitude(), user.getLongitude()),
+					result.score(), result.level(), TRAINING_SCHEMA_VERSION, SCORING_VERSION,
+					RiskFeatureSnapshot.from(result.inputs(), history),
+					TrainingHistoryDetails.from(historyAttacks, recentMeds, date, captureDate));
+			previous.ifPresent(old -> snapshot.setId(old.getId()));
+			trainingInputRepo.save(snapshot);
+		} catch (DuplicateKeyException ignored) {
+			// Другой запрос уже сохранил первый снимок до начала дня.
+		} catch (RuntimeException e) {
+			log.warn("Не удалось сохранить входы для обучения, date={}: {}", date, e.getMessage());
+		}
 	}
 
 	private void recordFuturePrediction(String userId, LocalDate date, String timezone,
@@ -216,11 +267,11 @@ public class RiskPredictionService {
 
 		int modifier = 0;
 		modifier += compareFactor(
-				current.pressureDelta24h() == null ? null : Math.abs(current.pressureDelta24h()),
+				current.pressureDelta24hMmHg() == null ? null : Math.abs(current.pressureDelta24hMmHg()),
 				snapshots,
 				attackDays,
-				s -> s.getPressureDelta24h() == null ? null : Math.abs(s.getPressureDelta24h()),
-				1.5,
+				s -> s.getPressureDelta24hMmHg() == null ? null : Math.abs(s.getPressureDelta24hMmHg()),
+				1.125,
 				"У тебя приступы чаще совпадали с резкими перепадами давления",
 				personalFactors);
 		modifier += compareFactor(
@@ -341,7 +392,7 @@ public class RiskPredictionService {
 				message,
 				List.of(),
 				List.of(),
-				new RiskPredictionResponse.RiskInputs(null, null, null, null, null, null, null, null,
+				new RiskPredictionResponse.RiskInputs(null, null, null, null, null, null, null, null, null,
 						0, 0, 0, false, 0, 0)
 		);
 	}
@@ -372,9 +423,10 @@ public class RiskPredictionService {
 	private record WeatherDay(
 			LocalDate date,
 			int score,
-			Double pressureHpa,
-			Double pressureDelta24h,
+			Double pressureMmHg,
+			Double pressureDelta24hMmHg,
 			Double humidity,
+			Double humidityDelta24h,
 			Double tempMin,
 			Double tempMax,
 			Double windKmhMax,
@@ -382,13 +434,14 @@ public class RiskPredictionService {
 			String timezone
 	) {
 		static WeatherDay from(ForecastDayDto day) {
-			return new WeatherDay(day.date(), day.score(), day.pressureHpa(), day.pressureDelta24h(),
-					day.humidity(), day.tempMin(), day.tempMax(), day.windKmhMax(), day.kpIndex(), day.timezone());
+			return new WeatherDay(day.date(), day.score(), day.pressureMmHg(), day.pressureDelta24hMmHg(),
+					day.humidity(), day.humidityDelta24h(), day.tempMin(), day.tempMax(), day.windKmhMax(), day.kpIndex(), day.timezone());
 		}
 
 		static WeatherDay from(ForecastSnapshot snap) {
-			return new WeatherDay(snap.getDate(), snap.getScore(), snap.getPressureHpa(), snap.getPressureDelta24h(),
-				snap.getHumidity(), snap.getTempMin(), snap.getTempMax(), snap.getWindKmhMax(), snap.getKpIndex(), snap.getTimezone());
+			return new WeatherDay(snap.getDate(), snap.getScore(), snap.getPressureMmHg(), snap.getPressureDelta24hMmHg(),
+				snap.getHumidity(), snap.getHumidityDelta24h(), snap.getTempMin(), snap.getTempMax(),
+				snap.getWindKmhMax(), snap.getKpIndex(), snap.getTimezone());
 		}
 	}
 }

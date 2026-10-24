@@ -17,8 +17,10 @@ frontend/*.local
 
 # Backend artifacts
 backend/target/
+backend/scripts/__pycache__/
 backend/.mvn/wrapper/maven-wrapper.jar
 backend/HELP.md
+/backend/generated/risk-training/shared-risk-training.csv
 
 # Secrets / env
 .env

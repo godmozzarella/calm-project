@@ -1,8 +1,8 @@
 @use 'app/styles/globals.scss' as *;
 
 .card {
-	background: rgba(0, 0, 0, 0.18);
-	border: 1px solid rgba(255, 255, 255, 0.05);
+	background: $quiet-surface;
+	border: 1px solid $quiet-line;
 	border-radius: 0.875rem;
 	padding: 1.125rem;
 	display: flex;
@@ -35,14 +35,13 @@
 	flex-direction: column;
 	gap: 0.15rem;
 	padding: 0.625rem 0.75rem;
-	background: rgba(255, 255, 255, 0.02);
-	border: 1px solid rgba(255, 255, 255, 0.05);
+	background: $quiet-surface-raised;
+	border: 1px solid $quiet-line;
 	border-radius: 0.625rem;
 }
 
 .metricWarn {
-	border-color: rgba(199, 152, 100, 0.35);
-	background: rgba(199, 152, 100, 0.06);
+	background: $quiet-surface-raised;
 
 	.metricValue { color: #c79864; }
 }
@@ -73,8 +72,7 @@
 	line-height: 1.45;
 	margin: 0;
 	padding: 0.6rem 0.75rem;
-	background: rgba(199, 152, 100, 0.08);
-	border-left: 3px solid rgba(199, 152, 100, 0.5);
+	background: $quiet-surface-raised;
 	border-radius: 0.5rem;
 }
 

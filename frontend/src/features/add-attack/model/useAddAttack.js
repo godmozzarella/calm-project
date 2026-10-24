@@ -6,18 +6,21 @@ const now = () => {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
-const makeEmpty = date => ({
-  intensity: 5,
-  type: 'pulsating',
-  startDate: date,
-  startTime: now(),
-  endDate: date,
-  endTime: '',
-  ongoing: false,
-  symptoms: [],
-  triggers: [],
-  note: '',
-})
+const makeEmpty = date => {
+  const startTime = now()
+  return {
+    intensity: 5,
+    type: 'pulsating',
+    startDate: date,
+    startTime,
+    endDate: date,
+    endTime: startTime,
+    ongoing: false,
+    symptoms: [],
+    triggers: [],
+    note: '',
+  }
+}
 
 export const useAddAttack = ({ date, onSuccess }) => {
   const [open,    setOpen]    = useState(false)
@@ -33,7 +36,7 @@ export const useAddAttack = ({ date, onSuccess }) => {
     setWasOngoing(attack.ongoing)
     setForm({
       intensity: attack.intensity,
-      type: attack.type,
+      type: String(attack.type ?? '').toLowerCase(),
       startDate: attack.startDate,
       startTime: attack.startTime?.slice(0, 5) ?? '',
       endDate: attack.endDate ?? attack.startDate,

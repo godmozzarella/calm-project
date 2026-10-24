@@ -9,7 +9,7 @@
 	max-width: 1200px;
 	margin: 0 auto;
 	padding: .75rem 1rem;
-	border: 1px solid rgba($contrast-color, .2);
+	border: 1px solid $quiet-line;
 	border-radius: .875rem;
 	background: $block-color;
 	color: $fc-main;
@@ -25,22 +25,15 @@
 	span { color: $fc-secondary; }
 }
 
-.card button {
+.card button:not(.secondary) {
+	@include contrast-button;
 	flex: 0 0 auto;
-	min-height: 2.75rem;
-	padding: .55rem .85rem;
-	border: 1px solid $contrast-color;
-	border-radius: .65rem;
-	background: $contrast-color;
-	color: $fc-dark;
-	font: inherit;
-	font-weight: $fw-semibold;
-	cursor: pointer;
-	&:focus-visible { outline: 3px solid $fc-main; outline-offset: 2px; }
-	&:disabled { opacity: .6; cursor: wait; }
+	font-family: inherit;
+	font-size: inherit;
 }
 
 .card button.secondary {
+	&::after { content: none; }
 	background: transparent;
 	color: $fc-main;
 }

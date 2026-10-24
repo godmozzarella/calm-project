@@ -14,6 +14,8 @@ const Input = props => {
 		error,
 		hint,
 		rightElement,
+		autoComplete,
+		name,
 	} = props
 
 	const hasWrapper = label || error !== undefined || hint || rightElement
@@ -29,6 +31,8 @@ const Input = props => {
 				onChange={onChange}
 				pattern={pattern}
 				accept={accept}
+				autoComplete={autoComplete}
+				name={name}
 			/>
 			{rightElement && <div className={s.rightElement}>{rightElement}</div>}
 		</div>

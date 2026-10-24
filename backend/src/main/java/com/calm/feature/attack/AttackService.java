@@ -90,7 +90,13 @@ public class AttackService {
 
 	private void clearConflictingNegative(Attack attack) {
 		if (outcomeRepo != null && attack.getStartDate() != null) {
-			outcomeRepo.deleteByUserIdAndDate(attack.getUserId(), attack.getStartDate());
+			LocalDate through = attack.getEndDate() != null ? attack.getEndDate()
+					: attack.isOngoing() ? LocalDate.now() : attack.getStartDate();
+			if (through.isBefore(attack.getStartDate())) return;
+			outcomeRepo.findByUserIdAndDateBetween(attack.getUserId(), attack.getStartDate(), through)
+					.stream().map(com.calm.feature.risk.DailyOutcome::getDate)
+					.filter(attack::overlaps)
+					.forEach(day -> outcomeRepo.deleteByUserIdAndDate(attack.getUserId(), day));
 		}
 	}
 }

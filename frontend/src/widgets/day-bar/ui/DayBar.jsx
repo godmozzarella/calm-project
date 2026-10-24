@@ -1,4 +1,10 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import SpaOutlinedIcon from '@mui/icons-material/SpaOutlined'
 import { BackIcon, ChevronLeftIcon, ChevronRightIcon, LocationOnIcon } from '@/shared/ui/icons'
+import { statsApi } from '@/shared/api'
+import { subscribe, ATTACKS_CHANGED, OUTCOMES_CHANGED } from '@/shared/lib/dataEvents'
+import { midnight } from '../lib/date'
+import { streakIncrease, streakSnapshotKey } from '../lib/streakAnimation'
 
 import s from './DayBar.module.scss'
 
@@ -18,15 +24,6 @@ const MONTHS_SHORT = [
 	'янв', 'фев', 'мар', 'апр', 'май', 'июн',
 	'июл', 'авг', 'сен', 'окт', 'ноя', 'дек',
 ]
-
-export const midnight = (d = new Date()) => {
-	const copy = new Date(d)
-	copy.setHours(0, 0, 0, 0)
-	return copy
-}
-
-export const dateKey = d =>
-	`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 const diffDays = (a, b) =>
 	Math.round((b.getTime() - a.getTime()) / 86_400_000)
@@ -64,7 +61,52 @@ const isSameDay = (a, b) =>
 	a.getMonth() === b.getMonth() &&
 	a.getFullYear() === b.getFullYear()
 
-const DayBar = ({ date, setDate, city }) => {
+const DayBar = ({ date, setDate, city, userId }) => {
+	const [currentStreak, setCurrentStreak] = useState(0)
+	const [streakGain, setStreakGain] = useState(0)
+	const [streakInfoOpen, setStreakInfoOpen] = useState(false)
+	const animationTimer = useRef(null)
+	const streakRequest = useRef(0)
+	const streakPreviewApplied = useRef(false)
+	const loadStreak = useCallback(() => {
+		const request = ++streakRequest.current
+		statsApi.getSummary('month').then(data => {
+			if (request !== streakRequest.current) return
+			const count = data.kpis?.currentStreak ?? 0
+			let previewIncrease = false
+			if (!streakPreviewApplied.current) {
+				try {
+					previewIncrease = sessionStorage.getItem('calm_streak_preview') === '1'
+					if (previewIncrease) sessionStorage.removeItem('calm_streak_preview')
+				} catch { /* Preview is optional when browser storage is unavailable. */ }
+				streakPreviewApplied.current = true
+			}
+			setCurrentStreak(count + (previewIncrease ? 1 : 0))
+			if (!userId) return
+			const key = streakSnapshotKey(userId)
+			let previous = null
+			try {
+				previous = JSON.parse(localStorage.getItem(key) || 'null')
+			} catch { /* Ignore an unavailable or invalid previous snapshot. */ }
+			try { localStorage.setItem(key, JSON.stringify({ count })) } catch { /* Storage may be disabled. */ }
+			const increase = previewIncrease ? 1 : streakIncrease(previous, count)
+			window.clearTimeout(animationTimer.current)
+			setStreakGain(increase)
+			if (increase > 0) animationTimer.current = window.setTimeout(() => setStreakGain(0), 1600)
+		}).catch(() => {})
+	}, [userId])
+	useEffect(() => { loadStreak() }, [loadStreak])
+	useEffect(() => subscribe(ATTACKS_CHANGED, loadStreak), [loadStreak])
+	useEffect(() => subscribe(OUTCOMES_CHANGED, loadStreak), [loadStreak])
+	useEffect(() => () => window.clearTimeout(animationTimer.current), [])
+	useEffect(() => {
+		if (!streakInfoOpen) return undefined
+		const closeOnEscape = event => {
+			if (event.key === 'Escape') setStreakInfoOpen(false)
+		}
+		window.addEventListener('keydown', closeOnEscape)
+		return () => window.removeEventListener('keydown', closeOnEscape)
+	}, [streakInfoOpen])
 	const today = midnight()
 	const isToday = date.getTime() === today.getTime()
 	const label = relativeLabel(date)
@@ -106,6 +148,30 @@ const DayBar = ({ date, setDate, city }) => {
 					<button className={s.returnBtn} onClick={() => setDate(today)}>
 						<BackIcon style={{ fontSize: '1rem' }} /> к сегодня
 					</button>
+				)}
+			</div>
+
+			<div className={`${s.streak} ${streakGain ? s.streakIncreased : ''}`}>
+				<button
+					className={s.streakButton}
+					type="button"
+					title={`Серия без приступов: ${currentStreak} дн. подряд`}
+					aria-label={`Серия без приступов: ${currentStreak} дней. Открыть памятку`}
+					aria-expanded={streakInfoOpen}
+					aria-controls="streak-info"
+					onClick={() => setStreakInfoOpen(open => !open)}
+				>
+				<SpaOutlinedIcon fontSize="small" aria-hidden="true" />
+				<strong key={currentStreak}>{currentStreak}</strong>
+				{streakGain > 0 && <span className={s.streakGain} aria-hidden="true">+{streakGain}</span>}
+				</button>
+				{streakInfoOpen && (
+					<div className={s.streakInfo} id="streak-info" role="dialog" aria-label="Как работает серия без приступов">
+						<strong>Стрик без боли</strong>
+						<p>Это число подряд идущих дней, которые вы отметили как дни без приступов.</p>
+						<p>Подтвердите отсутствие приступа за день, чтобы серия продолжилась. День с приступом сбрасывает текущую серию. Неподтверждённые дни в неё не засчитываются.</p>
+						<button className={s.streakInfoClose} type="button" onClick={() => setStreakInfoOpen(false)}>Понятно</button>
+					</div>
 				)}
 			</div>
 

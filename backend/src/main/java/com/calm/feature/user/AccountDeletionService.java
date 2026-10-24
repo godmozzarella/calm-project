@@ -7,6 +7,7 @@ import com.calm.feature.medication.MedicationRepository;
 import com.calm.feature.risk.RiskPredictionRecordRepository;
 import com.calm.feature.risk.DailyOutcomeRepository;
 import com.calm.feature.risk.SharedModelParticipationRepository;
+import com.calm.feature.risk.RiskTrainingInputSnapshotRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +35,7 @@ public class AccountDeletionService {
 	private final RiskPredictionRecordRepository predictionRecordRepository;
 	private final DailyOutcomeRepository dailyOutcomeRepository;
 	private final SharedModelParticipationRepository participationRepository;
+	private final RiskTrainingInputSnapshotRepository trainingInputRepository;
 	private final Path uploadDir;
 
 	public AccountDeletionService(
@@ -44,6 +46,7 @@ public class AccountDeletionService {
 			RiskPredictionRecordRepository predictionRecordRepository,
 			DailyOutcomeRepository dailyOutcomeRepository,
 			SharedModelParticipationRepository participationRepository,
+			RiskTrainingInputSnapshotRepository trainingInputRepository,
 			@Value("${calm.upload-dir:./uploads/avatars}") String uploadDir
 	) {
 		this.userRepository = userRepository;
@@ -53,6 +56,7 @@ public class AccountDeletionService {
 		this.predictionRecordRepository = predictionRecordRepository;
 		this.dailyOutcomeRepository = dailyOutcomeRepository;
 		this.participationRepository = participationRepository;
+		this.trainingInputRepository = trainingInputRepository;
 		this.uploadDir = Paths.get(uploadDir).toAbsolutePath().normalize();
 	}
 
@@ -66,6 +70,7 @@ public class AccountDeletionService {
 		predictionRecordRepository.deleteByUserId(userId);
 		dailyOutcomeRepository.deleteByUserId(userId);
 		participationRepository.deleteByUserId(userId);
+		trainingInputRepository.deleteByUserId(userId);
 
 		// Аватар-файл удаляем best-effort: даже если не получилось — пользователя всё равно сносим.
 		tryDeleteAvatar(user.getAvatarUrl());

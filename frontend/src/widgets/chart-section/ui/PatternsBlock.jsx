@@ -62,7 +62,7 @@ const MedsBlock = ({ items }) => (
 							</div>
 							<span
 								className={s.medBadge}
-								style={{ color, borderColor: color }}
+								style={{ color }}
 							>
 								{label}
 							</span>

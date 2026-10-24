@@ -4,7 +4,7 @@
 	display: flex;
 	flex-direction: column;
 	background-color: $block-color;
-	border: 1px solid rgba(92, 173, 228, 0.08);
+	border: 1px solid $quiet-line;
 	border-radius: 1.25rem;
 	overflow: hidden;
 	height: 100%;
@@ -29,8 +29,8 @@
 	display: flex;
 	align-items: center;
 	gap: 0.35rem;
-	background: none;
-	border: 1px solid rgba(92, 173, 228, 0.25);
+	background: $quiet-surface;
+	border: 1px solid $quiet-line;
 	border-radius: 2rem;
 	color: $fc-contrast;
 	padding: 0.3rem 0.75rem 0.3rem 0.5rem;
@@ -40,8 +40,7 @@
 	transition: background-color 0.18s ease, border-color 0.18s ease;
 
 	&:hover {
-		background-color: rgba(92, 173, 228, 0.08);
-		border-color: rgba(92, 173, 228, 0.45);
+		background-color: $quiet-surface-raised;
 	}
 }
 
@@ -63,11 +62,11 @@
 .overuseWarning {
 	margin: 0.75rem 1rem 0;
 	padding: 0.5rem 0.75rem;
-	background: rgba(239, 68, 68, 0.08);
-	border: 1px solid rgba(239, 68, 68, 0.25);
+	background: $quiet-surface;
+	border: 1px solid $quiet-line;
 	border-radius: 0.625rem;
 	@include fluid-text(11, 10);
-	color: #ef4444;
+	color: $error-color;
 	line-height: 1.5;
 }
 
@@ -101,7 +100,8 @@
 .list {
 	display: flex;
 	flex-direction: column;
-	padding: 0.5rem 0;
+	gap: 0.5rem;
+	padding: 0.5rem 0.65rem;
 	list-style: none;
 }
 
@@ -109,12 +109,10 @@
 	display: flex;
 	flex-direction: column;
 	gap: 0.4rem;
-	padding: 0.75rem 1.25rem;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-	transition: background-color 0.15s ease;
-
-	&:last-child { border-bottom: none; }
-	&:hover { background-color: rgba(255, 255, 255, 0.02); }
+	padding: 0.75rem 1rem;
+	border: 0;
+	border-radius: 1rem;
+	background: $quiet-surface;
 }
 
 .medTop {
@@ -144,8 +142,7 @@
 .medDosage {
 	@include fluid-text(11, 10);
 	color: $fc-contrast;
-	background: rgba(92, 173, 228, 0.12);
-	border: 1px solid rgba(92, 173, 228, 0.2);
+	background: $quiet-surface;
 	border-radius: 2rem;
 	padding: 0.1rem 0.5rem;
 	flex-shrink: 0;
@@ -183,7 +180,7 @@
 
 	&.deleteBtn:hover {
 		color: $error-color;
-		background-color: rgba(239, 68, 68, 0.08);
+		background-color: rgba(239, 100, 100, 0.1);
 	}
 }
 
@@ -191,8 +188,7 @@
 .attackLink {
 	@include fluid-text(11, 10);
 	color: $fc-contrast;
-	background: rgba(92, 173, 228, 0.07);
-	border-left: 2px solid rgba(92, 173, 228, 0.4);
+	background: $quiet-surface;
 	padding: 0.2rem 0.5rem;
 	border-radius: 0 0.375rem 0.375rem 0;
 }
@@ -204,23 +200,26 @@
 }
 
 .effectBtn {
+	min-height: 2rem;
 	padding: 0.2rem 0.6rem;
 	border-radius: 2rem;
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	background: none;
-	color: rgba(190, 190, 190, 0.4);
+	border: 1px solid $quiet-line;
+	background: $quiet-surface;
+	color: $fc-secondary;
 	@include fluid-text(11, 10);
 	cursor: pointer;
 	transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 
-	&:hover {
-		color: $fc-secondary;
-		background: rgba(255, 255, 255, 0.04);
-	}
+	&:focus-visible { outline: 2px solid $contrast-color; outline-offset: 2px; }
+	&:focus:not(:focus-visible) { outline: none; box-shadow: none; }
+	&:active { transform: scale(.97); }
+	@media (hover: hover) { &:hover { background: $quiet-surface-raised; border-color: $contrast-color; } }
+	@media (hover: none) { &:hover { background: $quiet-surface; } }
 }
 
 .effectBtnActive {
-	background: rgba(255, 255, 255, 0.05);
+	background: $quiet-surface-raised;
+	border-color: currentColor;
 }
 
 /* ── Note ── */

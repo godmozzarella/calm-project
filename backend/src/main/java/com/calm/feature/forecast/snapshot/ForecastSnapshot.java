@@ -1,6 +1,7 @@
 package com.calm.feature.forecast.snapshot;
 
 import com.calm.feature.forecast.RiskLevel;
+import com.calm.feature.forecast.PressureUnits;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
@@ -32,9 +33,13 @@ public class ForecastSnapshot {
 
 	private RiskLevel risk;
 	private int score;
+	private Double pressureMmHg;
+	private Double pressureDelta24hMmHg;
+	/** Legacy values from snapshots saved before the mmHg schema. */
 	private Double pressureHpa;
 	private Double pressureDelta24h;
 	private Double humidity;
+	private Double humidityDelta24h;
 	private Double tempMin;
 	private Double tempMax;
 	private Double windKmhMax;
@@ -56,12 +61,16 @@ public class ForecastSnapshot {
 	public void setRisk(RiskLevel risk) { this.risk = risk; }
 	public int getScore() { return score; }
 	public void setScore(int score) { this.score = score; }
-	public Double getPressureHpa() { return pressureHpa; }
-	public void setPressureHpa(Double pressureHpa) { this.pressureHpa = pressureHpa; }
-	public Double getPressureDelta24h() { return pressureDelta24h; }
-	public void setPressureDelta24h(Double pressureDelta24h) { this.pressureDelta24h = pressureDelta24h; }
+	public Double getPressureMmHg() { return pressureMmHg != null ? pressureMmHg : PressureUnits.roundedMmHg(pressureHpa); }
+	public void setPressureMmHg(Double pressureMmHg) { this.pressureMmHg = pressureMmHg; }
+	public Double getPressureDelta24hMmHg() {
+		return pressureDelta24hMmHg != null ? pressureDelta24hMmHg : PressureUnits.roundedMmHg(pressureDelta24h);
+	}
+	public void setPressureDelta24hMmHg(Double pressureDelta24hMmHg) { this.pressureDelta24hMmHg = pressureDelta24hMmHg; }
 	public Double getHumidity() { return humidity; }
 	public void setHumidity(Double humidity) { this.humidity = humidity; }
+	public Double getHumidityDelta24h() { return humidityDelta24h; }
+	public void setHumidityDelta24h(Double humidityDelta24h) { this.humidityDelta24h = humidityDelta24h; }
 	public Double getTempMin() { return tempMin; }
 	public void setTempMin(Double tempMin) { this.tempMin = tempMin; }
 	public Double getTempMax() { return tempMax; }

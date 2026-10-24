@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { adminApi } from '@/shared/api'
 
 import s from './Tab.module.scss'
+import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 
 const SettingsTab = () => {
 	const [data, setData] = useState(null)
@@ -37,8 +38,9 @@ const SettingsTab = () => {
 		}
 	}
 
-	if (loading || !draft) return <p className={s.muted}>Загрузка…</p>
-	if (error && !data) return <p className={s.error}>{error}</p>
+	if (loading) return <p className={s.muted}>Загрузка…</p>
+	if (error && !data) return <ErrorNotice message={error} title="Не удалось загрузить настройки" />
+	if (!draft) return null
 
 	return (
 		<div className={s.wrap}>
@@ -66,7 +68,7 @@ const SettingsTab = () => {
 				{!dirty && savedAt && <span className={s.muted}>Сохранено</span>}
 			</label>
 
-			{error && <p className={s.error}>{error}</p>}
+			<ErrorNotice message={error} title="Не удалось сохранить настройки" />
 		</div>
 	)
 }

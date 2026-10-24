@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { VisibilityIcon, VisibilityOffIcon } from '@/shared/ui/icons'
+import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 
 import s from './LoginForm.module.scss'
 
@@ -22,11 +23,7 @@ const LoginForm = props => {
 
 	return (
 		<form onSubmit={onSubmit} className={s.form} noValidate>
-			{formError && (
-				<div className={s.formError}>
-					<span>{formError}</span>
-				</div>
-			)}
+			<ErrorNotice message={formError} title="Не удалось войти" />
 
 			<Input
 				id="loginEmail"

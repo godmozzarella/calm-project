@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -166,8 +167,8 @@ public class ForecastService {
 			score += pressurePenalty;
 
 			if (pressurePenalty > 0) {
-				reasons.add(String.format("%s давления %s%.0f hPa за сутки",
-						isDrop ? "Падение" : "Рост", isDrop ? "" : "+", abs));
+				reasons.add(String.format(Locale.forLanguageTag("ru-RU"), "%s давления %s%.1f мм рт. ст. за сутки",
+						isDrop ? "Падение" : "Рост", isDrop ? "" : "+", abs * PressureUnits.MMHG_PER_HPA));
 			}
 		}
 
@@ -220,9 +221,10 @@ public class ForecastService {
 				level,
 				score,
 				reasons,
-				roundOrNull(r.pressureHpaAvg(), 0),
-				roundOrNull(r.pressureDelta24h(), 1),
+				PressureUnits.roundedMmHg(r.pressureHpaAvg()),
+				PressureUnits.roundedMmHg(r.pressureDelta24h()),
 				roundOrNull(r.humidityAvg(), 0),
+				roundOrNull(r.humidityDelta24h(), 0),
 				roundOrNull(r.tempMin(), 0),
 				roundOrNull(r.tempMax(), 0),
 				roundOrNull(r.windKmhMax(), 0),

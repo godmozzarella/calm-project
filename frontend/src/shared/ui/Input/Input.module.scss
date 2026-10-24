@@ -35,9 +35,9 @@ input {
 	@include fluid-text(15, 13);
 	font-family: 'Roboto', Arial, sans-serif;
 	font-weight: $fw-medium;
-	background-color: rgba(23, 25, 29, 0.8);
+	background-color: $quiet-surface;
 	color: $fc-main;
-	border: 1.5px solid rgba(92, 173, 228, 0.1);
+	border: 1.5px solid $quiet-line;
 	outline: none;
 	width: 100%;
 	transition:
@@ -51,8 +51,18 @@ input {
 
 	&:focus {
 		border-color: $contrast-color;
-		background-color: rgba(23, 25, 29, 0.95);
-		box-shadow: 0 0 0 3px rgba(92, 173, 228, 0.12);
+		background-color: $quiet-surface-raised;
+		box-shadow: none;
+	}
+
+	&:-webkit-autofill,
+	&:-webkit-autofill:hover,
+	&:-webkit-autofill:focus,
+	&:-webkit-autofill:active {
+		-webkit-box-shadow: 0 0 0 1000px $quiet-surface inset !important;
+		-webkit-text-fill-color: $fc-main !important;
+		caret-color: $fc-main;
+		transition: background-color 99999s ease-out 0s;
 	}
 }
 
@@ -70,11 +80,11 @@ input[type='email'] {
 /* ── ошибка — переопределяет через JS-класс ── */
 .inputError {
 	border-color: $error-color !important;
-	box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+	box-shadow: none !important;
 
 	&:focus {
 		border-color: $error-color;
-		box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
+		box-shadow: none !important;
 	}
 }
 

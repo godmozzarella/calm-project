@@ -51,11 +51,12 @@ const features = {
 	meanAttackIntensityLast30Days: 6, daysSinceLastAttackStart: 1,
 }
 
-function setup({ revoked = false } = {}) {
+function setup({ revoked = false, automatic = false } = {}) {
 	const today = new Date().toISOString().slice(0, 10)
 	const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
 	const twoDaysAgo = new Date(Date.now() - 2 * 86_400_000).toISOString().slice(0, 10)
 	const threeDaysAgo = new Date(Date.now() - 3 * 86_400_000).toISOString().slice(0, 10)
+	const fourDaysAgo = new Date(Date.now() - 4 * 86_400_000).toISOString().slice(0, 10)
 	const beforeStart = (day, hours) => new Date(makeDate(day).getTime() - hours * 3_600_000)
 	const predictions = [
 		{ userId: 'u-active', targetDate: makeDate(yesterday), issuedAt: beforeStart(yesterday, 24), timezone: 'UTC', score: 38, level: 'MEDIUM', featureSchemaVersion: 2, scoringVersion: 'personal-rules-v1', features },
@@ -78,12 +79,21 @@ function setup({ revoked = false } = {}) {
 			{ userId: 'u-active', participating: !revoked, consentVersion: 'shared-model-pilot-v1', consentDigest: 'a'.repeat(64) },
 			{ userId: 'u-not-consented', participating: false, consentVersion: 'shared-model-pilot-v1', consentDigest: 'a'.repeat(64) },
 		]),
-		risk_daily_outcomes: collection([{ userId: 'u-active', date: makeDate(twoDaysAgo) }]),
+		risk_daily_outcomes: collection([
+			{ userId: 'u-active', date: makeDate(twoDaysAgo) },
+			...(automatic ? [{ userId: 'u-active', date: makeDate(fourDaysAgo) }] : []),
+		]),
 		attacks: collection([
 			{ userId: 'u-active', startDate: makeDate(yesterday) },
 			{ userId: 'u-active', startDate: makeDate(threeDaysAgo) },
 		]),
 		risk_prediction_records: collection(predictions),
+		risk_training_input_snapshots: collection(automatic ? [{
+			userId: 'u-active', targetDate: makeDate(fourDaysAgo),
+			capturedAt: beforeStart(fourDaysAgo, 12), timezone: 'UTC',
+			baselineScore: 42, baselineLevel: 'MEDIUM',
+			featureSchemaVersion: 2, scoringVersion: 'personal-rules-v1', features,
+		}] : []),
 	}
 	const destination = {
 		training_examples: collection([
@@ -162,6 +172,36 @@ test('a rebuild after withdrawal removes the participant and the prior generatio
 	assert.equal(destination.export_metadata.rows[0].exampleCount, 0)
 	assert.equal(destination.risk_model_candidates.rows.length, 0)
 	assert.equal(destination.risk_model_evaluations.rows.length, 0)
+})
+
+test('exports a confirmed day from automatic inputs without a saved personal prediction', () => {
+	const { context, destination } = setup({ automatic: true })
+	runInNewContext(script, context)
+	const rows = destination.training_examples.rows
+	assert.equal(rows.length, 4)
+	const automaticRow = rows.find(row => row.baselineScore === 42)
+	assert.equal(automaticRow.outcome, 0)
+	assert.equal(automaticRow.attackCount, 0)
+	assert.deepEqual(Object.keys(automaticRow.features).sort(), Object.keys(features).sort())
+})
+
+test('labels start, middle and end days of a multi-day attack, even with a conflicting quiet confirmation', () => {
+	const { context, destination, yesterday, twoDaysAgo } = setup()
+	context.db.attacks.rows[1].endDate = makeDate(yesterday)
+	runInNewContext(script, context)
+	const row = destination.training_examples.rows.find(example => example.targetDate === twoDaysAgo)
+	assert.equal(row.outcome, 1)
+	assert.equal(row.attackCount, 1)
+	assert.equal(destination.training_examples.rows.find(example => example.targetDate === yesterday).attackCount, 2)
+	assert.equal(row.outcomeDefinition, 'attack-present-anytime-v1')
+})
+
+test('an ongoing attack counts on subsequent completed days', () => {
+	const { context, destination, yesterday, twoDaysAgo } = setup()
+	context.db.attacks.rows[1].ongoing = true
+	runInNewContext(script, context)
+	assert.equal(destination.training_examples.rows.find(row => row.targetDate === twoDaysAgo).outcome, 1)
+	assert.equal(destination.training_examples.rows.find(row => row.targetDate === yesterday).attackCount, 2)
 })
 
 test('refuses to overwrite the destination without explicit confirmation', () => {

@@ -10,6 +10,8 @@ import com.calm.feature.forecast.snapshot.ForecastSnapshot;
 import com.calm.feature.forecast.snapshot.ForecastSnapshotService;
 import com.calm.feature.medication.Medication;
 import com.calm.feature.medication.MedicationRepository;
+import com.calm.feature.risk.DailyOutcome;
+import com.calm.feature.risk.DailyOutcomeRepository;
 import com.calm.feature.stats.StatsResponse.*;
 import com.calm.feature.user.User;
 import com.calm.feature.user.UserRepository;
@@ -41,15 +43,17 @@ public class StatsService {
 	private final DictionaryRepository dictionaryRepo;
 	private final UserRepository userRepo;
 	private final ForecastSnapshotService snapshotService;
+	private final DailyOutcomeRepository outcomeRepo;
 
 	public StatsService(AttackRepository attackRepo, MedicationRepository medicationRepo,
 			DictionaryRepository dictionaryRepo, UserRepository userRepo,
-			ForecastSnapshotService snapshotService) {
+			ForecastSnapshotService snapshotService, DailyOutcomeRepository outcomeRepo) {
 		this.attackRepo = attackRepo;
 		this.medicationRepo = medicationRepo;
 		this.dictionaryRepo = dictionaryRepo;
 		this.userRepo = userRepo;
 		this.snapshotService = snapshotService;
+		this.outcomeRepo = outcomeRepo;
 	}
 
 	private Map<String, String> labelsOf(DictionaryType type) {
@@ -62,7 +66,8 @@ public class StatsService {
 		LocalDate today = LocalDate.now();
 		DateRange range = resolveRange(userId, period, today);
 
-		List<Attack> attacks = attackRepo.findInRange(userId, range.from(), range.to())
+		List<Attack> overlappingAttacks = attackRepo.findInRange(userId, range.from(), range.to());
+		List<Attack> attacks = overlappingAttacks
 				.stream()
 				.filter(a -> a.getStartDate() != null
 						&& !a.getStartDate().isBefore(range.from())
@@ -73,9 +78,10 @@ public class StatsService {
 
 		LocalDate firstOfMonth = today.withDayOfMonth(1);
 		List<Medication> thisMonthMeds = medicationRepo.findInRange(userId, firstOfMonth, today);
+		List<DailyOutcome> confirmedDays = outcomeRepo.findByUserIdAndDateBetween(userId, range.from(), today.minusDays(1));
 
 		List<BucketDto> buckets = buildBuckets(range, attacks);
-		KpisDto kpis = computeKpis(attacks, buckets, thisMonthMeds, range);
+		KpisDto kpis = computeKpis(userId, attacks, overlappingAttacks, buckets, thisMonthMeds, confirmedDays, range, today);
 		PatternsDto patterns = computePatterns(attacks, meds, range);
 		WeatherCorrelationDto weather = computeWeatherCorrelation(userId, attacks, range);
 
@@ -123,15 +129,15 @@ public class StatsService {
 				}
 				sumRiskAttack += snap.getScore();
 				countAttack++;
-				if (snap.getPressureHpa() != null) {
-					sumPressureAttack += snap.getPressureHpa();
+				if (snap.getPressureMmHg() != null) {
+					sumPressureAttack += snap.getPressureMmHg();
 					pressureAttackCnt++;
 				}
 			} else {
 				sumRiskFree += snap.getScore();
 				countFree++;
-				if (snap.getPressureHpa() != null) {
-					sumPressureFree += snap.getPressureHpa();
+				if (snap.getPressureMmHg() != null) {
+					sumPressureFree += snap.getPressureMmHg();
 					pressureFreeCnt++;
 				}
 			}
@@ -159,12 +165,15 @@ public class StatsService {
 			case "3months" -> new DateRange(today.minusDays(89), today, "day");
 			case "year"    -> new DateRange(today.minusDays(7 * 52 - 1), today, "week");
 			case "all"     -> {
-				Optional<LocalDate> earliest = attackRepo.findInRange(userId, LocalDate.of(2000, 1, 1), today)
+				Optional<LocalDate> firstAttack = attackRepo.findInRange(userId, LocalDate.of(2000, 1, 1), today)
 						.stream()
 						.map(Attack::getStartDate)
 						.filter(Objects::nonNull)
 						.min(Comparator.naturalOrder());
-				LocalDate from = earliest.orElse(today.minusDays(29));
+				Optional<LocalDate> firstConfirmed = outcomeRepo.findByUserIdAndDateBetween(userId, LocalDate.of(2000, 1, 1), today)
+						.stream().map(DailyOutcome::getDate).min(Comparator.naturalOrder());
+				LocalDate from = firstAttack.map(d -> firstConfirmed.map(c -> c.isBefore(d) ? c : d).orElse(d))
+						.orElseGet(() -> firstConfirmed.orElse(today.minusDays(29)));
 				long days = ChronoUnit.DAYS.between(from, today) + 1;
 				String g = days <= 60 ? "day" : days <= 730 ? "week" : "month";
 				yield new DateRange(from, today, g);
@@ -261,8 +270,9 @@ public class StatsService {
 
 	// ── KPIs ──────────────────────────────────────────────────────────────────
 
-	private KpisDto computeKpis(List<Attack> attacks, List<BucketDto> buckets,
-	                             List<Medication> thisMonthMeds, DateRange range) {
+	private KpisDto computeKpis(String userId, List<Attack> attacks, List<Attack> overlappingAttacks, List<BucketDto> buckets,
+	                             List<Medication> thisMonthMeds, List<DailyOutcome> confirmedDays,
+	                             DateRange range, LocalDate today) {
 		int total = attacks.size();
 
 		double avgIntensity = attacks.stream()
@@ -271,10 +281,11 @@ public class StatsService {
 				.average()
 				.orElse(0.0);
 
-		int streak = longestStreak(attacks, range.from(), range.to());
+		int streak = longestStreak(overlappingAttacks, confirmedDays, range.from(), today.minusDays(1));
+		int currentStreak = currentStreak(userId, today);
 
 		MohResult moh = computeMoh(thisMonthMeds);
-		return new KpisDto(total, Math.round(avgIntensity * 10.0) / 10.0, streak, moh.days(), moh.risk());
+		return new KpisDto(total, Math.round(avgIntensity * 10.0) / 10.0, streak, currentStreak, moh.days(), moh.risk());
 	}
 
 	/**
@@ -325,17 +336,29 @@ public class StatsService {
 
 	private record MohResult(int days, boolean risk) {}
 
-	private int longestStreak(List<Attack> attacks, LocalDate from, LocalDate to) {
-		Set<LocalDate> painDays = attacks.stream()
-				.map(Attack::getStartDate)
-				.filter(Objects::nonNull)
-				.collect(Collectors.toSet());
+	private int longestStreak(List<Attack> attacks, List<DailyOutcome> confirmedDays, LocalDate from, LocalDate to) {
+		Set<LocalDate> noAttackDays = confirmedDays.stream().map(DailyOutcome::getDate).collect(Collectors.toSet());
 
 		int best = 0, run = 0;
 		for (LocalDate d = from; !d.isAfter(to); d = d.plusDays(1)) {
-			if (painDays.contains(d)) { run = 0; } else { run++; if (run > best) best = run; }
+			LocalDate day = d;
+			if (attacks.stream().anyMatch(a -> a.overlaps(day)) || !noAttackDays.contains(d)) { run = 0; }
+			else { run++; best = Math.max(best, run); }
 		}
 		return best;
+	}
+
+	private int currentStreak(String userId, LocalDate today) {
+		if (attackRepo.findInRange(userId, today, today).stream().anyMatch(a -> a.overlaps(today))) return 0;
+		LocalDate yesterday = today.minusDays(1);
+		List<DailyOutcome> confirmations = outcomeRepo.findByUserIdAndDateBetween(userId, LocalDate.of(2000, 1, 1), yesterday);
+		Set<LocalDate> confirmed = confirmations.stream().map(DailyOutcome::getDate).collect(Collectors.toSet());
+		for (Attack attack : attackRepo.findInRange(userId, LocalDate.of(2000, 1, 1), yesterday)) {
+			confirmed.removeIf(attack::overlaps);
+		}
+		int run = 0;
+		for (LocalDate day = yesterday; confirmed.contains(day); day = day.minusDays(1)) run++;
+		return run;
 	}
 
 	// ── Patterns ──────────────────────────────────────────────────────────────

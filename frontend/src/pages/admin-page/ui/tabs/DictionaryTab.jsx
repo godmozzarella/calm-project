@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { adminApi, dictionaryApi } from '@/shared/api'
 import { emit } from '@/shared/lib/dataEvents'
+import { notifyError } from '@/shared/lib/notifyError'
+import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 
 import s from './Tab.module.scss'
 
@@ -16,16 +18,16 @@ const DictionaryTab = ({ type, title, categories = null }) => {
 	const [label, setLabel] = useState('')
 	const [category, setCategory] = useState(categories?.[0]?.value ?? '')
 
-	const load = () => {
+	const load = useCallback(() => {
 		setLoading(true)
 		setError(null)
 		dictionaryApi.getByType(type)
 			.then(setEntries)
 			.catch(e => setError(e.message))
 			.finally(() => setLoading(false))
-	}
+	}, [type])
 
-	useEffect(() => { load() }, [type])
+	useEffect(() => { load() }, [load])
 
 	const handleAdd = async e => {
 		e.preventDefault()
@@ -42,7 +44,7 @@ const DictionaryTab = ({ type, title, categories = null }) => {
 			setLabel('')
 			notifyChanged()
 		} catch (e) {
-			alert(e.message)
+			notifyError(e.message)
 		}
 	}
 
@@ -53,7 +55,7 @@ const DictionaryTab = ({ type, title, categories = null }) => {
 			setEntries(prev => prev.map(e => e.id === updated.id ? updated : e))
 			notifyChanged()
 		} catch (e) {
-			alert(e.message)
+			notifyError(e.message)
 		}
 	}
 
@@ -64,7 +66,7 @@ const DictionaryTab = ({ type, title, categories = null }) => {
 			setEntries(prev => prev.map(e => e.id === updated.id ? updated : e))
 			notifyChanged()
 		} catch (e) {
-			alert(e.message)
+			notifyError(e.message)
 		}
 	}
 
@@ -75,11 +77,9 @@ const DictionaryTab = ({ type, title, categories = null }) => {
 			setEntries(prev => prev.filter(e => e.id !== entry.id))
 			notifyChanged()
 		} catch (e) {
-			alert(e.message)
+			notifyError(e.message)
 		}
 	}
-
-	const catLabel = v => categories?.find(c => c.value === v)?.label ?? v ?? '—'
 
 	return (
 		<div className={s.wrap}>
@@ -116,7 +116,7 @@ const DictionaryTab = ({ type, title, categories = null }) => {
 				<button type="submit" className={s.btn}>+ Добавить</button>
 			</form>
 
-			{error && <p className={s.error}>{error}</p>}
+			<ErrorNotice message={error} title="Не удалось загрузить справочник" />
 			{loading && <p className={s.muted}>Загрузка…</p>}
 
 			{!loading && !error && (

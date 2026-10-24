@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 
 import { adminApi } from '@/shared/api'
 import { getCurrentUser } from '@/entities/user'
+import { notifyError } from '@/shared/lib/notifyError'
+import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 
 import s from './Tab.module.scss'
 
@@ -38,7 +40,7 @@ const UsersTab = () => {
 			const updated = await adminApi.changeRole(user.id, newRole)
 			setUsers(prev => prev.map(u => u.id === updated.id ? updated : u))
 		} catch (e) {
-			alert(e.message)
+			notifyError(e.message)
 		}
 	}
 
@@ -57,7 +59,7 @@ const UsersTab = () => {
 				return next
 			})
 		} catch (e) {
-			alert(e.message)
+			notifyError(e.message)
 		} finally {
 			setDeletingUserId(null)
 		}
@@ -81,7 +83,7 @@ const UsersTab = () => {
 			const updated = await adminApi.setSharedModelParticipationBlocked(user.id, blocked)
 			setParticipationByUser(prev => ({ ...prev, [user.id]: updated }))
 		} catch (e) {
-			alert(e.message)
+			notifyError(e.message)
 		}
 	}
 
@@ -98,7 +100,7 @@ const UsersTab = () => {
 				<button type="submit" className={s.btn}>Найти</button>
 			</form>
 
-			{error && <p className={s.error}>{error}</p>}
+			<ErrorNotice message={error} title="Не удалось загрузить пользователей" />
 			{loading && <p className={s.muted}>Загрузка…</p>}
 
 			{!loading && !error && (

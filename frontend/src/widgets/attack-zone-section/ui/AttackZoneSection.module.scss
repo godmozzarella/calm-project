@@ -4,7 +4,7 @@
 	display: flex;
 	flex-direction: column;
 	background-color: $block-color;
-	border: 1px solid rgba(92, 173, 228, 0.08);
+	border: 1px solid $quiet-line;
 	border-radius: 1.25rem;
 	overflow: hidden;
 	height: 100%;
@@ -14,6 +14,8 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: .5rem;
 	padding: 1.125rem 1.25rem 0.875rem;
 	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -36,6 +38,18 @@
 
 	&:hover { color: $fc-secondary; }
 }
+
+.editBtn, .editActions button {
+	background: $quiet-surface;
+	border: 1px solid $quiet-line;
+	border-radius: .5rem;
+	color: $fc-main;
+	cursor: pointer;
+	padding: .3rem .5rem;
+}
+
+.editActions { display: flex; gap: .4rem; margin-left: auto; }
+.zoneTag:disabled { cursor: default; }
 
 .cardBody {
 	display: flex;
@@ -88,25 +102,36 @@
 }
 
 .attackPill {
-	padding: 0.28rem 0.65rem;
-	border-radius: 2rem;
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	background: none;
+	min-height: 2.25rem;
+	padding: 0.35rem 0.65rem;
+	border-radius: .75rem;
+	border: 1px solid $quiet-line;
+	background: $quiet-surface;
 	color: $fc-secondary;
 	@include fluid-text(11, 10);
 	cursor: pointer;
+	-webkit-appearance: none;
+	appearance: none;
+	-webkit-tap-highlight-color: transparent;
 	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 
 	&:hover {
 		background: rgba(255, 255, 255, 0.06);
 		color: $fc-main;
 	}
+	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: 2px; }
 }
 
 .attackPillActive {
-	background: rgba(92, 173, 228, 0.14);
-	border-color: rgba(92, 173, 228, 0.4);
-	color: $fc-contrast;
+	background: $quiet-surface-raised;
+	border-color: rgba(255, 255, 255, .2);
+	color: $fc-main;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+}
+
+@media (hover: none) {
+	.attackPill:hover { background: $quiet-surface; color: $fc-secondary; }
+	.attackPillActive:hover { background: $quiet-surface-raised; color: $fc-main; }
 }
 
 /* ── Two head views ── */

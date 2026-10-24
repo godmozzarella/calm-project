@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 
 import { AddIcon, DeleteIcon, EditIcon } from '@/shared/ui/icons'
 import { AddAttackForm, useAddAttack } from '@/features/add-attack'
-import { ATTACK_TYPE_LABELS, intensityColor } from '@/entities/attack'
+import { formatAttackTime, getAttackTypeLabel, intensityColor, sortAttacksNewest } from '@/entities/attack'
 import { attackApi } from '@/shared/api'
 import { subscribe, ATTACKS_CHANGED, OPEN_ATTACK_FORM } from '@/shared/lib/dataEvents'
 import { useDictionaries } from '@/shared/lib/dictionaries'
@@ -21,8 +21,8 @@ const formatRange = attack => {
 	const endDate = attack.endDate ?? startDate
 	const sameDay = startDate === endDate
 
-	const startTime = attack.startTime
-	const endTime = attack.endTime
+	const startTime = formatAttackTime(attack.startTime)
+	const endTime = formatAttackTime(attack.endTime)
 
 	if (attack.ongoing) {
 		return `${shortDate(startDate)}, ${startTime} — продолжается`
@@ -41,7 +41,7 @@ const AttackSection = ({ date }) => {
 	const { getLabel } = useDictionaries()
 
 	const reload = useCallback(
-		() => attackApi.getByDate(date).then(setAttacks),
+		() => attackApi.getByDate(date).then(list => setAttacks(sortAttacksNewest(list))),
 		[date]
 	)
 
@@ -82,13 +82,13 @@ const AttackSection = ({ date }) => {
 												{formatRange(attack)}
 											</span>
 											<span className={s.attackType}>
-												{ATTACK_TYPE_LABELS[attack.type]}
+												{getAttackTypeLabel(attack.type)}
 											</span>
 										</div>
 										<div className={s.attackRight}>
 											<span
 												className={s.intensityBadge}
-												style={{ background: `${intensityColor(attack.intensity)}22`, color: intensityColor(attack.intensity), borderColor: `${intensityColor(attack.intensity)}55` }}
+												style={{ color: intensityColor(attack.intensity) }}
 											>
 												{attack.intensity}/10
 											</span>

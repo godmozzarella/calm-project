@@ -5,6 +5,7 @@
   const sourceName = testMode ? 'calm_risk_pipeline_test_source' : 'calm'
   const featureSchemaVersion = 2
   const scoringVersion = 'personal-rules-v1'
+  const outcomeDefinition = 'attack-present-anytime-v1'
   const consentVersion = process.env.CALM_RISK_CONSENT_VERSION ||
     (testMode ? 'shared-model-pilot-v1' : '')
   const consentDigest = process.env.CALM_RISK_CONSENT_DIGEST || (testMode ? 'a'.repeat(64) : '')
@@ -34,7 +35,7 @@
   if (!consentVersion || !/^[a-f0-9]{64}$/.test(consentDigest) ||
       metadata.consentVersion !== consentVersion || metadata.consentDigest !== consentDigest ||
       metadata.featureSchemaVersion !== featureSchemaVersion ||
-      metadata.scoringVersion !== scoringVersion) {
+      metadata.scoringVersion !== scoringVersion || metadata.outcomeDefinition !== outcomeDefinition) {
     throw new Error('Training snapshot policy or feature version is incompatible; rebuild before evaluation')
   }
   const ageMs = Date.now() - new Date(metadata.generatedAt).getTime()
@@ -88,7 +89,8 @@
     const valid = typeof row.participantKey === 'string' && /^[a-f0-9]{64}$/.test(row.participantKey) &&
       /^\d{4}-\d{2}-\d{2}$/.test(row.targetDate) && (row.outcome === 0 || row.outcome === 1) &&
       Number.isInteger(row.baselineScore) && row.baselineScore >= 0 && row.baselineScore <= 100 &&
-      row.featureSchemaVersion === featureSchemaVersion && row.scoringVersion === scoringVersion && featureShapeValid &&
+      row.featureSchemaVersion === featureSchemaVersion && row.scoringVersion === scoringVersion &&
+      row.outcomeDefinition === outcomeDefinition && featureShapeValid &&
       !seenParticipantDays.has(rowDayKey)
     if (!valid) invalidExamples++
     seenParticipantDays.add(rowDayKey)
@@ -104,6 +106,7 @@
     generatedAt: new Date(),
     generation: metadata.generation,
     featureSchemaVersion,
+    outcomeDefinition,
     modelVersion,
     status: 'INSUFFICIENT_DATA',
     minimums,
@@ -284,6 +287,7 @@
         modelVersion,
         generation: metadata.generation,
         featureSchemaVersion,
+        outcomeDefinition,
         featureNames,
         imputationMeans: means,
         scales,

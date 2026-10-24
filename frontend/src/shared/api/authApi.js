@@ -15,8 +15,8 @@ const saveSession = ({ token, refreshToken, user }) => {
 export const authApi = {
   login:    (email, password)       => http.post('/auth/login',    { email, password }).then(saveSession),
   register: (email, password, name) => http.post('/auth/register', { email, password, name }).then(saveSession),
-  verifyEmail: token => http.post('/auth/verify-email', { token }),
-  resendVerification: () => http.post('/auth/resend-verification', {}),
+  verifyEmail: code => http.post('/auth/verify-email', { code }),
+  sendVerificationCode: () => http.post('/auth/send-verification-code', {}),
   logout: async () => {
     try { await http.post('/auth/logout', {}) } catch { /* Удаляем локальную сессию и без связи с сервером. */ }
     clearToken()

@@ -6,6 +6,7 @@ import com.calm.feature.auth.AuthSessionRepository;
 import com.calm.feature.medication.MedicationRepository;
 import com.calm.feature.risk.DailyOutcomeRepository;
 import com.calm.feature.risk.RiskPredictionRecordRepository;
+import com.calm.feature.risk.RiskTrainingInputSnapshotRepository;
 import com.calm.feature.risk.SharedModelParticipationRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -28,17 +29,19 @@ class AccountDeletionServiceTest {
 		var predictions = mock(RiskPredictionRecordRepository.class);
 		var outcomes = mock(DailyOutcomeRepository.class);
 		var participation = mock(SharedModelParticipationRepository.class);
+		var trainingInputs = mock(RiskTrainingInputSnapshotRepository.class);
 		var user = new User("pilot@example.test", "Pilot", "hash");
 		user.setId("pilot-user");
 		when(users.findById("pilot-user")).thenReturn(Optional.of(user));
 		var service = new AccountDeletionService(users, attacks, medications, sessions,
-			predictions, outcomes, participation, uploadDir.toString());
+			predictions, outcomes, participation, trainingInputs, uploadDir.toString());
 
 		service.deleteAccount("pilot-user");
 
 		verify(predictions).deleteByUserId("pilot-user");
 		verify(outcomes).deleteByUserId("pilot-user");
 		verify(participation).deleteByUserId("pilot-user");
+		verify(trainingInputs).deleteByUserId("pilot-user");
 		verify(attacks).deleteByUserId("pilot-user");
 		verify(medications).deleteByUserId("pilot-user");
 		verify(sessions).deleteByUserId("pilot-user");
@@ -54,11 +57,12 @@ class AccountDeletionServiceTest {
 		var predictions = mock(RiskPredictionRecordRepository.class);
 		var outcomes = mock(DailyOutcomeRepository.class);
 		var participation = mock(SharedModelParticipationRepository.class);
+		var trainingInputs = mock(RiskTrainingInputSnapshotRepository.class);
 		when(users.findById("missing")).thenReturn(Optional.empty());
 		var service = new AccountDeletionService(users, attacks, medications, sessions,
-			predictions, outcomes, participation, uploadDir.toString());
+			predictions, outcomes, participation, trainingInputs, uploadDir.toString());
 
 		assertThatThrownBy(() -> service.deleteAccount("missing")).isInstanceOf(NotFoundException.class);
-		verifyNoInteractions(attacks, medications, sessions, predictions, outcomes, participation);
+		verifyNoInteractions(attacks, medications, sessions, predictions, outcomes, participation, trainingInputs);
 	}
 }

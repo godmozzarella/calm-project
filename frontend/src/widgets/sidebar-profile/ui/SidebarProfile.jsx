@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 
 import { Input } from '@/shared/ui/Input'
+import { notifyError } from '@/shared/lib/notifyError'
+import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 import { Button } from '@/shared/ui/Button'
 import {
 	CloseIcon,
@@ -15,6 +18,7 @@ import {
 	DeleteIcon,
 	NotificationsNoneIcon,
 	DarkModeOutlinedIcon,
+	LightModeOutlinedIcon,
 	LanguageIcon,
 	VisibilityIcon,
 	VisibilityOffIcon,
@@ -28,10 +32,12 @@ import { useEditProfile } from '@/features/edit-profile'
 import { LocationOnboarding } from '@/features/onboarding-location'
 import { clearCurrentUser, setCurrentUser } from '@/entities/user'
 import { authApi, userApi, forecastApi, riskApi } from '@/shared/api'
+import { useTheme } from '@/app/providers/theme/ThemeProvider'
 
 import s from './SidebarProfile.module.scss'
 
 const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
+	const { theme, toggleTheme } = useTheme()
 	const navigate = useNavigate()
 	const [view, setView] = useState('main')
 	const [showPassword, setShowPassword] = useState(false)
@@ -40,7 +46,15 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 	const [togglingNotif, setTogglingNotif] = useState(false)
 	const [sendingTest, setSendingTest] = useState(false)
 	const [testMessage, setTestMessage] = useState(null)
-	const [sendingVerification, setSendingVerification] = useState(false)
+	const [verificationOpen, setVerificationOpen] = useState(false)
+	const [verificationCode, setVerificationCode] = useState('')
+	const [verificationSending, setVerificationSending] = useState(false)
+	const [verificationChecking, setVerificationChecking] = useState(false)
+	const [verificationSent, setVerificationSent] = useState(false)
+	const [verificationCooldown, setVerificationCooldown] = useState(0)
+	const [verificationError, setVerificationError] = useState('')
+	const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
+	const [loggingOut, setLoggingOut] = useState(false)
 	const [participation, setParticipation] = useState(null)
 	const [loadingParticipation, setLoadingParticipation] = useState(false)
 	const [savingParticipation, setSavingParticipation] = useState(false)
@@ -80,6 +94,13 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 
 	const toggleNotifications = async () => {
 		if (togglingNotif) return
+		if (!user.emailVerified) {
+			setVerificationCode('')
+			setVerificationError('')
+			setVerificationSent(false)
+			setVerificationOpen(true)
+			return
+		}
 		setTogglingNotif(true)
 		try {
 			const updated = await userApi.updateMe({ notificationsEnabled: !user.notificationsEnabled })
@@ -107,18 +128,62 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 		}
 	}
 
-	const resendVerification = async () => {
-		if (sendingVerification) return
-		setSendingVerification(true)
+	const sendVerificationCode = async () => {
+		if (verificationSending || verificationCooldown > 0) return
+		setVerificationSending(true)
+		setVerificationError('')
 		try {
-			await authApi.resendVerification()
-			setTestMessage('Ссылка подтверждения отправлена. Проверьте почту.')
+			await authApi.sendVerificationCode()
+			setVerificationSent(true)
+			setVerificationCooldown(30)
+			setVerificationCode('')
 		} catch (e) {
-			setTestMessage(e.message || 'Не удалось отправить ссылку.')
+			setVerificationError(e.message || 'Не удалось отправить код.')
+			const retry = e.message?.match(/через\s+(\d+)\s+сек/i)
+			if (retry) setVerificationCooldown(Number(retry[1]))
 		} finally {
-			setSendingVerification(false)
+			setVerificationSending(false)
 		}
 	}
+
+	const verifyEmailCode = async event => {
+		event.preventDefault()
+		if (verificationChecking || verificationCode.length !== 4) return
+		setVerificationChecking(true)
+		setVerificationError('')
+		try {
+			await authApi.verifyEmail(verificationCode)
+			const verifiedUser = await userApi.getMe()
+			setCurrentUser(verifiedUser)
+			setUser(verifiedUser)
+			const updated = await userApi.updateMe({ notificationsEnabled: true })
+			setCurrentUser(updated)
+			setUser(updated)
+			setVerificationOpen(false)
+			setVerificationSent(false)
+			setVerificationCode('')
+			setTestMessage('Email подтверждён, уведомления включены.')
+		} catch (e) {
+			setVerificationError(e.message || 'Не удалось подтвердить код.')
+		} finally {
+			setVerificationChecking(false)
+		}
+	}
+
+	useEffect(() => {
+		if (verificationCooldown <= 0) return undefined
+		const timer = window.setTimeout(() => setVerificationCooldown(value => Math.max(0, value - 1)), 1000)
+		return () => window.clearTimeout(timer)
+	}, [verificationCooldown])
+
+	useEffect(() => {
+		if (!verificationOpen) return undefined
+		const onKeyDown = event => {
+			if (event.key === 'Escape' && !verificationSending && !verificationChecking) setVerificationOpen(false)
+		}
+		window.addEventListener('keydown', onKeyDown)
+		return () => window.removeEventListener('keydown', onKeyDown)
+	}, [verificationOpen, verificationSending, verificationChecking])
 
 	const {
 		editData,
@@ -164,6 +229,8 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 	}
 
 	const handleLogout = async () => {
+		if (loggingOut) return
+		setLoggingOut(true)
 		await authApi.logout()
 		clearCurrentUser()
 		navigate('/')
@@ -184,7 +251,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 			clearCurrentUser()
 			navigate('/')
 		} catch (e) {
-			alert(`Не удалось удалить аккаунт: ${e.message || 'ошибка сети'}`)
+			notifyError(e.message || 'Ошибка сети', 'Не удалось удалить аккаунт')
 		}
 	}
 
@@ -202,7 +269,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 						</div>
 
 						<div className={s.userSection}>
-							<label htmlFor="quickAvatarUpload" className={s.avatarWrapper}>
+							<div className={`${s.avatarWrapper} ${s.avatarReadOnly}`}>
 								{user?.avatarUrl ? (
 									<img className={s.avatar} src={resolveAvatar(user.avatarUrl)} alt="Аватар" />
 								) : (
@@ -210,27 +277,9 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 										<span className={s.initials}>{initials}</span>
 									</div>
 								)}
-								<div className={s.avatarOverlay}>
-									<PhotoCameraIcon style={{ fontSize: '1.25rem' }} />
-								</div>
-								<input
-									type="file"
-									id="quickAvatarUpload"
-									accept="image/*"
-									className={s.fileInput}
-									onChange={e => {
-										handleOpenEdit()
-										handleAvatarUpload(e)
-									}}
-								/>
-							</label>
+							</div>
 							<p className={s.userName}>{user?.name || 'Пользователь'}</p>
 							<p className={s.userEmail}>{user?.email}</p>
-							{user && !user.emailVerified && (
-								<button type="button" onClick={resendVerification} disabled={sendingVerification}>
-									{sendingVerification ? 'Отправляем…' : 'Подтвердить email — отправить ссылку'}
-								</button>
-							)}
 						</div>
 
 						<div className={s.divider} />
@@ -278,11 +327,13 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 								className={s.navItem}
 								onClick={toggleNotifications}
 								disabled={togglingNotif}
+								role="switch"
+								aria-checked={Boolean(user?.emailVerified && user?.notificationsEnabled)}
 							>
 								<span className={s.navIcon}><NotificationsNoneIcon fontSize="small" /></span>
 								<span className={s.navLabel}>Email-уведомления</span>
-								<span className={user?.notificationsEnabled ? s.toggleOn : s.toggleOff}>
-									{user?.notificationsEnabled ? 'Вкл' : 'Выкл'}
+								<span className={`${s.toggleTrack} ${user?.emailVerified && user?.notificationsEnabled ? s.toggleChecked : ''}`} aria-hidden="true">
+									<span className={s.toggleThumb} />
 								</span>
 							</button>
 							<button
@@ -305,10 +356,12 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 							{testMessage && (
 								<div className={s.testMessage}>{testMessage}</div>
 							)}
-							<button className={s.navItem} disabled>
-								<span className={s.navIcon}><DarkModeOutlinedIcon fontSize="small" /></span>
+			<button className={s.navItem} onClick={toggleTheme} role="switch" aria-checked={theme === 'light'} aria-label={theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}>
+								<span className={s.navIcon}>{theme === 'dark' ? <LightModeOutlinedIcon fontSize="small" /> : <DarkModeOutlinedIcon fontSize="small" />}</span>
 								<span className={s.navLabel}>Тема</span>
-								<span className={s.soon}>Скоро</span>
+				<span className={`${s.toggleTrack} ${theme === 'light' ? s.toggleChecked : ''}`} aria-hidden="true">
+					<span className={s.toggleThumb} />
+				</span>
 							</button>
 							<button className={s.navItem} disabled>
 								<span className={s.navIcon}><LanguageIcon fontSize="small" /></span>
@@ -320,15 +373,10 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 						<div className={s.spacer} />
 
 						<div className={s.divider} />
-						<button className={`${s.navItem} ${s.logoutItem}`} onClick={handleLogout}>
+						<button className={`${s.navItem} ${s.logoutItem}`} onClick={() => setLogoutConfirmOpen(true)}>
 							<span className={s.navIcon}><LogoutIcon fontSize="small" /></span>
 							<span className={s.navLabel}>Выйти из аккаунта</span>
 						</button>
-						<button className={`${s.navItem} ${s.dangerItem}`} onClick={handleDeleteAccount}>
-							<span className={s.navIcon}><DeleteIcon fontSize="small" /></span>
-							<span className={s.navLabel}>Удалить аккаунт</span>
-						</button>
-
 						<div className={s.divider} />
 
 						{/* ── Socials + copyright ── */}
@@ -353,8 +401,9 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 						</div>
 
 						{editData && (
-							<form
+											<form
 								className={s.editForm}
+												autoComplete="off"
 								onSubmit={e => {
 									e.preventDefault()
 									handleSaveChanges(handleBackToMain)
@@ -415,8 +464,10 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 									<span className={s.sectionLabel}>Смена пароля</span>
 									<Input
 										id="password"
+												name="calm-profile-confirmation"
 										type={showPassword ? 'text' : 'password'}
 										label="Текущий пароль"
+													autoComplete="new-password"
 										placeholder="••••••••"
 										value={editData.password}
 										onChange={handleInputChange}
@@ -436,6 +487,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 										id="newPassword"
 										type={showNewPassword ? 'text' : 'password'}
 										label="Новый пароль"
+														autoComplete="new-password"
 										placeholder="••••••••"
 										value={editData.newPassword}
 										onChange={handleInputChange}
@@ -455,6 +507,13 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 								<Button type="submit" colored className={s.saveBtn}>
 									Сохранить изменения
 								</Button>
+								<div className={s.deleteAccountSection}>
+									<p>Удаление аккаунта безвозвратно удалит ваши записи и настройки.</p>
+									<button type="button" className={s.deleteAccountButton} onClick={handleDeleteAccount}>
+										<DeleteIcon fontSize="small" />
+										Удалить аккаунт
+									</button>
+								</div>
 							</form>
 						)}
 					</div>
@@ -507,7 +566,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 									) : null}
 								</>
 							)}
-							{participationError && <p className={s.participationError} role="alert">{participationError}</p>}
+							<ErrorNotice message={participationError} title="Не удалось изменить участие" />
 						</div>
 					</div>
 				</div>
@@ -520,6 +579,73 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 				onClose={() => setLocationModalOpen(false)}
 				setUser={setUser}
 			/>
+			{verificationOpen && createPortal(
+				<div className={s.verificationOverlay} onClick={event => event.target === event.currentTarget && setVerificationOpen(false)}>
+					<section className={s.verificationDialog} role="dialog" aria-modal="true" aria-labelledby="emailVerificationTitle">
+						<header className={s.verificationHeader}>
+							<div>
+								<h2 id="emailVerificationTitle">Подтвердите email</h2>
+								<p>{user?.email}</p>
+							</div>
+							<button type="button" className={s.iconBtn} onClick={() => setVerificationOpen(false)} aria-label="Закрыть">
+								<CloseIcon fontSize="small" />
+							</button>
+						</header>
+						<p className={s.verificationHint}>Отправим на этот адрес четырёхзначный код. Он действует 5 минут.</p>
+						<ErrorNotice message={verificationError} title="Не удалось подтвердить email" />
+						<form className={s.verificationForm} onSubmit={verifyEmailCode}>
+							<label htmlFor="emailVerificationCode">Код из письма</label>
+							<input
+								id="emailVerificationCode"
+								className={s.verificationCodeInput}
+								type="text"
+								inputMode="numeric"
+								autoComplete="one-time-code"
+								pattern="[0-9]{4}"
+								maxLength={4}
+								value={verificationCode}
+								onChange={event => setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 4))}
+								placeholder="0000"
+								disabled={!verificationSent || verificationChecking}
+								aria-describedby="emailVerificationCodeHint"
+							/>
+							<span id="emailVerificationCodeHint" className={s.verificationCodeHint}>
+								{verificationSent ? 'Введите код из письма' : 'Сначала отправьте код на почту'}
+							</span>
+							<button
+								type="button"
+								className={s.verificationSendButton}
+								onClick={sendVerificationCode}
+								disabled={verificationSending || verificationCooldown > 0}
+							>
+								{verificationSending
+									? 'Отправляем…'
+									: verificationCooldown > 0
+										? `Повторить через ${verificationCooldown} сек.`
+										: verificationSent ? 'Отправить письмо повторно' : 'Отправить письмо'}
+							</button>
+							<button type="submit" className={s.verificationConfirmButton} disabled={!verificationSent || verificationCode.length !== 4 || verificationChecking}>
+								{verificationChecking ? 'Проверяем…' : 'Подтвердить и включить уведомления'}
+							</button>
+						</form>
+					</section>
+				</div>,
+				document.body,
+			)}
+			{logoutConfirmOpen && createPortal(
+				<div className={s.verificationOverlay} onClick={event => event.target === event.currentTarget && !loggingOut && setLogoutConfirmOpen(false)}>
+					<section className={`${s.verificationDialog} ${s.logoutConfirmDialog}`} role="dialog" aria-modal="true" aria-labelledby="logoutConfirmTitle">
+						<p id="logoutConfirmTitle" className={s.logoutConfirmQuestion}>Вы действительно хотите выйти?</p>
+						<div className={s.logoutConfirmActions}>
+							<button type="button" className={s.logoutConfirmButton} onClick={handleLogout} disabled={loggingOut}>
+								{loggingOut ? 'Выходим…' : 'Выйти'}
+							</button>
+							<button type="button" className={s.logoutConfirmStayButton} onClick={() => setLogoutConfirmOpen(false)} disabled={loggingOut}>Остаться</button>
+						</div>
+					</section>
+				</div>,
+				document.body,
+			)}
 		</>
 	)
 }

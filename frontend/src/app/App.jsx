@@ -4,6 +4,9 @@ import AppRouter from '@/app/providers/router/AppRouter'
 import { DictionariesProvider } from '@/shared/lib/dictionaries'
 import { expireSessionIfIdle, getToken, http } from '@/shared/api/httpClient'
 import { touchSession } from '@/shared/lib/sessionActivity'
+import ConnectivityNotice from '@/shared/ui/ConnectivityNotice/ConnectivityNotice'
+import GlobalErrorNotice from '@/shared/ui/GlobalErrorNotice/GlobalErrorNotice'
+import { ThemeProvider } from '@/app/providers/theme/ThemeProvider'
 
 const App = () => {
 	useEffect(() => {
@@ -43,10 +46,14 @@ const App = () => {
 	}, [])
 
 	return (
+		<ThemeProvider>
 		<DictionariesProvider>
+			<ConnectivityNotice />
+			<GlobalErrorNotice />
 			<ScrollToTop />
 			<AppRouter />
 		</DictionariesProvider>
+		</ThemeProvider>
 	)
 }
 

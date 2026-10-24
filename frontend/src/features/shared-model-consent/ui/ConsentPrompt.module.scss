@@ -21,7 +21,7 @@
 	overflow-y: auto;
 	overscroll-behavior: contain;
 	padding: clamp(1.25rem, 4vw, 2rem);
-	border: 1px solid rgba(92, 173, 228, .2);
+	border: 1px solid $quiet-line;
 	border-radius: 1.2rem;
 	background: #1c1f24;
 	box-shadow: 0 1.25rem 4rem rgba(0, 0, 0, .5);
@@ -59,7 +59,7 @@
 	padding: .8rem 1rem;
 	border: 1px solid rgba(255, 255, 255, .1);
 	border-radius: .75rem;
-	background: rgba(255, 255, 255, .025);
+	background: $quiet-surface;
 	 p { margin: 0 0 .7rem; }
 	 p:last-child { margin-bottom: 0; }
 }
@@ -85,19 +85,12 @@
 }
 
 .acceptButton {
-	background: $contrast-color;
-	color: $fc-dark;
+	@include contrast-button;
 }
 
 .declineButton {
 	background: transparent;
 	color: $fc-main;
-}
-
-.error {
-	margin: 0 0 .8rem;
-	color: $error-color;
-	font-size: .85rem;
 }
 
 @media (max-width: 480px) {

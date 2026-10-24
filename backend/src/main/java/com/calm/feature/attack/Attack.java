@@ -83,4 +83,10 @@ public class Attack {
 	public void setNote(String note) { this.note = note; }
 	public Instant getCreatedAt() { return createdAt; }
 	public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
+	/** Calendar days touched by this attack, including both endpoints. */
+	public boolean overlaps(LocalDate day) {
+		return day != null && startDate != null && !startDate.isAfter(day)
+				&& (endDate != null ? !endDate.isBefore(day) : ongoing || startDate.equals(day));
+	}
 }

@@ -4,7 +4,7 @@
 	display: flex;
 	flex-direction: column;
 	background-color: $block-color;
-	border: 1px solid rgba(92, 173, 228, 0.08);
+	border: 1px solid $quiet-line;
 	border-radius: 1.25rem;
 	overflow: hidden;
 	height: 100%;
@@ -29,8 +29,8 @@
 	display: flex;
 	align-items: center;
 	gap: 0.35rem;
-	background: none;
-	border: 1px solid rgba(92, 173, 228, 0.25);
+	background: $quiet-surface;
+	border: 1px solid $quiet-line;
 	border-radius: 2rem;
 	color: $fc-contrast;
 	padding: 0.3rem 0.75rem 0.3rem 0.5rem;
@@ -40,8 +40,7 @@
 	transition: background-color 0.18s ease, border-color 0.18s ease;
 
 	&:hover {
-		background-color: rgba(92, 173, 228, 0.08);
-		border-color: rgba(92, 173, 228, 0.45);
+		background-color: $quiet-surface-raised;
 	}
 }
 
@@ -89,8 +88,8 @@
 .list {
 	display: flex;
 	flex-direction: column;
-	gap: 0;
-	padding: 0.5rem 0;
+	gap: 0.5rem;
+	padding: 0.5rem 0.65rem;
 	list-style: none;
 }
 
@@ -98,13 +97,10 @@
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
-	padding: 0.875rem 1.25rem;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-	transition: background-color 0.15s ease;
-
-	&:last-child { border-bottom: none; }
-
-	&:hover { background-color: rgba(255, 255, 255, 0.02); }
+	padding: 0.875rem 1rem;
+	border: 0;
+	border-radius: 1rem;
+	background: $quiet-surface;
 }
 
 .attackTop {
@@ -151,7 +147,7 @@
 	font-weight: $fw-semibold;
 	padding: 0.2rem 0.5rem;
 	border-radius: 2rem;
-	border: 1px solid;
+	background: $quiet-surface;
 }
 
 .editBtn,
@@ -174,7 +170,7 @@
 
 	&.deleteBtn:hover {
 		color: $error-color;
-		background-color: rgba(239, 68, 68, 0.08);
+		background-color: rgba(239, 100, 100, 0.1);
 	}
 }
 
@@ -189,8 +185,8 @@
 	@include fluid-text(10, 9);
 	padding: 0.15rem 0.5rem;
 	border-radius: 2rem;
-	background: rgba(255, 255, 255, 0.06);
-	border: 1px solid rgba(255, 255, 255, 0.1);
+	background: $quiet-surface-raised;
+	border: 1px solid $quiet-line;
 	color: $fc-secondary;
 }
 

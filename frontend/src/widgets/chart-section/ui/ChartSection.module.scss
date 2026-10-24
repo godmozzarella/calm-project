@@ -4,7 +4,7 @@
 	display: flex;
 	flex-direction: column;
 	background-color: $block-color;
-	border: 1px solid rgba(92, 173, 228, 0.08);
+	border: 1px solid $quiet-line;
 	border-radius: 1.25rem;
 	overflow: hidden;
 	width: 100%;
@@ -35,7 +35,7 @@
 
 .tabs {
 	display: inline-flex;
-	background: rgba(23, 25, 29, 0.6);
+	background: $quiet-surface;
 	border: 1px solid rgba(255, 255, 255, 0.05);
 	border-radius: 0.625rem;
 	padding: 0.2rem;
@@ -60,13 +60,21 @@
 	white-space: nowrap;
 	flex-shrink: 0;
 	transition: background-color 0.15s ease, color 0.15s ease;
+	-webkit-tap-highlight-color: transparent;
 
 	&:hover { color: $fc-main; }
+	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: 1px; }
 }
 
 .tabActive {
-	background: rgba(92, 173, 228, 0.15);
-	color: $fc-contrast;
+	background: $quiet-surface-raised;
+	color: $fc-main;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06);
+}
+
+@media (hover: none) {
+	.tab:hover { color: $fc-secondary; }
+	.tabActive:hover { color: $fc-main; }
 }
 
 .statsLink {
@@ -79,13 +87,12 @@
 	text-decoration: none;
 	padding: 0.4rem 0.75rem;
 	border-radius: 0.625rem;
-	border: 1px solid rgba(92, 173, 228, 0.25);
-	background: rgba(92, 173, 228, 0.08);
+	border: 1px solid $quiet-line;
+	background: $quiet-surface;
 	transition: background-color 0.15s ease, border-color 0.15s ease;
 
 	&:hover {
-		background: rgba(92, 173, 228, 0.16);
-		border-color: rgba(92, 173, 228, 0.45);
+		background: $quiet-surface-raised;
 	}
 }
 

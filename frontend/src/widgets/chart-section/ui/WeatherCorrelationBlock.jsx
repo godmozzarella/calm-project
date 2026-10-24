@@ -1,3 +1,4 @@
+import { roundedPressure } from '@/shared/lib/pressure'
 import s from './WeatherCorrelationBlock.module.scss'
 
 const MIN_DAYS_FOR_INSIGHT = 7
@@ -72,12 +73,14 @@ const WeatherCorrelationBlock = ({ weather }) => {
 				/>
 				<Metric
 					label="Среднее давление в дни приступа"
-					value={avgPressureOnAttack != null ? `${avgPressureOnAttack} hPa` : '—'}
+					value={avgPressureOnAttack != null ? roundedPressure(avgPressureOnAttack) : '—'}
+					sub="мм рт. ст."
 					accent={pressureLower ? 'warning' : null}
 				/>
 				<Metric
 					label="Среднее давление в дни без боли"
-					value={avgPressureOnPainFree != null ? `${avgPressureOnPainFree} hPa` : '—'}
+					value={avgPressureOnPainFree != null ? roundedPressure(avgPressureOnPainFree) : '—'}
+					sub="мм рт. ст."
 				/>
 			</div>
 

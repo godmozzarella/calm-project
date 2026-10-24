@@ -22,10 +22,10 @@ public class User {
 
 	private String passwordHash;
 	private boolean emailVerified;
-	@Indexed(sparse = true)
-	private String emailVerificationTokenHash;
+	private String emailVerificationCodeHash;
 	private Instant emailVerificationExpiresAt;
 	private Instant emailVerificationSentAt;
+	private int emailVerificationAttempts;
 
 	/** Роль доступа. Default USER, см. {@link Role}. */
 	private Role role = Role.USER;
@@ -37,8 +37,8 @@ public class User {
 	private Double longitude;
 	private String city;
 
-	/** Шлём ли уведомления о неблагоприятной погоде на email. По умолчанию true после установки локации. */
-	private boolean notificationsEnabled = true;
+	/** Email-уведомления включаются только после подтверждения адреса и явного выбора пользователя. */
+	private boolean notificationsEnabled;
 
 	/** Дата последнего отправленного уведомления — защита от дублей в один день. */
 	private LocalDate lastNotifiedDate;
@@ -70,12 +70,14 @@ public class User {
 	public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
 	public boolean isEmailVerified() { return emailVerified; }
 	public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
-	public String getEmailVerificationTokenHash() { return emailVerificationTokenHash; }
-	public void setEmailVerificationTokenHash(String hash) { this.emailVerificationTokenHash = hash; }
+	public String getEmailVerificationCodeHash() { return emailVerificationCodeHash; }
+	public void setEmailVerificationCodeHash(String hash) { this.emailVerificationCodeHash = hash; }
 	public Instant getEmailVerificationExpiresAt() { return emailVerificationExpiresAt; }
 	public void setEmailVerificationExpiresAt(Instant expiresAt) { this.emailVerificationExpiresAt = expiresAt; }
 	public Instant getEmailVerificationSentAt() { return emailVerificationSentAt; }
 	public void setEmailVerificationSentAt(Instant sentAt) { this.emailVerificationSentAt = sentAt; }
+	public int getEmailVerificationAttempts() { return emailVerificationAttempts; }
+	public void setEmailVerificationAttempts(int attempts) { this.emailVerificationAttempts = attempts; }
 	public String getAvatarUrl() { return avatarUrl; }
 	public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 

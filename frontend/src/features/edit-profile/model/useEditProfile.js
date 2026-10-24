@@ -35,6 +35,17 @@ export const useEditProfile = ({ user, setUser }) => {
   const handleAvatarUpload = async e => {
     const file = e.target.files[0]
     if (!file) return
+	e.target.value = ''
+
+	if (file.size > 5 * 1024 * 1024) {
+	  setPasswordError('Размер фотографии не должен превышать 5 МБ')
+	  return
+	}
+	if (!file.type.startsWith('image/')) {
+	  setPasswordError('Выберите файл изображения')
+	  return
+	}
+	setPasswordError('')
 
     // Показываем превью сразу (local blob URL)
     const preview = URL.createObjectURL(file)
@@ -58,6 +69,7 @@ export const useEditProfile = ({ user, setUser }) => {
   }
 
   const handleAvatarDelete = async () => {
+    setPasswordError('')
     try {
       await http.delete('/users/me/avatar')
       setTempAvatar(null)

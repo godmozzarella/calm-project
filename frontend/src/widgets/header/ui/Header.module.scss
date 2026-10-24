@@ -5,10 +5,10 @@ header {
 	align-items: center;
 	gap: 2.5rem;
 
-	background-color: rgba(23, 23, 23, 0.85);
+	background-color: color-mix(in srgb, var(--secondary-color) 88%, transparent);
 	backdrop-filter: blur(10px);
 	-webkit-backdrop-filter: blur(10px);
-	border: 1px solid rgba(92, 173, 228, 0.08);
+	border: 1px solid $quiet-line;
 	border-radius: 2rem;
 	padding: 0.625rem 1rem;
 	margin: 1.25rem auto;

@@ -5,11 +5,15 @@ import {
 	TelegramIcon,
 	XIcon,
 	YouTubeIcon,
+	DarkModeOutlinedIcon,
+	LightModeOutlinedIcon,
 } from '@/shared/ui/icons'
+import { useTheme } from '@/app/providers/theme/ThemeProvider'
 
 import s from './Footer.module.scss'
 
 const Footer = () => {
+	const { theme, toggleTheme } = useTheme()
 	return (
 		<div className={s.footerRoot} id="contacts">
 		<footer>
@@ -49,6 +53,7 @@ const Footer = () => {
 
 			<div className={s.item2}>
 				<div className={s.bottomLeft}>
+					<div className={s.localeThemeControls}>
 					<Button
 						sText
 						icon={<LanguageIcon />}
@@ -56,6 +61,10 @@ const Footer = () => {
 					>
 						Русский
 					</Button>
+					<button className={s.themeButton} type="button" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}>
+						{theme === 'dark' ? <LightModeOutlinedIcon fontSize="small" /> : <DarkModeOutlinedIcon fontSize="small" />}
+					</button>
+					</div>
 					<p className={s.copyright}>
 						2026 &copy; Calm — сервис отслеживания и анализа головной боли
 					</p>

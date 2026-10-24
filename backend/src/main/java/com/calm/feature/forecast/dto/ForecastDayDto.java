@@ -11,10 +11,11 @@ import java.util.List;
  * @param date              календарная дата
  * @param risk              уровень риска ({@code LOW/MEDIUM/HIGH})
  * @param score             численный риск-скор 0..100 (для интерполяций на фронте)
- * @param reasons           список причин, по которым риск повышен (например «Давление падает на 8 hPa»)
- * @param pressureHpa       среднее давление, гПа (или null)
- * @param pressureDelta24h  изменение давления за 24ч, гПа (или null)
+ * @param reasons           список причин, по которым риск повышен (давление в мм рт. ст.)
+ * @param pressureMmHg      среднее давление, мм рт. ст. (или null)
+ * @param pressureDelta24hMmHg изменение давления за 24ч, мм рт. ст. (или null)
  * @param humidity          средняя влажность, % (или null)
+ * @param humidityDelta24h  изменение средней влажности за сутки, п.п. (или null)
  * @param tempMin           минимальная температура, °C (или null)
  * @param tempMax           максимальная температура, °C (или null)
  * @param windKmhMax        максимум порывов ветра, км/ч (или null)
@@ -25,9 +26,10 @@ public record ForecastDayDto(
 		RiskLevel risk,
 		int score,
 		List<String> reasons,
-		Double pressureHpa,
-		Double pressureDelta24h,
+		Double pressureMmHg,
+		Double pressureDelta24hMmHg,
 		Double humidity,
+		Double humidityDelta24h,
 		Double tempMin,
 		Double tempMax,
 		Double windKmhMax,

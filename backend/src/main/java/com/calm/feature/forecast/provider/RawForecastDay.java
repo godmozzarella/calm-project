@@ -14,6 +14,7 @@ import java.time.LocalDate;
  * @param pressureDelta24h  изменение давления за последние 24ч относительно
  *                          предыдущих суток, гПа (резкое падение — повышенный риск)
  * @param humidityAvg       средняя относительная влажность за сутки, %
+ * @param humidityDelta24h  изменение средней влажности относительно предыдущих суток, п.п.
  * @param tempMin           минимум температуры, °C
  * @param tempMax           максимум температуры, °C
  * @param windKmhMax        максимум порывов ветра, км/ч
@@ -25,6 +26,7 @@ public record RawForecastDay(
 		Double pressureHpaAvg,
 		Double pressureDelta24h,
 		Double humidityAvg,
+		Double humidityDelta24h,
 		Double tempMin,
 		Double tempMax,
 		Double windKmhMax,
@@ -34,10 +36,11 @@ public record RawForecastDay(
 	/** Конструктор без kpIndex — обратная совместимость с OpenMeteoProvider. */
 	public RawForecastDay(LocalDate date, Double pressureHpaAvg, Double pressureDelta24h,
 	                      Double humidityAvg, Double tempMin, Double tempMax, Double windKmhMax) {
-		this(date, pressureHpaAvg, pressureDelta24h, humidityAvg, tempMin, tempMax, windKmhMax, null, null);
+		this(date, pressureHpaAvg, pressureDelta24h, humidityAvg, null, tempMin, tempMax, windKmhMax, null, null);
 	}
 
 	public RawForecastDay withKpIndex(Double kp) {
-		return new RawForecastDay(date, pressureHpaAvg, pressureDelta24h, humidityAvg, tempMin, tempMax, windKmhMax, kp, timezone);
+		return new RawForecastDay(date, pressureHpaAvg, pressureDelta24h, humidityAvg, humidityDelta24h,
+				tempMin, tempMax, windKmhMax, kp, timezone);
 	}
 }

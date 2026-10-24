@@ -37,14 +37,17 @@ public class AuthController {
 	}
 
 	@PostMapping("/verify-email")
-	public ResponseEntity<Void> verifyEmail(@Valid @RequestBody VerifyEmailRequest req) {
-		emailVerification.verify(req.token());
+	public ResponseEntity<Void> verifyEmail(
+			@Valid @RequestBody VerifyEmailRequest req,
+			@AuthenticationPrincipal AuthenticatedUser principal
+	) {
+		emailVerification.verify(principal.getUserId(), req.code());
 		return ResponseEntity.noContent().build();
 	}
 
-	@PostMapping("/resend-verification")
-	public ResponseEntity<Void> resendVerification(@AuthenticationPrincipal AuthenticatedUser principal) {
-		emailVerification.resend(principal.getUserId());
+	@PostMapping("/send-verification-code")
+	public ResponseEntity<Void> sendVerificationCode(@AuthenticationPrincipal AuthenticatedUser principal) {
+		emailVerification.sendCode(principal.getUserId());
 		return ResponseEntity.noContent().build();
 	}
 

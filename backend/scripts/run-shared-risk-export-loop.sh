@@ -34,6 +34,17 @@ rm -f /tmp/calm-risk-last-success
 while :; do
   # Any failure exits the process; Compose restarts it, and health stays non-green.
   timeout "$run_timeout" mongosh --quiet "$CALM_TRAINING_SOURCE_URI" --file /scripts/export-shared-risk-training.js
+  export_dir="${CALM_TRAINING_EXPORT_DIR:-/exports}"
+  mkdir -p "$export_dir"
+  export_tmp="$export_dir/shared-risk-training.csv.tmp"
+  if timeout "$run_timeout" mongosh --quiet "$CALM_TRAINING_MONGO_URI" \
+      --file /scripts/export-shared-risk-training-csv.js > "$export_tmp"; then
+    chmod 600 "$export_tmp"
+    mv -f "$export_tmp" "$export_dir/shared-risk-training.csv"
+  else
+    rm -f "$export_tmp"
+    echo 'CSV snapshot export failed; MongoDB training snapshot remains available' >&2
+  fi
   date +%s > /tmp/calm-risk-last-success
   sleep "$interval"
 done
