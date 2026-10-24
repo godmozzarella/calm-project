@@ -31,6 +31,15 @@ export const dateKey = d =>
 const diffDays = (a, b) =>
 	Math.round((b.getTime() - a.getTime()) / 86_400_000)
 
+const dayWord = count => {
+	const lastTwo = count % 100
+	if (lastTwo >= 11 && lastTwo <= 14) return 'дней'
+	const last = count % 10
+	if (last === 1) return 'день'
+	if (last >= 2 && last <= 4) return 'дня'
+	return 'дней'
+}
+
 const getWeekDays = date => {
 	const day = date.getDay() === 0 ? 6 : date.getDay() - 1
 	return Array.from({ length: 7 }, (_, i) => {
@@ -46,7 +55,7 @@ const relativeLabel = date => {
 	if (diff === 0) return 'Сегодня'
 	if (diff === 1) return 'Вчера'
 	if (diff === 2) return 'Позавчера'
-	if (diff > 2) return `${diff} дня назад`
+	if (diff > 2) return `${diff} ${dayWord(diff)} назад`
 	return null
 }
 
@@ -90,7 +99,7 @@ const DayBar = ({ date, setDate, city }) => {
 				{city && (
 					<span className={s.city} title={city}>
 						<LocationOnIcon style={{ fontSize: '0.95rem' }} />
-						{city}
+						<span className={s.cityName}>{city}</span>
 					</span>
 				)}
 				{!isToday && (

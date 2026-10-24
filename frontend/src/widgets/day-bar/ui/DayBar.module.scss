@@ -129,10 +129,14 @@
 	@include fluid-text(11, 10);
 	color: $fc-secondary;
 	width: fit-content;
-	max-width: 16rem;
-	overflow: hidden;
-	text-overflow: ellipsis;
 	white-space: nowrap;
+
+	svg { flex-shrink: 0; }
+}
+
+.cityName {
+	display: block;
+	min-width: 0;
 }
 
 /* ── Week strip ── */
@@ -155,7 +159,15 @@
 
 	.center {
 		flex: 1;
+		min-width: 0;
 		align-items: flex-start;
+	}
+
+	.city { max-width: 100%; }
+
+	.cityName {
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 }
 
