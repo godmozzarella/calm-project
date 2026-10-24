@@ -32,7 +32,7 @@ import { useEditProfile } from '@/features/edit-profile'
 import { LocationOnboarding } from '@/features/onboarding-location'
 import { clearCurrentUser, setCurrentUser } from '@/entities/user'
 import { authApi, userApi, forecastApi, riskApi } from '@/shared/api'
-import { useTheme } from '@/app/providers/theme/ThemeProvider'
+import { useTheme } from '@/app/providers/theme/useTheme'
 
 import s from './SidebarProfile.module.scss'
 

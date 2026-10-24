@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import { useState, useLayoutEffect, useRef } from 'react'
 import { intensityColor } from '@/entities/attack'
 import { pickLabelIndices } from '../lib/buckets'
 import s from './BarChart.module.scss'
@@ -28,6 +28,7 @@ const BarChart = ({ buckets, metric, onBarClick }) => {
 	const wrapRef = useRef(null)
 	const [w, setW] = useState(MIN_W)
 	const [hover, setHover] = useState(null)
+	const isEmpty = buckets.length === 0
 
 	useLayoutEffect(() => {
 		if (!wrapRef.current) return
@@ -37,9 +38,9 @@ const BarChart = ({ buckets, metric, onBarClick }) => {
 		})
 		ro.observe(wrapRef.current)
 		return () => ro.disconnect()
-	}, [buckets.length === 0])
+	}, [isEmpty])
 
-	if (buckets.length === 0) {
+	if (isEmpty) {
 		return <div ref={wrapRef} className={s.empty}>Нет данных для отображения</div>
 	}
 

@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { ThemeContext } from './themeContext'
 
-const ThemeContext = createContext(null)
 const THEME_KEY = 'calm_theme'
 const getInitialTheme = () => {
 	try { return localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark' }
@@ -15,10 +15,4 @@ export const ThemeProvider = ({ children }) => {
 	}, [theme])
 	const value = useMemo(() => ({ theme, toggleTheme: () => setTheme(current => current === 'dark' ? 'light' : 'dark') }), [theme])
 	return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
-}
-
-export const useTheme = () => {
-	const context = useContext(ThemeContext)
-	if (!context) throw new Error('useTheme must be used inside ThemeProvider')
-	return context
 }

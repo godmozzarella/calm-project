@@ -8,7 +8,7 @@ import {
 	DarkModeOutlinedIcon,
 	LightModeOutlinedIcon,
 } from '@/shared/ui/icons'
-import { useTheme } from '@/app/providers/theme/ThemeProvider'
+import { useTheme } from '@/app/providers/theme/useTheme'
 
 import s from './Footer.module.scss'
 

@@ -1,1 +1,2 @@
-export { DictionariesProvider, useDictionaries } from './DictionariesContext'
+export { DictionariesProvider } from './DictionariesContext'
+export { useDictionaries } from './dictionaryStore'
