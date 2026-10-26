@@ -82,6 +82,31 @@ class SharedModelParticipationServiceTest {
 	}
 
 	@Test
+	void decliningNewTermsWithdrawsOldParticipationAndClosesPrompt() {
+		var repository = mock(SharedModelParticipationRepository.class);
+		var participation = new SharedModelParticipation("pilot-user");
+		participation.grant("shared-model-pilot-v1", "old-digest", Instant.now());
+		when(repository.findByUserId("pilot-user")).thenReturn(Optional.of(participation));
+		when(repository.save(participation)).thenReturn(participation);
+		var service = new SharedModelParticipationService(repository, true, SharedModelConsentPolicy.VERSION,
+			SharedModelConsentPolicy.DIGEST);
+
+		var displayed = service.get("pilot-user");
+		assertThat(displayed.showConsentPrompt()).isTrue();
+		var response = service.decline("pilot-user", displayed.currentConsentVersion(), displayed.currentConsentDigest());
+
+		assertThat(response.participating()).isFalse();
+		assertThat(response.showConsentPrompt()).isFalse();
+		assertThat(participation.getEvents()).extracting(SharedModelParticipation.ParticipationEvent::action)
+			.containsExactly("GRANTED", "WITHDRAWN", "DECLINED");
+		assertThat(participation.getEvents()).last().satisfies(event -> {
+			assertThat(event.consentVersion()).isEqualTo(SharedModelConsentPolicy.VERSION);
+			assertThat(event.consentDigest()).isEqualTo(SharedModelConsentPolicy.DIGEST);
+		});
+		verify(repository).save(participation);
+	}
+
+	@Test
 	void administratorCanBlockAndLaterRestoreParticipationAccess() {
 		var repository = mock(SharedModelParticipationRepository.class);
 		var participation = new SharedModelParticipation("pilot-user");

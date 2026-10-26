@@ -59,7 +59,12 @@ public class SharedModelParticipation {
 	}
 
 	public void decline(String offeredVersion, String offeredDigest, Instant at) {
-		if (participating) throw new IllegalStateException("A participant cannot decline while participating");
+		if (participating) {
+			if (offeredVersion.equals(consentVersion) && offeredDigest.equals(consentDigest)) {
+				throw new IllegalStateException("A participant cannot decline current consent while participating");
+			}
+			withdraw(at);
+		}
 		if (!events.isEmpty()) {
 			ParticipationEvent last = events.get(events.size() - 1);
 			if ("DECLINED".equals(last.action()) && offeredVersion.equals(last.consentVersion()) &&

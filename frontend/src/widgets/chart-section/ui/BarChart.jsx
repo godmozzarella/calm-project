@@ -40,7 +40,7 @@ const BarChart = ({ buckets, metric, onBarClick }) => {
 		return () => ro.disconnect()
 	}, [hasBuckets])
 
-	if (buckets.length === 0) {
+	if (!hasBuckets) {
 		return <div ref={wrapRef} className={s.empty}>Нет данных для отображения</div>
 	}
 
