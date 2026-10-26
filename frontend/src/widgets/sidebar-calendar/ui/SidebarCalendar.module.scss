@@ -17,6 +17,7 @@
 	z-index: 1000;
 	color: $fc-main;
 	overflow-y: auto;
+	overscroll-behavior: contain;
 	scrollbar-width: none;
 
 	&::-webkit-scrollbar { display: none; }
@@ -119,7 +120,7 @@
 	font-weight: $fw-semibold;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
-	color: rgba(140, 150, 170, 0.6);
+	color: var(--fc-subtle);
 	padding: 0.25rem 0;
 }
 
@@ -146,7 +147,7 @@
 	transition: background-color 0.15s ease, border-color 0.15s ease;
 
 	&:hover:not(:disabled) {
-		background-color: var(--surface-hover);
+		background-color: var(--selection-hover);
 	}
 }
 
@@ -161,19 +162,40 @@
 }
 
 .cellToday {
-	background-color: $quiet-surface-raised;
-	border-color: $quiet-line;
+	background-color: var(--selection-hover);
 
 	.cellNum {
-		color: $fc-contrast;
+		color: $fc-main;
 		font-weight: $fw-semibold;
 	}
 }
 
-.cellSelected {
-	background-color: var(--surface-hover);
-	border-color: rgba(255, 255, 255, 0.18);
+:root:not([data-theme='light']) .cellToday:not(.cellSelected) {
+	background-color: transparent;
+	color: $fc-contrast;
+	.cellNum { color: $fc-contrast; }
+	&:hover:not(:disabled) { background-color: transparent; }
 }
+
+:root[data-theme='light'] .cellToday:not(.cellSelected) {
+	background-color: transparent;
+	color: $fc-contrast;
+	.cellNum { color: $fc-contrast; }
+	&:hover:not(:disabled) { background-color: transparent; }
+}
+
+.cellSelected {
+	background-color: var(--selected-control-bg);
+	color: var(--selected-control-fg);
+
+	.cellNum { color: var(--selected-control-fg); }
+}
+
+.cellSelected:hover:not(:disabled) {
+	background-color: var(--selected-control-bg);
+}
+
+:root[data-theme='light'] .cellToday.cellSelected { background-color: var(--selected-control-bg); }
 
 .cellNum {
 	@include fluid-text(13, 11);
@@ -200,7 +222,7 @@
 	margin: 1rem 0.75rem 0;
 	padding: 0.875rem 1rem;
 	background: var(--surface-hover);
-	border: 1px solid rgba(255, 255, 255, 0.08);
+	border: 0;
 	border-radius: 0.875rem;
 	animation: slideDown 0.2s ease;
 }
@@ -229,7 +251,7 @@
 	padding: 0.5rem 0.625rem;
 	border-radius: 0.625rem;
 	background: none;
-	border: 1px solid transparent;
+	border: 0;
 	color: $fc-main;
 	cursor: pointer;
 	text-align: left;
@@ -237,7 +259,6 @@
 
 	&:hover {
 		background-color: var(--surface-hover);
-		border-color: rgba(255, 255, 255, 0.08);
 	}
 }
 
@@ -265,7 +286,7 @@
 	margin: 1rem 0.75rem 0;
 	padding: 0.875rem 1rem;
 	background: var(--surface-hover);
-	border: 1px solid rgba(255, 255, 255, 0.08);
+	border: 0;
 	border-radius: 0.875rem;
 	animation: slideDown 0.2s ease;
 }
@@ -321,15 +342,18 @@
 	transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 
 	&:hover {
-		background-color: var(--surface-hover);
+		background-color: var(--selection-hover);
 		color: $fc-main;
 	}
 }
 
 .markItemActive {
-	background-color: var(--surface-hover);
-	border-color: rgba(255, 255, 255, 0.1);
+	background-color: var(--selection-surface);
 	color: $fc-main;
+}
+
+.markItemActive:hover {
+	background-color: var(--selection-surface);
 }
 
 .markDot {

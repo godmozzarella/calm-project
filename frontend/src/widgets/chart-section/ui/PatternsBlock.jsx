@@ -50,7 +50,7 @@ const MedsBlock = ({ items }) => (
 			<ul className={s.medList}>
 				{items.map(m => {
 					const rounded = m.avgEff !== null ? Math.round(m.avgEff) : null
-					const color = rounded ? EFF_COLOR[rounded] : 'rgba(140,150,170,0.4)'
+					const color = rounded ? EFF_COLOR[rounded] : 'var(--fc-subtle)'
 					const label = rounded
 						? `${EFFECTIVENESS_LABELS[rounded]} · ${m.avgEff.toFixed(1)}/3`
 						: 'Не оценено'
@@ -110,13 +110,13 @@ const PatternsBlock = ({ patterns }) => {
 			<ListBlock
 				title="Топ-триггеры"
 				items={patterns.topTriggers}
-				accent="rgba(92, 173, 228, 0.55)"
+				accent="color-mix(in srgb, var(--fc-contrast) 70%, transparent)"
 				emptyText="Триггеры не отмечены"
 			/>
 			<ListBlock
 				title="Частые симптомы"
 				items={patterns.topSymptoms}
-				accent="rgba(168, 85, 247, 0.55)"
+				accent="color-mix(in srgb, var(--fc-contrast) 55%, var(--fc-secondary))"
 				emptyText="Симптомы не отмечены"
 			/>
 			<ZonesBlock zones={patterns.zones} />

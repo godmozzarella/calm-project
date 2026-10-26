@@ -51,11 +51,12 @@ const ConsentPrompt = ({ status, saving, error, onDecide }) => {
 				</div>
 				<ErrorNotice message={error} title="Не удалось сохранить выбор" />
 				<div className={s.actions}>
-					<button type="button" className={s.acceptButton} onClick={() => onDecide(true)} disabled={saving}>
+					<button type="button" className={s.acceptButton} onClick={() => onDecide(true)} disabled={saving} data-help="Разрешить использовать перечисленные данные дневника для проверки общей модели. Согласие можно отозвать в профиле.">
 						{saving ? 'Сохраняем…' : 'Согласиться и участвовать'}
 					</button>
 					<button ref={declineButton} type="button" className={s.declineButton}
-						onClick={() => onDecide(false)} disabled={saving}>
+						onClick={() => onDecide(false)} disabled={saving}
+						data-help="Продолжить вести дневник без участия в общей модели. Решение можно изменить позже в профиле.">
 						{saving ? 'Сохраняем…' : 'Продолжить без участия'}
 					</button>
 				</div>

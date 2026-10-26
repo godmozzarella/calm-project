@@ -10,6 +10,7 @@ public record MedicationDto(
 		String id,
 		String intakeId,
 		String name,
+		String personalMedicationId,
 		String dosage,
 		String category,
 		LocalDate date,
@@ -22,10 +23,15 @@ public record MedicationDto(
 		Instant createdAt
 ) {
 	public static MedicationDto from(Medication m) {
+		return from(m, m.getName());
+	}
+
+	public static MedicationDto from(Medication m, String displayName) {
 		return new MedicationDto(
 				m.getId(),
 				m.getIntakeId(),
-				m.getName(),
+				displayName,
+				m.getPersonalMedicationId(),
 				m.getDosage(),
 				m.getCategory(),
 				m.getDate(),

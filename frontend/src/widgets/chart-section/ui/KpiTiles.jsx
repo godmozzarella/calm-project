@@ -26,13 +26,13 @@ const KpiTiles = ({ kpis }) => {
 
 	return (
 		<div className={s.grid}>
-			<div className={s.tile}>
+			<div className={s.tile} data-help="Сколько приступов вы записали за выбранный период.">
 				<span className={s.label}>Всего</span>
 				<span className={s.value}>{total}</span>
 				<span className={s.sub}>{pluralAttacks(total)} за период</span>
 			</div>
 
-			<div className={s.tile}>
+			<div className={s.tile} data-help="Средняя сила боли в записанных приступах по шкале от 1 до 10.">
 				<span className={s.label}>Средняя интенсивность</span>
 				<span
 					className={s.value}
@@ -43,13 +43,13 @@ const KpiTiles = ({ kpis }) => {
 				<span className={s.sub}>{avgIntensity > 0 ? 'из 10' : 'нет данных'}</span>
 			</div>
 
-			<div className={s.tile}>
+			<div className={s.tile} data-help="Самая длинная последовательность дней без приступа за выбранный период.">
 				<span className={s.label}>Макс. серия без приступов</span>
 				<span className={s.value}>{longestStreak}</span>
 				<span className={s.sub}>{pluralDays(longestStreak)} за период</span>
 			</div>
 
-			<div className={`${s.tile} ${overuseRisk ? s.tileWarn : ''}`}>
+			<div className={`${s.tile} ${overuseRisk ? s.tileWarn : ''}`} data-help="Сколько дней в этом месяце вы отмечали приём обезболивающих. Частый приём может повышать риск головной боли.">
 				<span className={s.label}>Обезболивающие</span>
 				<span className={s.value}>{overuseDays}</span>
 				<span className={s.sub}>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PAIN_ZONE_LABELS } from '@/entities/attack'
 
 const HEAD_PATH = 'M80,16 C132,16 154,58 154,106 C154,164 128,210 80,213 C32,210 6,164 6,106 C6,58 28,16 80,16Z'
 
@@ -43,6 +44,17 @@ const HeadBack = ({ zones = {}, onToggle, readOnly = false }) => {
 		onClick:      () => onToggle(zone),
 		onMouseEnter: () => setHovered(zone),
 		onMouseLeave: () => setHovered(null),
+		onKeyDown: event => {
+			if (event.key === 'Enter' || event.key === ' ') {
+				event.preventDefault()
+				onToggle(zone)
+			}
+		},
+		role: 'button',
+		tabIndex: 0,
+		'aria-label': `Зона боли: ${PAIN_ZONE_LABELS[zone]}`,
+		'aria-pressed': Boolean(zones[zone]),
+		'data-help': `Отметить зону «${PAIN_ZONE_LABELS[zone]}». Повторные нажатия меняют силу боли и затем снимают отметку.`,
 	}
 
 	const zoneEl = (zone, cx, cy, rx, ry) => {

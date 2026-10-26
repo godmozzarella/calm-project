@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { ChartSection } from '@/widgets/chart-section'
 import { BackIcon, PrintIcon, FileDownloadIcon } from '@/shared/ui/icons'
@@ -11,6 +11,8 @@ import {
 	MEDICATIONS_CHANGED,
 } from '@/shared/lib/dataEvents'
 import { useDictionaries } from '@/shared/lib/dictionaries'
+import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
+import PageLoading from '@/shared/ui/PageLoading/PageLoading'
 
 import {
 	exportAttacksCsv,
@@ -32,27 +34,45 @@ const todayLong = () => {
 }
 
 const StatsPage = () => {
-	const [user, setUser]             = useState(null)
+	const location = useLocation()
+	const navigate = useNavigate()
+	const [user]                      = useState(getCurrentUser)
 	const [attacks, setAttacks]       = useState([])
 	const [medications, setMedications] = useState([])
+	const [readyParts, setReadyParts] = useState({})
+	const [showBeforeReady, setShowBeforeReady] = useState(false)
 	const [pdfLoading, setPdfLoading] = useState(false)
 	const [riskQuality, setRiskQuality] = useState(null)
 	const [riskQualityError, setRiskQualityError] = useState(null)
 	const { symptoms, triggers }      = useDictionaries()
+	const markReady = useCallback(part => setReadyParts(previous =>
+		previous[part] ? previous : { ...previous, [part]: true }), [])
+	const statsReady = ['attacks', 'medications', 'quality', 'chart']
+		.every(part => readyParts[part])
+	const statsVisible = statsReady || showBeforeReady
+	useBodyScrollLock(!statsVisible)
 
 	const loadAttacks = useCallback(() => attackApi.getAll().then(setAttacks).catch(() => {}), [])
 	const loadMeds    = useCallback(() => medicationApi.getAll().then(setMedications).catch(() => {}), [])
 
-	useEffect(() => { setUser(getCurrentUser()) }, [])
-	useEffect(() => { loadAttacks() }, [loadAttacks])
-	useEffect(() => { loadMeds() },    [loadMeds])
+	useEffect(() => {
+		let active = true
+		loadAttacks().then(() => { if (active) markReady('attacks') })
+		return () => { active = false }
+	}, [loadAttacks, markReady])
+	useEffect(() => {
+		let active = true
+		loadMeds().then(() => { if (active) markReady('medications') })
+		return () => { active = false }
+	}, [loadMeds, markReady])
 	useEffect(() => {
 		let active = true
 		riskApi.getQuality()
 			.then(data => { if (active) setRiskQuality(data) })
 			.catch(e => { if (active) setRiskQualityError(e.message) })
+			.finally(() => { if (active) markReady('quality') })
 		return () => { active = false }
-	}, [])
+	}, [markReady])
 
 	useEffect(() => subscribe(ATTACKS_CHANGED,     loadAttacks), [loadAttacks])
 	useEffect(() => subscribe(MEDICATIONS_CHANGED, loadMeds),    [loadMeds])
@@ -61,6 +81,15 @@ const StatsPage = () => {
 
 	const handleExportAttacks = () => exportAttacksCsv(attacks, { symptoms, triggers })
 	const handleExportMeds    = () => exportMedicationsCsv(medications)
+	const handleBack = () => {
+		if (location.state?.from === 'menu') {
+			navigate('/profile', { replace: true, state: { openMenu: true } })
+		} else if (location.state?.from === 'diary') {
+			navigate('/profile', { replace: true, state: { scrollToChart: true } })
+		} else {
+			navigate('/profile', { replace: true })
+		}
+	}
 
 	const buildReportArgs = async () => {
 		const summary = await statsApi.getSummary('month').catch(() => ({}))
@@ -94,6 +123,7 @@ const StatsPage = () => {
 
 	return (
 		<div className={s.page}>
+			{!statsVisible && <PageLoading label="Загружаем статистику…" onContinue={() => setShowBeforeReady(true)} />}
 			{pdfLoading && (
 				<div className={s.pdfOverlay}>
 					<div className={s.pdfOverlaySpinner} />
@@ -102,10 +132,9 @@ const StatsPage = () => {
 			)}
 
 			<div className={s.topBar}>
-				<Link to="/profile" className={s.backBtn} aria-label="К дневнику">
+				<button type="button" onClick={handleBack} className={s.backBtn} aria-label="Назад" title="Назад">
 					<BackIcon fontSize="small" />
-					<span>К дневнику</span>
-				</Link>
+				</button>
 
 				<div className={s.titleWrap}>
 					<h1 className={s.title}>Статистика</h1>
@@ -155,7 +184,7 @@ const StatsPage = () => {
 			</div>
 
 			<div className={s.dashboard}>
-				<ChartSection />
+				<ChartSection onInitialReady={markReady} />
 				<RiskQualityBlock quality={riskQuality} error={riskQualityError} />
 			</div>
 

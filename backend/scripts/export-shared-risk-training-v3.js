@@ -127,6 +127,44 @@
   const medicationsByUser = new Map()
   const noAttackDays = new Set()
 
+  const personalLabel = 'Свой препарат'
+  const publicMedicationNames = new Set([
+    'Суматриптан', 'Золмитриптан', 'Элетриптан', 'Нурофен', 'Ибупрофен',
+    'Найз', 'Аспирин', 'Парацетамол', 'Кетопрофен', 'Нурофен Экспресс',
+    'Аспирин УПСА', 'Имигран спрей', 'Золмитриптан спрей',
+  ].map(name => name.toLowerCase()))
+  for (const entry of source.dictionaries.find({ type: 'MEDICATION_PRESET' }).toArray()) {
+    if (entry.label) publicMedicationNames.add(entry.label.toLowerCase())
+    if (entry.value) publicMedicationNames.add(entry.value.toLowerCase())
+  }
+  const personalNamesByUser = new Map()
+  const addPersonalName = (userId, name) => {
+    if (!userId || typeof name !== 'string') return
+    if (!personalNamesByUser.has(userId)) personalNamesByUser.set(userId, new Set())
+    personalNamesByUser.get(userId).add(name.toLowerCase())
+  }
+  for (const personal of source.personal_medications.find({ userId: { $in: userIds } }).toArray()) {
+    addPersonalName(personal.userId, personal.name)
+  }
+  const trainingMedicationName = medication =>
+    medication.personalMedicationId || medication.category === 'Другое'
+      ? personalLabel : medication.name ?? null
+  const safeHistoryDetails = (details, userId) => {
+    const counts = new Map()
+    for (const entry of details.medicationNamesLast30Days) {
+      const normalized = entry.code.toLowerCase()
+      const code = publicMedicationNames.has(normalized) && !personalNamesByUser.get(userId)?.has(normalized)
+        ? entry.code : personalLabel
+      counts.set(code, (counts.get(code) ?? 0) + entry.count)
+    }
+    return {
+      ...details,
+      medicationNamesLast30Days: [...counts.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([code, count]) => ({ code, count })),
+    }
+  }
+
   if (userIds.length > 0) {
     phase = 'read labeled days and forecasts'
     for (const outcome of source.risk_daily_outcomes.find({ userId: { $in: userIds } }).toArray()) {
@@ -141,6 +179,9 @@
       attacksByUser.get(attack.userId).push({ ...attack, start, end })
     }
     for (const medication of source.medications.find({ userId: { $in: userIds } }).toArray()) {
+      if (medication.category === 'Другое' && !medication.personalMedicationId) {
+        addPersonalName(medication.userId, medication.name)
+      }
       const date = dateKey(medication.date)
       if (!date) continue
       if (!medicationsByUser.has(medication.userId)) medicationsByUser.set(medication.userId, [])
@@ -216,7 +257,7 @@
     }))
     const medications = dayMedications.map(medication => ({
       time: medication.time == null ? null : String(medication.time).slice(0, 5),
-      name: medication.name ?? null,
+      name: trainingMedicationName(medication),
       therapeuticClass: medication.therapeuticClass ?? null,
       purpose: medication.purpose ?? null,
       effectiveness: medication.effectiveness ?? null,
@@ -233,7 +274,7 @@
       forecastTimezone: timezone,
       locationGrid: grid,
       diaryOutcome: { attacks, medications },
-      historyDetails,
+      historyDetails: safeHistoryDetails(historyDetails, userId),
       binaryPrediction: null,
       predictionMatched: null,
       baselineScore: prediction.score,

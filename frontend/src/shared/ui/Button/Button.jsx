@@ -8,13 +8,15 @@ const {
 	colored = false,
 	children,
 	sText = false,
-	icon
+	icon,
+	...buttonProps
 } = props;
 
 	return(
 		<button 
 		type={type}
 			onClick={onClick} 
+			{...buttonProps}
 			className={`${colored ? s.colored : ''} ${className || ''}`}>			
 			{children && <span className={sText ? s.sText : s.mText}>{children}</span>}
 			{icon && <span className={s.icon}>{icon}</span>}

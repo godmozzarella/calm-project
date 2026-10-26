@@ -46,7 +46,7 @@ input {
 		background-color 0.2s ease;
 
 	&::placeholder {
-		color: rgba(190, 190, 190, 0.4);
+		color: color-mix(in srgb, var(--fc-secondary) 40%, transparent);
 	}
 
 	&:focus {

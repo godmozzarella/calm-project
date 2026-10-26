@@ -6,6 +6,7 @@ const notify = result => { emit(MEDICATIONS_CHANGED); return result }
 const medicationBody = med => ({
   intakeId:         med.intakeId         ?? null,
   name:             med.name,
+  personalMedicationId: med.personalMedicationId ?? null,
   dosage:           med.dosage           ?? null,
   category:         med.category         ?? null,
   date:             med.date,
@@ -20,6 +21,8 @@ const medicationBody = med => ({
 export const medicationApi = {
   getByDate:     date           => http.get(`/medications?from=${date}&to=${date}`),
   getAll:        ()             => http.get('/medications'),
+  getPersonal:   ()             => http.get('/medications/personal'),
+  deletePersonal: id            => http.delete(`/medications/personal/${encodeURIComponent(id)}`),
   getInRange:    (from, to)     => http.get(`/medications?from=${from}&to=${to}`),
   getOveruseDays: (year, month) => http.get(`/medications/overuse?year=${year}&month=${month}`)
                                       .then(r => r.days),

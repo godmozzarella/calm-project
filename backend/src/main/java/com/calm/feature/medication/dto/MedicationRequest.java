@@ -12,6 +12,7 @@ public record MedicationRequest(
 		String clientId,
 		String intakeId,
 		@NotBlank String name,
+		String personalMedicationId,
 		String dosage,
 		String category,
 		@NotNull LocalDate date,

@@ -12,7 +12,7 @@ const MIN_W = 280
 
 const TOOLTIP_W = 200 // приблизительная ширина для clamp
 
-const COUNT_COLOR = '#5cade4'
+const COUNT_COLOR = 'var(--fc-contrast)'
 
 const formatTooltipDate = bucket => {
 	if (bucket.fromKey === bucket.toKey) {
@@ -28,7 +28,7 @@ const BarChart = ({ buckets, metric, onBarClick }) => {
 	const wrapRef = useRef(null)
 	const [w, setW] = useState(MIN_W)
 	const [hover, setHover] = useState(null)
-	const isEmpty = buckets.length === 0
+	const hasBuckets = buckets.length > 0
 
 	useLayoutEffect(() => {
 		if (!wrapRef.current) return
@@ -38,9 +38,9 @@ const BarChart = ({ buckets, metric, onBarClick }) => {
 		})
 		ro.observe(wrapRef.current)
 		return () => ro.disconnect()
-	}, [isEmpty])
+	}, [hasBuckets])
 
-	if (isEmpty) {
+	if (!hasBuckets) {
 		return <div ref={wrapRef} className={s.empty}>Нет данных для отображения</div>
 	}
 
@@ -111,7 +111,7 @@ const BarChart = ({ buckets, metric, onBarClick }) => {
 
 					const isEmpty = b.count === 0
 					const fill = isEmpty
-						? 'rgba(255,255,255,0.06)'
+						? 'var(--surface-hover)'
 						: metric === 'intensity'
 							? intensityColor(b.maxIntensity)
 							: COUNT_COLOR
@@ -125,6 +125,16 @@ const BarChart = ({ buckets, metric, onBarClick }) => {
 							onMouseEnter={() => setHover(i)}
 							onMouseLeave={() => setHover(null)}
 							onClick={() => b.dateKey && onBarClick?.(b.dateKey)}
+							onKeyDown={event => {
+								if (b.dateKey && (event.key === 'Enter' || event.key === ' ')) {
+									event.preventDefault()
+									onBarClick?.(b.dateKey)
+								}
+							}}
+							role={b.dateKey ? 'button' : undefined}
+							tabIndex={b.dateKey ? 0 : undefined}
+							aria-label={b.dateKey ? `Открыть дневник за ${formatTooltipDate(b)}` : undefined}
+							data-help={b.dateKey ? `Открыть записи дневника за ${formatTooltipDate(b)}.` : undefined}
 							className={`${s.barGroup} ${b.dateKey ? s.clickable : ''}`}
 						>
 							<rect

@@ -17,7 +17,7 @@
 	max-height: 90vh;
 	overflow-y: auto;
 	background-color: var(--surface-strong);
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 1.25rem;
 	padding: 1.5rem 1.5rem 1.25rem;
 	z-index: 1101;
@@ -129,7 +129,7 @@
 	padding: 0.625rem 0.75rem;
 	background: transparent;
 	color: $fc-main;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 0.5rem;
 	cursor: pointer;
 	transition: background 0.2s ease, border-color 0.2s ease;

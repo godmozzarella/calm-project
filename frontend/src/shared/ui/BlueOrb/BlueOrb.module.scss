@@ -1,0 +1,24 @@
+.orb {
+	position: absolute;
+	display: block;
+	aspect-ratio: 1;
+	border-radius: 50%;
+	background: radial-gradient(circle,
+		rgba(116, 198, 255, 1) 0%,
+		rgba(58, 155, 255, .82) 12%,
+		rgba(30, 116, 246, .48) 34%,
+		rgba(32, 104, 233, .2) 54%,
+		rgba(32, 104, 233, 0) 72%);
+	filter: blur(9px);
+	pointer-events: none;
+	animation: orbPulse 4.5s ease-in-out infinite;
+}
+
+@keyframes orbPulse {
+	0%, 100% { transform: scale(.92); opacity: .55; }
+	50% { transform: scale(1.12); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.orb { animation: none; }
+}

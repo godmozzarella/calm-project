@@ -17,6 +17,34 @@ import static org.mockito.Mockito.*;
 
 class DailyOutcomeServiceTest {
 	@Test
+	void allowsConfirmingTodayBeforeTheDayEnds() {
+		var outcomes = mock(DailyOutcomeRepository.class);
+		var attacks = mock(AttackRepository.class);
+		var predictions = mock(RiskPredictionRecordRepository.class);
+		var service = new DailyOutcomeService(outcomes, attacks, predictions);
+		var today = LocalDate.now(ZoneId.of("UTC"));
+		when(attacks.findInRange("user-1", today, today)).thenReturn(List.of());
+		when(outcomes.save(any(DailyOutcome.class))).thenAnswer(call -> call.getArgument(0));
+
+		assertThat(service.confirmNoAttack("user-1", today, "UTC").status())
+				.isEqualTo(DailyOutcomeResponse.Status.NO_ATTACK);
+		verify(outcomes).save(any(DailyOutcome.class));
+	}
+
+	@Test
+	void rejectsFutureDay() {
+		var outcomes = mock(DailyOutcomeRepository.class);
+		var attacks = mock(AttackRepository.class);
+		var predictions = mock(RiskPredictionRecordRepository.class);
+		var service = new DailyOutcomeService(outcomes, attacks, predictions);
+		var tomorrow = LocalDate.now(ZoneId.of("UTC")).plusDays(1);
+
+		assertThatThrownBy(() -> service.confirmNoAttack("user-1", tomorrow, "UTC"))
+				.isInstanceOf(ResponseStatusException.class);
+		verify(outcomes, never()).save(any());
+	}
+
+	@Test
 	void usesForecastTimezoneInsteadOfBrowserTimezoneForCompletionCheck() {
 		var outcomes = mock(DailyOutcomeRepository.class);
 		var attacks = mock(AttackRepository.class);

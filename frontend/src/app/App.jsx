@@ -7,6 +7,7 @@ import { touchSession } from '@/shared/lib/sessionActivity'
 import ConnectivityNotice from '@/shared/ui/ConnectivityNotice/ConnectivityNotice'
 import GlobalErrorNotice from '@/shared/ui/GlobalErrorNotice/GlobalErrorNotice'
 import { ThemeProvider } from '@/app/providers/theme/ThemeProvider'
+import HelpTooltip from '@/shared/ui/HelpTooltip/HelpTooltip'
 
 const App = () => {
 	useEffect(() => {
@@ -50,6 +51,7 @@ const App = () => {
 		<DictionariesProvider>
 			<ConnectivityNotice />
 			<GlobalErrorNotice />
+			<HelpTooltip />
 			<ScrollToTop />
 			<AppRouter />
 		</DictionariesProvider>

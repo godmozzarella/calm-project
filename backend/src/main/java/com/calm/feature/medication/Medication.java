@@ -23,6 +23,7 @@ import java.time.LocalTime;
 	@CompoundIndex(name = "user_date_time", def = "{'userId': 1, 'date': 1, 'time': 1}")
 })
 public class Medication {
+	public static final String PERSONAL_LABEL = "Свой препарат";
 
 	@Id
 	private String id;
@@ -32,6 +33,8 @@ public class Medication {
 	private String intakeId;
 
 	private String name;
+	/** Ссылка на личное название; обычные препараты используют общий каталог. */
+	private String personalMedicationId;
 	private String dosage;
 	private String category;
 
@@ -64,6 +67,10 @@ public class Medication {
 	public void setIntakeId(String intakeId) { this.intakeId = intakeId; }
 	public String getName() { return name; }
 	public void setName(String name) { this.name = name; }
+	public String getPersonalMedicationId() { return personalMedicationId; }
+	public void setPersonalMedicationId(String personalMedicationId) { this.personalMedicationId = personalMedicationId; }
+	public boolean isPersonal() { return personalMedicationId != null || "Другое".equals(category); }
+	public String trainingName() { return isPersonal() ? PERSONAL_LABEL : name; }
 	public String getDosage() { return dosage; }
 	public void setDosage(String dosage) { this.dosage = dosage; }
 	public String getCategory() { return category; }

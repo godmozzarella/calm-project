@@ -54,4 +54,19 @@ class TrainingHistoryDetailsTest {
 		assertThat(result.linkedMedicationEntriesLast30Days()).isEqualTo(1);
 		assertThat(result.ongoingAttackAtCutoff()).isTrue();
 	}
+
+	@Test
+	void replacesCustomMedicationNamesWithGenericLabel() {
+		LocalDate target = LocalDate.of(2026, 10, 17);
+		Medication custom = new Medication();
+		custom.setDate(target.minusDays(1));
+		custom.setName("Мой препарат");
+		custom.setCategory("Другое");
+
+		TrainingHistoryDetails result = TrainingHistoryDetails.from(
+				List.of(), List.of(custom), target, target.minusDays(1));
+
+		assertThat(result.medicationNamesLast30Days())
+				.containsExactly(new TrainingHistoryDetails.CodeCount(Medication.PERSONAL_LABEL, 1));
+	}
 }

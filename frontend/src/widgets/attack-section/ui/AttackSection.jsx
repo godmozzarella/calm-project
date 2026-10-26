@@ -36,7 +36,7 @@ const formatRange = attack => {
 	return `${shortDate(startDate)} ${startTime} — ${shortDate(endDate)} ${endTime}`
 }
 
-const AttackSection = ({ date }) => {
+const AttackSection = ({ date, onInitialReady }) => {
 	const [attacks, setAttacks] = useState([])
 	const { getLabel } = useDictionaries()
 
@@ -45,7 +45,11 @@ const AttackSection = ({ date }) => {
 		[date]
 	)
 
-	useEffect(() => { reload() }, [reload])
+	useEffect(() => {
+		let active = true
+		reload().catch(() => {}).finally(() => { if (active) onInitialReady?.('attacks') })
+		return () => { active = false }
+	}, [reload, onInitialReady])
 
 	useEffect(() => subscribe(ATTACKS_CHANGED, reload), [reload])
 
@@ -54,13 +58,16 @@ const AttackSection = ({ date }) => {
 	useEffect(() => subscribe(OPEN_ATTACK_FORM, openForm), [openForm])
 
 	const handleDelete = id => attackApi.delete(id)
+	const handleCardClick = event => {
+		if (!event.target.closest('button, a, input, select, textarea')) openForm()
+	}
 
 	return (
 		<>
-			<div className={s.card}>
+			<div className={s.card} onClick={handleCardClick} data-help="Приступы: здесь можно записать новый приступ, а также посмотреть и изменить уже добавленные.">
 				<div className={s.cardHeader}>
 					<h2 className={s.title}>Приступы</h2>
-					<button className={s.addBtn} onClick={openForm} aria-label="Добавить приступ">
+					<button className={s.addBtn} onClick={openForm} aria-label="Добавить приступ" data-help="Добавить приступ за выбранный день: укажите время, силу боли, симптомы и другие подробности.">
 						<AddIcon fontSize="small" />
 						<span>Добавить</span>
 					</button>
@@ -96,6 +103,7 @@ const AttackSection = ({ date }) => {
 												className={s.editBtn}
 												onClick={() => openEditForm(attack)}
 												aria-label="Редактировать приступ"
+								data-help="Изменить время и подробности этого приступа."
 											>
 												<EditIcon style={{ fontSize: '1rem' }} />
 											</button>
@@ -103,6 +111,7 @@ const AttackSection = ({ date }) => {
 												className={s.deleteBtn}
 												onClick={() => handleDelete(attack.id)}
 												aria-label="Удалить"
+								data-help="Удалить эту запись о приступе."
 											>
 												<DeleteIcon style={{ fontSize: '1rem' }} />
 											</button>

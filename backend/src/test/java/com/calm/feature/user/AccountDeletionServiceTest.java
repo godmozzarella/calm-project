@@ -4,6 +4,7 @@ import com.calm.common.exception.NotFoundException;
 import com.calm.feature.attack.AttackRepository;
 import com.calm.feature.auth.AuthSessionRepository;
 import com.calm.feature.medication.MedicationRepository;
+import com.calm.feature.medication.PersonalMedicationRepository;
 import com.calm.feature.risk.DailyOutcomeRepository;
 import com.calm.feature.risk.RiskPredictionRecordRepository;
 import com.calm.feature.risk.RiskTrainingInputSnapshotRepository;
@@ -25,6 +26,7 @@ class AccountDeletionServiceTest {
 		var users = mock(UserRepository.class);
 		var attacks = mock(AttackRepository.class);
 		var medications = mock(MedicationRepository.class);
+		var personalMedications = mock(PersonalMedicationRepository.class);
 		var sessions = mock(AuthSessionRepository.class);
 		var predictions = mock(RiskPredictionRecordRepository.class);
 		var outcomes = mock(DailyOutcomeRepository.class);
@@ -33,7 +35,7 @@ class AccountDeletionServiceTest {
 		var user = new User("pilot@example.test", "Pilot", "hash");
 		user.setId("pilot-user");
 		when(users.findById("pilot-user")).thenReturn(Optional.of(user));
-		var service = new AccountDeletionService(users, attacks, medications, sessions,
+		var service = new AccountDeletionService(users, attacks, medications, personalMedications, sessions,
 			predictions, outcomes, participation, trainingInputs, uploadDir.toString());
 
 		service.deleteAccount("pilot-user");
@@ -44,6 +46,7 @@ class AccountDeletionServiceTest {
 		verify(trainingInputs).deleteByUserId("pilot-user");
 		verify(attacks).deleteByUserId("pilot-user");
 		verify(medications).deleteByUserId("pilot-user");
+		verify(personalMedications).deleteByUserId("pilot-user");
 		verify(sessions).deleteByUserId("pilot-user");
 		verify(users).delete(user);
 	}
@@ -53,16 +56,17 @@ class AccountDeletionServiceTest {
 		var users = mock(UserRepository.class);
 		var attacks = mock(AttackRepository.class);
 		var medications = mock(MedicationRepository.class);
+		var personalMedications = mock(PersonalMedicationRepository.class);
 		var sessions = mock(AuthSessionRepository.class);
 		var predictions = mock(RiskPredictionRecordRepository.class);
 		var outcomes = mock(DailyOutcomeRepository.class);
 		var participation = mock(SharedModelParticipationRepository.class);
 		var trainingInputs = mock(RiskTrainingInputSnapshotRepository.class);
 		when(users.findById("missing")).thenReturn(Optional.empty());
-		var service = new AccountDeletionService(users, attacks, medications, sessions,
+		var service = new AccountDeletionService(users, attacks, medications, personalMedications, sessions,
 			predictions, outcomes, participation, trainingInputs, uploadDir.toString());
 
 		assertThatThrownBy(() -> service.deleteAccount("missing")).isInstanceOf(NotFoundException.class);
-		verifyNoInteractions(attacks, medications, sessions, predictions, outcomes, participation, trainingInputs);
+		verifyNoInteractions(attacks, medications, personalMedications, sessions, predictions, outcomes, participation, trainingInputs);
 	}
 }

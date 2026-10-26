@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PAIN_ZONE_LABELS } from '@/entities/attack'
 
 const HEAD_PATH = 'M80,16 C130,16 152,56 152,104 C152,160 126,208 80,212 C34,208 8,160 8,104 C8,56 30,16 80,16Z'
 
@@ -54,6 +55,17 @@ const HeadFront = ({ zones = {}, onToggle, readOnly = false }) => {
 		onClick:      () => onToggle(zone),
 		onMouseEnter: () => setHovered(zone),
 		onMouseLeave: () => setHovered(null),
+		onKeyDown: event => {
+			if (event.key === 'Enter' || event.key === ' ') {
+				event.preventDefault()
+				onToggle(zone)
+			}
+		},
+		role: 'button',
+		tabIndex: 0,
+		'aria-label': `Зона боли: ${PAIN_ZONE_LABELS[zone]}`,
+		'aria-pressed': Boolean(zones[zone]),
+		'data-help': `Отметить зону «${PAIN_ZONE_LABELS[zone]}». Повторные нажатия меняют силу боли и затем снимают отметку.`,
 	}
 
 	return (
@@ -88,9 +100,9 @@ const HeadFront = ({ zones = {}, onToggle, readOnly = false }) => {
 			{/* decorative face features, pointer-events: none */}
 			<path d="M42,98 Q57,90 72,98"  fill="none" stroke={c.feature} strokeWidth="1.4" strokeLinecap="round" style={{ pointerEvents: 'none' }} />
 			<path d="M88,98 Q103,90 118,98" fill="none" stroke={c.feature} strokeWidth="1.4" strokeLinecap="round" style={{ pointerEvents: 'none' }} />
-			<path d="M44,112 Q57,104 70,112 Q57,120 44,112Z"  fill="rgba(28,32,50,0.85)" stroke={c.feature} strokeWidth="0.8" style={{ pointerEvents: 'none' }} />
-			<path d="M90,112 Q103,104 116,112 Q103,120 90,112Z" fill="rgba(28,32,50,0.85)" stroke={c.feature} strokeWidth="0.8" style={{ pointerEvents: 'none' }} />
-			<path d="M78,124 L74,148 Q80,152 86,148 L82,124"  fill="rgba(28,32,50,0.55)" stroke={c.feature} strokeWidth="0.8" style={{ pointerEvents: 'none' }} />
+			<path d="M44,112 Q57,104 70,112 Q57,120 44,112Z" fill="var(--fc-dark)" stroke={c.feature} strokeWidth="0.8" style={{ pointerEvents: 'none' }} />
+			<path d="M90,112 Q103,104 116,112 Q103,120 90,112Z" fill="var(--fc-dark)" stroke={c.feature} strokeWidth="0.8" style={{ pointerEvents: 'none' }} />
+			<path d="M78,124 L74,148 Q80,152 86,148 L82,124" fill="var(--fc-dark)" stroke={c.feature} strokeWidth="0.8" style={{ pointerEvents: 'none' }} />
 			<path d="M63,170 Q80,181 97,170" fill="none" stroke={c.feature} strokeWidth="1.2" strokeLinecap="round" style={{ pointerEvents: 'none' }} />
 		</svg>
 	)

@@ -35,7 +35,7 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 
 				<div className={s.header}>
 					<h2 className={s.title}>{editing ? 'Редактировать приступ' : 'Новый приступ'}</h2>
-					<button className={s.closeBtn} onClick={onClose}>✕</button>
+					<button className={s.closeBtn} onClick={onClose} aria-label="Закрыть форму приступа" data-help="Закрыть форму записи приступа.">✕</button>
 				</div>
 
 				<div className={s.body}>
@@ -47,6 +47,8 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 						<div className={s.intensityRow}>
 							<input
 								type="range"
+								aria-label="Сила боли от 1 до 10"
+								data-help="Выберите силу боли: 1 — слабая, 10 — очень сильная."
 								min={1} max={10}
 								value={form.intensity}
 								onChange={e => setField('intensity', Number(e.target.value))}
@@ -76,6 +78,7 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 									onClick={() => setField('type', value)}
 					type="button"
 					aria-pressed={form.type === value}
+					data-help={`Выбрать тип боли «${label}» для этого приступа.`}
 								>
 									{label}
 								</button>
@@ -91,6 +94,8 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 								<span>Начало</span>
 								<input
 									type="date"
+									aria-label="Дата начала приступа"
+									data-help="Укажите день, когда начался приступ."
 									value={form.startDate}
 									max={today}
 									onChange={e => setField('startDate', e.target.value)}
@@ -98,6 +103,8 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 								/>
 								<input
 									type="time"
+									aria-label="Время начала приступа"
+									data-help="Укажите время начала приступа."
 									value={form.startTime}
 									onChange={e => setField('startTime', e.target.value)}
 									className={s.timeInput}
@@ -108,6 +115,8 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 									<span>Конец</span>
 									<input
 										type="date"
+										aria-label="Дата окончания приступа"
+										data-help="Укажите день, когда приступ закончился."
 										value={form.endDate}
 										min={form.startDate}
 										max={today}
@@ -116,6 +125,8 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 									/>
 									<input
 										type="time"
+										aria-label="Время окончания приступа"
+										data-help="Укажите время окончания приступа."
 										value={form.endTime}
 										onChange={e => setField('endTime', e.target.value)}
 										className={s.timeInput}
@@ -129,6 +140,7 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 							role="switch"
 							aria-checked={form.ongoing}
 							aria-label="Приступ продолжается"
+							data-help="Включите, если приступ ещё не закончился. Время окончания можно будет указать позже."
 							onClick={() => setField('ongoing', !form.ongoing)}
 						>
 							<span>Приступ продолжается</span>
@@ -149,6 +161,7 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 									onClick={() => toggleArrayField('symptoms', value)}
 					type="button"
 					aria-pressed={form.symptoms.includes(value)}
+					data-help={`Отметить симптом «${label}», который был во время приступа.`}
 								>
 									{label}
 								</button>
@@ -167,6 +180,7 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 									onClick={() => toggleArrayField('triggers', value)}
 					type="button"
 					aria-pressed={form.triggers.includes(value)}
+					data-help={`Отметить возможный провоцирующий фактор «${label}».`}
 								>
 									{label}
 								</button>
@@ -180,6 +194,8 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 						<textarea
 							className={s.textarea}
 							placeholder="Дополнительные наблюдения..."
+							aria-label="Заметка о приступе"
+							data-help="При желании добавьте личные наблюдения об этом приступе."
 							value={form.note}
 							onChange={e => setField('note', e.target.value)}
 							rows={3}
@@ -188,7 +204,7 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 				</div>
 
 				<div className={s.footer}>
-					<button className={s.submitBtn} onClick={onSubmit} disabled={loading}>
+					<button className={s.submitBtn} onClick={onSubmit} disabled={loading} data-help="Сохранить запись о приступе в дневнике.">
 						Сохранить приступ
 					</button>
 				</div>

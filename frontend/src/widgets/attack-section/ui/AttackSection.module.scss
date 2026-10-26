@@ -3,8 +3,9 @@
 .card {
 	display: flex;
 	flex-direction: column;
+	cursor: pointer;
 	background-color: $block-color;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 1.25rem;
 	overflow: hidden;
 	height: 100%;
@@ -15,7 +16,7 @@
 	align-items: center;
 	justify-content: space-between;
 	padding: 1.125rem 1.25rem 0.875rem;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+	border-bottom: 1px solid $quiet-line;
 	flex-shrink: 0;
 }
 
@@ -30,7 +31,7 @@
 	align-items: center;
 	gap: 0.35rem;
 	background: $quiet-surface;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 2rem;
 	color: $fc-contrast;
 	padding: 0.3rem 0.75rem 0.3rem 0.5rem;
@@ -48,12 +49,12 @@
 	flex: 1;
 	overflow-y: auto;
 	scrollbar-width: thin;
-	scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+	scrollbar-color: color-mix(in srgb, var(--fc-main) 12%, transparent) transparent;
 
 	&::-webkit-scrollbar { width: 4px; }
 	&::-webkit-scrollbar-track { background: transparent; }
 	&::-webkit-scrollbar-thumb {
-		background: rgba(255, 255, 255, 0.12);
+		background: color-mix(in srgb, var(--fc-main) 12%, transparent);
 		border-radius: 2px;
 	}
 }
@@ -79,7 +80,7 @@
 
 .emptyHint {
 	@include fluid-text(11, 10);
-	color: rgba(190, 190, 190, 0.4);
+	color: var(--fc-subtle);
 	max-width: 18rem;
 	line-height: 1.5;
 }
@@ -160,12 +161,12 @@
 	background: none;
 	border: none;
 	border-radius: 50%;
-	color: rgba(190, 190, 190, 0.3);
+	color: var(--fc-subtle);
 	cursor: pointer;
 	transition: color 0.15s ease, background-color 0.15s ease;
 	&.editBtn:hover {
 		color: $fc-contrast;
-		background-color: rgba(92, 173, 228, 0.08);
+		background-color: color-mix(in srgb, var(--fc-contrast) 8%, transparent);
 	}
 
 	&.deleteBtn:hover {
@@ -186,7 +187,7 @@
 	padding: 0.15rem 0.5rem;
 	border-radius: 2rem;
 	background: $quiet-surface-raised;
-	border: 1px solid $quiet-line;
+	border: 0;
 	color: $fc-secondary;
 }
 

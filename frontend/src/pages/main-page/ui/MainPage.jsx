@@ -1,21 +1,26 @@
-import { useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { useCallback, useEffect, useState } from 'react'
+import { Navigate, useLocation } from 'react-router-dom'
 
 import { SidebarProfile } from '@/widgets/sidebar-profile'
 import { SidebarCalendar } from '@/widgets/sidebar-calendar'
 import { MainSection } from '@/widgets/main-section'
+import { midnight } from '@/widgets/day-bar'
 import { Button } from '@/shared/ui/Button'
 import { CalendarMonthIcon, MenuIcon } from '@/shared/ui/icons'
 import { getCurrentUser, setCurrentUser } from '@/entities/user'
 import { userApi, getToken, riskApi } from '@/shared/api'
+import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
+import PageLoading from '@/shared/ui/PageLoading/PageLoading'
 import { LocationOnboarding } from '@/features/onboarding-location'
 import ConsentPrompt from '@/features/shared-model-consent/ui/ConsentPrompt'
 
 import s from './MainPage.module.scss'
 
 const MainPage = () => {
-	const [openMenu, setOpenMenu] = useState(false)
+	const location = useLocation()
+	const [openMenu, setOpenMenu] = useState(() => location.state?.openMenu === true)
 	const [openCalendar, setOpenCalendar] = useState(false)
+	const [diaryDate, setDiaryDate] = useState(midnight)
 	// Ленивая инициализация: сразу читаем из localStorage, чтобы не было мигания
 	// «не авторизован» между первым рендером и useEffect.
 	const [user, setUser] = useState(() => getCurrentUser())
@@ -24,6 +29,22 @@ const MainPage = () => {
 	const [consentPrompt, setConsentPrompt] = useState(null)
 	const [consentSaving, setConsentSaving] = useState(false)
 	const [consentError, setConsentError] = useState('')
+	const [readyParts, setReadyParts] = useState({})
+	const [showBeforeReady, setShowBeforeReady] = useState(false)
+	const markReady = useCallback(part => setReadyParts(previous =>
+		previous[part] ? previous : { ...previous, [part]: true }), [])
+	const diaryReady = ['attacks', 'medications', 'zones', 'forecast', 'chart', 'outcome']
+		.every(part => readyParts[part])
+	const diaryVisible = diaryReady || showBeforeReady
+	useBodyScrollLock(openMenu || openCalendar || !diaryVisible)
+
+	useEffect(() => {
+		if (!location.state?.scrollToChart || !diaryVisible) return undefined
+		const frame = window.requestAnimationFrame(() => {
+			document.getElementById('diary-chart')?.scrollIntoView({ block: 'start', behavior: 'auto' })
+		})
+		return () => window.cancelAnimationFrame(frame)
+	}, [location.state, diaryVisible])
 
 	const hasToken = !!getToken()
 
@@ -101,15 +122,20 @@ const MainPage = () => {
 
 	return (
 		<div className={s.mainPage}>
+			{!diaryVisible && <PageLoading label="Загружаем дневник…" onContinue={() => setShowBeforeReady(true)} />}
 			<Button
 				className={`${s.icon} ${s.menu}`}
 				icon={<MenuIcon />}
+				aria-label="Открыть меню"
+				data-help="Открыть меню профиля, настроек и статистики."
 				onClick={() => setOpenMenu(prev => !prev)}
 			/>
 
 			<Button
 				className={`${s.icon} ${s.calendar}`}
 				icon={<CalendarMonthIcon />}
+				aria-label="Открыть календарь"
+				data-help="Открыть календарь и выбрать день дневника."
 				onClick={() => setOpenCalendar(prev => !prev)}
 			/>
 
@@ -123,10 +149,14 @@ const MainPage = () => {
 			<SidebarCalendar
 				openCalendar={openCalendar}
 				setOpenCalendar={setOpenCalendar}
+				currentDate={diaryDate}
 			/>
 
 			<MainSection
 				user={user}
+				date={diaryDate}
+				setDate={setDiaryDate}
+				onInitialReady={markReady}
 				onOpenLocationModal={() => {
 					setOnboardingDismissed(false)
 					setShowLocationOnboarding(true)

@@ -24,7 +24,7 @@ const cycleZone = (zones, zone) => {
 const fmtAttack = a =>
 	`${a.startDate} ${formatAttackTime(a.startTime)}${a.ongoing ? ' — продолжается' : a.endTime ? ` — ${formatAttackTime(a.endTime)}` : ''} · ${a.intensity}/10`
 
-const AttackZoneSection = ({ date }) => {
+const AttackZoneSection = ({ date, onInitialReady }) => {
 	const [attacks,    setAttacks]    = useState([])
 	const [selectedId, setSelectedId] = useState(null)   // null = без привязки
 	const [zones,      setZones]      = useState({})     // { zone: 'green'|'yellow'|'red' }
@@ -34,14 +34,17 @@ const AttackZoneSection = ({ date }) => {
 
 	// При смене дня сначала показываем текущий приступ, затем самые свежие.
 	useEffect(() => {
+		let active = true
 		attackApi.getByDate(date).then(list => {
+			if (!active) return
 			const sorted = sortAttacksNewest(list)
 			setAttacks(sorted)
 			setSelectedId(sorted[0]?.id ?? null)
 			setZones(toZoneMap(sorted[0]?.painZones))
 			setEditing(false)
-		})
-	}, [date])
+		}).catch(() => {}).finally(() => { if (active) onInitialReady?.('zones') })
+		return () => { active = false }
+	}, [date, onInitialReady])
 
 	// Эффект 1b: при внешнем добавлении/удалении приступа — перечитать список
 	useEffect(() => subscribe(ATTACKS_CHANGED, () => {
@@ -100,16 +103,16 @@ const AttackZoneSection = ({ date }) => {
 	const zoneCount = Object.keys(zones).length
 
 	return (
-		<div className={s.card}>
+		<div className={s.card} data-help="Зоны боли: отметьте на рисунке головы места, где болело во время выбранного приступа.">
 			<div className={s.cardHeader}>
 				<h2 className={s.title}>Зоны боли</h2>
 				{editing && zoneCount > 0 && (
-					<button className={s.clearBtn} onClick={clearAll}>Сбросить</button>
+					<button className={s.clearBtn} onClick={clearAll} data-help="Убрать все отмеченные зоны боли для выбранного приступа.">Сбросить</button>
 				)}
-				{hasAttacks && !editing && <button className={s.editBtn} onClick={() => setEditing(true)} aria-label="Редактировать зоны боли"><EditIcon fontSize="small" /></button>}
+				{hasAttacks && !editing && <button className={s.editBtn} onClick={() => setEditing(true)} aria-label="Редактировать зоны боли" data-help="Отметить или изменить зоны боли для выбранного приступа."><EditIcon fontSize="small" /></button>}
 				{editing && <div className={s.editActions}>
-					<button onClick={() => { setZones(toZoneMap(attacks.find(a => a.id === selectedId)?.painZones)); setEditing(false); setError('') }} disabled={saving}>Отмена</button>
-					<button onClick={saveZones} disabled={saving}>{saving ? 'Сохраняем…' : 'Готово'}</button>
+					<button onClick={() => { setZones(toZoneMap(attacks.find(a => a.id === selectedId)?.painZones)); setEditing(false); setError('') }} disabled={saving} data-help="Отменить изменения зон боли.">Отмена</button>
+					<button onClick={saveZones} disabled={saving} data-help="Сохранить отмеченные зоны боли в записи приступа.">{saving ? 'Сохраняем…' : 'Готово'}</button>
 				</div>}
 			</div>
 
@@ -130,6 +133,7 @@ const AttackZoneSection = ({ date }) => {
 					aria-pressed={selectedId === a.id}
 									className={`${s.attackPill} ${selectedId === a.id ? s.attackPillActive : ''}`}
 									onClick={() => selectAttack(a.id)}
+									data-help="Выбрать приступ, для которого нужно посмотреть или изменить зоны боли."
 								>
 									{fmtAttack(a)}
 								</button>
@@ -162,7 +166,7 @@ const AttackZoneSection = ({ date }) => {
 									className={`${s.zoneTag} ${s[`zoneTag_${color}`]}`}
 									onClick={() => toggleZone(zone)}
 									disabled={!editing}
-									title={editing ? 'Изменить интенсивность' : PAIN_ZONE_LABELS[zone]}
+									data-help={editing ? `Изменить силу боли в зоне «${PAIN_ZONE_LABELS[zone]}».` : `Зона боли: ${PAIN_ZONE_LABELS[zone]}.`}
 								>
 									<span className={`${s.zoneDot} ${s[`dot_${color}`]}`} />
 									{PAIN_ZONE_LABELS[zone]}

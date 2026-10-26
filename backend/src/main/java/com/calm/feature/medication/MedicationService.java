@@ -16,13 +16,15 @@ import java.util.Objects;
 
 @Service
 public class MedicationService {
-
 	private final MedicationRepository repo;
 	private final DictionaryRepository dictionaryRepo;
+	private final PersonalMedicationService personalService;
 
-	public MedicationService(MedicationRepository repo, DictionaryRepository dictionaryRepo) {
+	public MedicationService(MedicationRepository repo, DictionaryRepository dictionaryRepo,
+			PersonalMedicationService personalService) {
 		this.repo = repo;
 		this.dictionaryRepo = dictionaryRepo;
+		this.personalService = personalService;
 	}
 
 	public List<Medication> listForUser(String userId) {
@@ -52,13 +54,13 @@ public class MedicationService {
 			m.setId(req.clientId());
 		}
 		m.setUserId(userId);
-		applyRequest(m, req);
+		applyRequest(userId, m, req);
 		return repo.save(m);
 	}
 
 	public Medication update(String userId, String id, MedicationRequest req) {
 		Medication m = getOwned(userId, id);
-		applyRequest(m, req);
+		applyRequest(userId, m, req);
 		return repo.save(m);
 	}
 
@@ -78,11 +80,37 @@ public class MedicationService {
 		return days.size();
 	}
 
-	private void applyRequest(Medication m, MedicationRequest req) {
+	public List<PersonalMedication> listPersonal(String userId) {
+		for (Medication medication : repo.findLegacyPersonal(userId)) {
+			if (medication.getName() != null && !Medication.PERSONAL_LABEL.equals(medication.getName())) {
+				PersonalMedication personal = personalService.remember(userId, medication.getName());
+				medication.setPersonalMedicationId(personal.getId());
+				medication.setName(Medication.PERSONAL_LABEL);
+				repo.save(medication);
+			}
+		}
+		return personalService.listActive(userId);
+	}
+
+	public String displayName(String userId, Medication medication) {
+		return medication.getPersonalMedicationId() == null ? medication.getName()
+				: personalService.getOwned(userId, medication.getPersonalMedicationId()).getName();
+	}
+
+	private void applyRequest(String userId, Medication m, MedicationRequest req) {
 		m.setIntakeId(req.intakeId());
-		m.setName(req.name());
+		if (req.personalMedicationId() != null || "Другое".equals(req.category())) {
+			PersonalMedication personal = req.personalMedicationId() != null
+					? personalService.getOwned(userId, req.personalMedicationId())
+					: personalService.remember(userId, req.name());
+			m.setPersonalMedicationId(personal.getId());
+			m.setName(Medication.PERSONAL_LABEL);
+		} else {
+			m.setPersonalMedicationId(null);
+			m.setName(req.name());
+		}
 		m.setDosage(req.dosage());
-		m.setCategory(req.category());
+		m.setCategory(m.getPersonalMedicationId() == null ? req.category() : "Другое");
 		m.setDate(req.date());
 		m.setTime(req.time());
 		m.setAttackId(req.attackId());

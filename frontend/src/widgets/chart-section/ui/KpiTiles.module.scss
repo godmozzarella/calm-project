@@ -13,7 +13,7 @@
 	gap: 0.25rem;
 	padding: 0.875rem 1rem;
 	background: $quiet-surface;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 0.875rem;
 	min-width: 0;
 	transition: border-color 0.18s ease, background-color 0.18s ease;
@@ -24,7 +24,7 @@
 	font-weight: $fw-semibold;
 	letter-spacing: 0.07em;
 	text-transform: uppercase;
-	color: rgba(140, 150, 170, 0.6);
+	color: var(--fc-subtle);
 }
 
 .value {
@@ -37,7 +37,7 @@
 
 .sub {
 	@include fluid-text(11, 10);
-	color: rgba(140, 150, 170, 0.6);
+	color: var(--fc-subtle);
 	line-height: 1.3;
 }
 

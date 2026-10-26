@@ -15,7 +15,9 @@ section {
 }
 
 .colored {
-	background-color: $secondary-color;
+	background-color: color-mix(in srgb, var(--secondary-color) 70%, transparent);
+	-webkit-backdrop-filter: blur(18px);
+	backdrop-filter: blur(18px);
 }
 
 .title {

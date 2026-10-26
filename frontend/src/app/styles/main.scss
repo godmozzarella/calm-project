@@ -2,78 +2,86 @@
 
 :root {
 	color-scheme: dark;
-	--fc-logo: rgba(17, 139, 222, 1);
-	--fc-main: rgba(212, 212, 212, 1);
-	--fc-secondary: rgba(190, 190, 190, 1);
-	--fc-contrast: rgba(92, 173, 228, 1);
-	--fc-dark: rgba(23, 25, 29, 1);
-	--main-color: rgb(33, 37, 45);
-	--secondary-color: rgba(23, 23, 23, 1);
-	--contrast-color: rgba(92, 173, 228, 1);
-	--block-color: rgba(54, 61, 83, 1);
-	--quiet-surface: #292e39;
-	--quiet-surface-raised: #303744;
-	--quiet-line: rgba(212, 212, 212, .1);
+	--fc-logo: var(--fc-contrast);
+	--fc-main: #f3f4f5;
+	--fc-secondary: #babec2;
+	--fc-subtle: #9da1a5;
+	--fc-contrast: #65b8ec;
+	--fc-dark: #101113;
+	--main-color: #101113;
+	--secondary-color: #191b1d;
+	--contrast-color: var(--fc-contrast);
+	--block-color: #202225;
+	--quiet-surface: #181a1c;
+	--quiet-surface-raised: #2d3033;
+	--quiet-line: rgba(255, 255, 255, .1);
+	--selection-surface: #373a3e;
+	--selection-hover: #333639;
+	--selected-control-bg: #303337;
+	--selected-control-fg: var(--fc-main);
 	--toggle-thumb: #f5f6f8;
 	--error-color: rgba(239, 100, 100, 1);
 	--success-color: rgba(34, 197, 94, 1);
 	--warning-color: rgba(234, 179, 8, 1);
-	--surface-overlay: rgba(20, 22, 28, .98);
-	--surface-strong: #1c1f24;
-	--surface-inset: rgba(23, 25, 29, .7);
-	--auth-switch-bg: rgba(23, 25, 29, .7);
-	--auth-switch-active: rgba(54, 61, 83, 1);
-	--surface-hover: rgba(255, 255, 255, .07);
+	--surface-overlay: rgba(16, 17, 19, .98);
+	--surface-strong: var(--secondary-color);
+	--surface-inset: rgba(23, 25, 27, .72);
+	--auth-switch-bg: #151719;
+	--auth-switch-active: #35383c;
+	--surface-hover: rgba(255, 255, 255, .08);
 	--line-muted: rgba(255, 255, 255, .1);
-	--chart-badge-bg: rgba(28, 31, 40, .95);
-	--chart-badge-line: rgba(255, 255, 255, .18);
+	--chart-badge-bg: rgba(30, 32, 35, .95);
+	--chart-badge-line: rgba(255, 255, 255, .15);
 	--head-idle: rgba(255, 255, 255, .04);
 	--head-idle-line: rgba(255, 255, 255, .09);
 	--head-idle-hover: rgba(255, 255, 255, .13);
 	--head-idle-hover-line: rgba(255, 255, 255, .18);
-	--head-base: rgba(40, 45, 62, 1);
-	--head-ear: rgba(44, 49, 68, 1);
-	--head-line: rgba(92, 173, 228, .22);
-	--head-feature: rgba(180, 192, 215, .16);
+	--head-base: #303337;
+	--head-ear: #383b3f;
+	--head-line: rgba(101, 184, 236, .22);
+	--head-feature: rgba(243, 244, 245, .16);
 	--chart-grid: rgba(255, 255, 255, .05);
 	--chart-base: rgba(255, 255, 255, .1);
-	--chart-label: rgba(140, 150, 170, .6);
-	--tooltip-label: rgba(140, 150, 170, .7);
+	--chart-label: rgba(186, 190, 194, .65);
+	--tooltip-label: var(--chart-label);
 }
 
 :root[data-theme='light'] {
 	color-scheme: light;
-	--fc-main: #252b35;
-	--fc-secondary: #596474;
-	--fc-dark: #202630;
-	--main-color: #f3f5f8;
+	--fc-main: #1c1e21;
+	--fc-secondary: #5b6066;
+	--fc-subtle: #666b70;
+	--fc-contrast: #1479b8;
+	--fc-dark: #1c1e21;
+	--main-color: #f7f8f9;
 	--secondary-color: #ffffff;
-	--block-color: #e9edf3;
-	--quiet-surface: #ffffff;
-	--quiet-surface-raised: #edf1f6;
-	--quiet-line: rgba(31, 42, 58, .12);
+	--block-color: #ffffff;
+	--selected-control-bg: #d3d7dc;
+	--quiet-surface: #f2f3f5;
+	--quiet-surface-raised: #e6e8eb;
+	--quiet-line: rgba(20, 23, 27, .12);
+	--selection-surface: #e8eaed;
+	--selection-hover: rgba(20, 23, 27, .07);
 	--toggle-thumb: #ffffff;
 	--surface-overlay: rgba(255, 255, 255, .98);
-	--surface-strong: #ffffff;
-	--surface-inset: #e4e9f0;
-	--auth-switch-bg: #d4dce7;
-	--auth-switch-active: #aebdd0;
-	--surface-hover: rgba(31, 42, 58, .06);
-	--line-muted: rgba(31, 42, 58, .14);
+	--surface-inset: #eceef0;
+	--auth-switch-bg: #e8eaed;
+	--auth-switch-active: #d3d7dc;
+	--surface-hover: rgba(20, 23, 27, .07);
+	--line-muted: rgba(20, 23, 27, .14);
 	--chart-badge-bg: #ffffff;
-	--chart-badge-line: rgba(31, 42, 58, .22);
-	--head-idle: rgba(60, 76, 98, .06);
-	--head-idle-line: rgba(60, 76, 98, .2);
-	--head-idle-hover: rgba(60, 76, 98, .12);
-	--head-idle-hover-line: rgba(60, 76, 98, .3);
-	--head-base: #e5eaf1;
-	--head-ear: #dce3ec;
-	--head-line: rgba(65, 105, 145, .35);
-	--head-feature: rgba(60, 76, 98, .22);
-	--chart-grid: rgba(31, 42, 58, .08);
-	--chart-base: rgba(31, 42, 58, .2);
-	--chart-label: #687486;
-	--tooltip-label: #687486;
+	--chart-badge-line: rgba(20, 23, 27, .2);
+	--head-idle: rgba(28, 30, 33, .05);
+	--head-idle-line: rgba(28, 30, 33, .18);
+	--head-idle-hover: rgba(28, 30, 33, .1);
+	--head-idle-hover-line: rgba(28, 30, 33, .28);
+	--head-base: #e4e6e9;
+	--head-ear: #dadddf;
+	--head-line: rgba(20, 121, 184, .35);
+	--head-feature: rgba(28, 30, 33, .2);
+	--chart-grid: rgba(20, 23, 27, .08);
+	--chart-base: rgba(20, 23, 27, .18);
+	--chart-label: #696e75;
 }
 
 * {
@@ -91,12 +99,21 @@ a,
 	-webkit-tap-highlight-color: transparent !important;
 }
 
-button {
-	border-radius: 2rem !important;
-}
-
 body {
 	background-color: $main-color;
 	color: $fc-main;
 	margin: 0;
+}
+
+body:not(:has(#regAndLog)) {
+	background-image:
+		radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--fc-contrast) 13%, transparent), transparent 30rem),
+		radial-gradient(circle at 88% 78%, color-mix(in srgb, var(--fc-contrast) 8%, transparent), transparent 34rem);
+	background-attachment: fixed;
+}
+
+:root[data-theme='light'] body:not(:has(#regAndLog)) {
+	background-image:
+		radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--fc-contrast) 8%, transparent), transparent 30rem),
+		radial-gradient(circle at 88% 78%, color-mix(in srgb, var(--fc-contrast) 5%, transparent), transparent 34rem);
 }

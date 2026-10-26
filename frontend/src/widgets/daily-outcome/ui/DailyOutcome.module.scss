@@ -4,51 +4,77 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 1rem;
+	flex-wrap: wrap;
+	gap: .75rem 1rem;
 	width: calc(100% - 3rem);
 	max-width: 1200px;
 	margin: 0 auto;
-	padding: .75rem 1rem;
-	border: 1px solid $quiet-line;
-	border-radius: .875rem;
+	padding: .85rem 1.1rem;
+	border: 0;
+	border-radius: 1.25rem;
 	background: $block-color;
 	color: $fc-main;
-	font-size: .875rem;
 }
 
 .copy {
-	display: flex;
-	flex-direction: column;
-	gap: .2rem;
-	min-width: 0;
-	line-height: 1.4;
-	span { color: $fc-secondary; }
+	font-size: .9rem;
+	font-weight: $fw-semibold;
+	line-height: 1.35;
 }
 
-.card button:not(.secondary) {
-	@include contrast-button;
+.text { display: flex; flex-direction: column; gap: .2rem; }
+.hint { font-size: .85rem; line-height: 1.35; color: $fc-secondary; }
+
+.toggle {
+	position: relative;
+	width: 2.9rem;
+	height: 1.7rem;
 	flex: 0 0 auto;
-	font-family: inherit;
-	font-size: inherit;
+	padding: 0;
+	border: 0;
+	border-radius: 2rem;
+	background: $quiet-surface-raised;
+	cursor: pointer;
+	transition: background-color .18s ease, border-color .18s ease, opacity .18s ease;
+
+	&:focus-visible { outline: 2px solid $fc-contrast; outline-offset: 3px; }
+	&:disabled { cursor: default; }
 }
 
-.card button.secondary {
-	&::after { content: none; }
-	background: transparent;
-	color: $fc-main;
+.toggleOn {
+	background: $fc-contrast;
 }
 
-.error { color: $error-color !important; }
-.future { color: $fc-secondary; text-align: right; }
+.togglePlaceholder {
+	width: 2.9rem;
+	height: 1.7rem;
+	flex: 0 0 auto;
+	border-radius: 2rem;
+	background: $quiet-surface-raised;
+	opacity: .35;
+}
+
+.thumb {
+	position: absolute;
+	top: .25rem;
+	left: .25rem;
+	width: 1.2rem;
+	height: 1.2rem;
+	border-radius: inherit;
+	background: var(--toggle-thumb);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+	transition: transform .18s ease;
+
+	.toggleOn & { transform: translateX(1.2rem); }
+}
+
+.blocked {
+	.copy, .toggle { opacity: .45; }
+}
+
+.error { flex-basis: 100%; }
 
 @media (max-width: 640px) {
-	.card {
-		align-items: flex-start;
-		flex-direction: column;
-		width: calc(100% - 2rem);
-		padding: .75rem;
-		font-size: .8125rem;
-	}
-	.card button { width: 100%; }
-	.future { text-align: left; }
+	.card { width: calc(100% - 2rem); padding: .75rem 1rem; }
+	.copy { font-size: .8125rem; }
 }

@@ -26,7 +26,7 @@
 	transition: background-color 0.18s ease, color 0.18s ease;
 
 	&:hover {
-		background-color: rgba(255, 255, 255, 0.06);
+		background-color: color-mix(in srgb, var(--fc-main) 6%, transparent);
 		color: $fc-main;
 	}
 }
@@ -92,15 +92,18 @@
 }
 
 .labelToday {
-	color: $fc-contrast;
-	background: $quiet-surface;
-	border: 1px solid $quiet-line;
+	color: $fc-main;
+	background: var(--selection-surface);
+}
+
+:root:not([data-theme='light']) .labelToday {
+	color: var(--selected-control-fg);
+	background: var(--selected-control-bg);
 }
 
 .labelPast {
 	color: $fc-secondary;
-	background: rgba(190, 190, 190, 0.07);
-	border: 1px solid rgba(190, 190, 190, 0.15);
+	background: $quiet-surface;
 }
 
 .returnBtn {
@@ -129,10 +132,14 @@
 	@include fluid-text(11, 10);
 	color: $fc-secondary;
 	width: fit-content;
-	max-width: 16rem;
-	overflow: hidden;
-	text-overflow: ellipsis;
 	white-space: nowrap;
+
+	svg { flex-shrink: 0; }
+}
+
+.cityName {
+	display: block;
+	min-width: 0;
 }
 
 /* ── Week strip ── */
@@ -149,21 +156,21 @@
 	flex-shrink: 0;
 	margin-left: auto;
 	padding: 0;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: .7rem;
 	background: $quiet-surface;
 	color: $fc-secondary;
 	font-size: .75rem;
 	white-space: nowrap;
 
-	&:has(.streakButton:focus-visible) { outline: 2px solid $fc-contrast; outline-offset: 2px; }
+	&:has(.streakButton:focus-visible) { outline: 2px solid $fc-secondary; outline-offset: 2px; }
 
-	svg { color: $fc-contrast; font-size: 1.125rem; }
-	strong { color: $fc-contrast; font-weight: $fw-semibold; }
+	svg { color: $fc-main; font-size: 1.125rem; }
+	strong { color: $fc-main; font-weight: $fw-semibold; }
 }
 
 @media (hover: hover) and (pointer: fine) {
-	.streak:hover { background: $quiet-surface-raised; }
+	.streak:hover { background: var(--selection-hover); }
 }
 
 .streakButton {
@@ -184,14 +191,28 @@
 	&:focus-visible { outline: none; }
 }
 
+.streakOverlay {
+	position: fixed;
+	inset: 0;
+	z-index: 3000;
+	display: grid;
+	place-items: center;
+	padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+		max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+	background: rgba(0, 0, 0, .68);
+	backdrop-filter: blur(2px);
+	-webkit-backdrop-filter: blur(2px);
+	touch-action: none;
+}
+
 .streakInfo {
-	position: absolute;
-	z-index: 20;
-	top: calc(100% + .55rem);
-	right: 0;
-	width: min(21rem, calc(100vw - 2rem));
+	width: min(21rem, 100%);
+	max-height: calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	touch-action: auto;
 	padding: 1rem;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: .9rem;
 	background: $block-color;
 	color: $fc-main;
@@ -219,23 +240,6 @@
 	&:focus-visible { outline: 2px solid $fc-main; outline-offset: 2px; }
 }
 
-@media (max-width: 768px) {
-	.streakInfo {
-		position: fixed;
-		z-index: 1200;
-		top: 50%;
-		right: 1rem;
-		left: 1rem;
-		width: auto;
-		max-height: calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-		overflow-y: auto;
-		overscroll-behavior: contain;
-		transform: translateY(-50%);
-		padding-bottom: max(1rem, env(safe-area-inset-bottom));
-		-webkit-overflow-scrolling: touch;
-	}
-}
-
 .streakIncreased {
 	strong { animation: streakCount .55s ease-out; }
 	svg { animation: streakIcon .65s ease-out; }
@@ -245,7 +249,7 @@
 	position: absolute;
 	left: 50%;
 	bottom: calc(100% + .15rem);
-	color: $fc-contrast;
+	color: $fc-main;
 	font-size: .75rem;
 	font-weight: $fw-semibold;
 	pointer-events: none;
@@ -286,7 +290,15 @@
 
 	.center {
 		flex: 1;
+		min-width: 0;
 		align-items: flex-start;
+	}
+
+	.city { max-width: 100%; }
+
+	.cityName {
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 }
 
@@ -325,7 +337,7 @@
 	transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 
 	&:hover:not(:disabled) {
-		background-color: rgba(255, 255, 255, 0.05);
+		background-color: var(--selection-hover);
 		color: $fc-main;
 	}
 
@@ -336,19 +348,46 @@
 }
 
 .dayPillSelected {
-	background-color: rgba(255, 255, 255, 0.08);
-	border-color: rgba(255, 255, 255, 0.12);
-	color: $fc-main;
+	background-color: var(--selected-control-bg);
+	color: var(--selected-control-fg);
+
+	.pillNum {
+		color: var(--selected-control-fg);
+	}
+}
+
+.dayPillSelected:hover:not(:disabled) {
+	background-color: var(--selected-control-bg);
+}
+
+.dayPillToday {
+	background-color: var(--selection-hover);
 
 	.pillNum {
 		color: $fc-main;
 	}
 }
 
-.dayPillToday {
-	.pillNum {
+:root:not([data-theme='light']) {
+	.dayPillToday,
+	.dayPillToday:hover:not(:disabled) {
+		background-color: transparent;
 		color: $fc-contrast;
 	}
+	.dayPillToday .pillNum { color: $fc-contrast; }
+}
+
+:root[data-theme='light'] {
+	.labelToday { background: $quiet-surface; }
+	.streak:hover { background: $quiet-surface-raised; }
+	.dayPill:hover:not(:disabled) { background-color: color-mix(in srgb, var(--fc-main) 5%, transparent); }
+	.dayPillToday,
+	.dayPillToday:hover:not(:disabled) {
+		background-color: transparent;
+		color: $fc-contrast;
+	}
+	.dayPillToday .pillNum { color: $fc-contrast; }
+	.dayPillSelected:hover:not(:disabled) { background-color: var(--selected-control-bg); }
 }
 
 .dayPillFuture {

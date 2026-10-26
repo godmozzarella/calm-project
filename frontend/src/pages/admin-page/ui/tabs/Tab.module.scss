@@ -17,8 +17,8 @@
 
 .tag {
 	@include fluid-text(11, 10);
-	color: rgba(199, 152, 100, 0.9);
-	background: rgba(199, 152, 100, 0.12);
+	color: $fc-contrast;
+	background: color-mix(in srgb, var(--fc-contrast) 12%, transparent);
 	padding: 0.15rem 0.5rem;
 	border-radius: 0.4rem;
 	font-weight: $fw-medium;
@@ -42,7 +42,7 @@
 	outline: none;
 	transition: border-color 0.15s ease;
 
-	&:focus { border-color: rgba(92, 173, 228, 0.4); }
+	&:focus { border-color: color-mix(in srgb, var(--fc-contrast) 40%, transparent); }
 	&:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
@@ -60,7 +60,7 @@
 .btn {
 	background: $quiet-surface-raised;
 	color: $fc-contrast;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 0.5rem;
 	padding: 0.5rem 0.9rem;
 	@include fluid-text(13, 12);
@@ -75,7 +75,7 @@
 .btnSmall {
 	background: $quiet-surface;
 	color: $fc-main;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 0.4rem;
 	padding: 0.3rem 0.6rem;
 	@include fluid-text(12, 11);
@@ -88,7 +88,7 @@
 .btnDanger {
 	background: $quiet-surface;
 	color: #c97070;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 0.4rem;
 	padding: 0.3rem 0.6rem;
 	@include fluid-text(12, 11);
@@ -160,7 +160,7 @@
 	cursor: text;
 	border-bottom: 1px dashed transparent;
 
-	&:hover { border-bottom-color: rgba(255, 255, 255, 0.15); }
+	&:hover { border-bottom-color: color-mix(in srgb, var(--fc-main) 15%, transparent); }
 }
 
 .muted {
@@ -213,5 +213,5 @@
 	@include fluid-text(13, 12);
 	outline: none;
 
-	&:focus { border-color: rgba(92, 173, 228, 0.4); }
+	&:focus { border-color: color-mix(in srgb, var(--fc-contrast) 40%, transparent); }
 }

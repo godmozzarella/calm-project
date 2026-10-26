@@ -81,7 +81,6 @@ export const useLocationOnboarding = ({ setUser }) => {
 				latitude,
 				longitude,
 				city: cityLabel,
-				notificationsEnabled: true,
 			})
 			setCurrentUser(updated)
 			setUser(updated)

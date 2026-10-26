@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { dictionaryApi } from '@/shared/api'
 import { getToken } from '@/shared/api'
 import { subscribe, AUTH_CHANGED } from '@/shared/lib/dataEvents'
-import { DictionariesContext } from './dictionaryStore'
+import { DictionariesContext } from './dictionariesState'
 
 const toMap = list => Object.fromEntries(list.map(e => [e.value, e.label]))
 

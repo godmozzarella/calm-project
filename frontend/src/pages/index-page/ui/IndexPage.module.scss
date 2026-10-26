@@ -9,11 +9,74 @@ html:has(.indexBody) {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	position: relative;
+	isolation: isolate;
 	margin: $margin-top-body auto 0 auto;
 	width: 100%;
+	background-color: var(--main-color);
+	color: var(--fc-main);
+}
+
+.ambientLayer {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	overflow: hidden;
+	pointer-events: none;
+	opacity: .6;
+}
+
+:global(:root[data-theme='light']) .ambientLayer { opacity: .48; }
+
+.ambientOrbOne {
+	width: clamp(15rem, 25vw, 25rem);
+	top: 12%;
+	left: -6%;
+	animation-duration: 7s;
+}
+
+.ambientOrbTwo {
+	width: clamp(11rem, 17vw, 17rem);
+	top: 28%;
+	right: 5%;
+	animation-duration: 8.5s;
+	animation-delay: -2s;
+}
+
+.ambientOrbThree {
+	width: clamp(18rem, 31vw, 31rem);
+	top: 45%;
+	left: 10%;
+	animation-duration: 9s;
+	animation-delay: -4s;
+}
+
+.ambientOrbFour {
+	width: clamp(13rem, 20vw, 20rem);
+	top: 63%;
+	right: -5%;
+	animation-duration: 7.5s;
+	animation-delay: -3s;
+}
+
+.ambientOrbFive {
+	width: clamp(16rem, 24vw, 24rem);
+	top: 80%;
+	left: 26%;
+	animation-duration: 9.5s;
+	animation-delay: -5s;
 }
 
 /* ── Hero ── */
+.heroGlowArea {
+	position: relative;
+	isolation: isolate;
+	width: 100%;
+	overflow: hidden;
+
+	> section { position: relative; z-index: 1; }
+}
+
 .rowContent {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
@@ -48,8 +111,41 @@ html:has(.indexBody) {
 
 .containerItem:last-child {
 	align-items: center;
-	gap: 2rem;
+	align-self: stretch;
+}
+
+.logoStage {
+	display: grid;
+	place-items: center;
+	width: 100%;
+	min-height: clamp(14rem, 24vw, 23rem);
+}
+
+.logoOrb {
+	width: clamp(22rem, 38vw, 38rem);
+	top: -12%;
+	right: 4%;
+	z-index: 0;
+}
+
+.bottomGlowArea {
 	position: relative;
+	isolation: isolate;
+	width: 100%;
+	overflow: hidden;
+
+	> section,
+	> :last-child {
+		position: relative;
+		z-index: 1;
+	}
+}
+
+.bottomOrb {
+	width: max(160vw, 120rem);
+	left: calc(-1 * max(96vw, 72rem));
+	bottom: calc(-1 * max(96vw, 72rem));
+	z-index: 0;
 }
 
 .bigLogo {
@@ -60,29 +156,6 @@ html:has(.indexBody) {
 	letter-spacing: 0.02em;
 	text-align: center;
 	position: relative;
-	z-index: 1;
-}
-
-.buttons {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: center;
-	gap: 0.75rem;
-	width: 100%;
-	max-width: 32rem;
-	position: relative;
-	z-index: 1;
-
-	> * {
-		flex: 1 1 14rem;
-	}
-}
-
-.buttonText {
-	@include fluid-text(16, 12);
-	font-family: 'Roboto', Arial, sans-serif;
-	font-weight: $fw-semibold;
 }
 
 .inTextLogo {
@@ -121,12 +194,8 @@ html:has(.indexBody) {
 		text-align: center;
 	}
 
-	.buttons {
-		flex-direction: column;
-		width: 100%;
-
-		> * { width: 100%; flex: 0 0 auto; }
-	}
+	.logoStage { min-height: 12rem; }
+	.logoOrb { width: 24rem; top: -10%; right: -12%; }
 }
 
 @media (max-width: 27rem) {
@@ -134,7 +203,5 @@ html:has(.indexBody) {
 		margin-top: 5rem;
 	}
 
-	.containerItem:last-child::before {
-		width: 22rem;
-	}
+	.logoOrb { right: -18%; }
 }

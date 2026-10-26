@@ -41,8 +41,8 @@ public class DailyOutcomeService {
 				.orElse(timezone);
 		try { zone = ZoneId.of(Objects.requireNonNullElse(forecastTimezone, "UTC")); }
 		catch (RuntimeException e) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Некорректный часовой пояс"); }
-		if (!date.isBefore(LocalDate.now(zone))) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Можно отмечать только завершившийся день");
+		if (date.isAfter(LocalDate.now(zone))) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Нельзя отмечать будущий день");
 		}
 		if (hasAttack(userId, date)) {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, "На этот день уже записан приступ");

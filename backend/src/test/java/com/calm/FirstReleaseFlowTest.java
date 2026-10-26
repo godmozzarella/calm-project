@@ -2,6 +2,7 @@ package com.calm;
 
 import com.calm.feature.email.EmailService;
 import com.calm.feature.email.EmailSendResult;
+import com.calm.feature.medication.MedicationRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.UUID;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,7 +32,37 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class FirstReleaseFlowTest {
 	@Autowired MockMvc mvc;
 	@Autowired ObjectMapper json;
+	@Autowired MedicationRepository medications;
 	@MockitoBean EmailService email;
+
+	@Test
+	void todayCanBeMarkedQuietAndLaterAttackReplacesTheMark() throws Exception {
+		JsonNode account = register("outcome-" + UUID.randomUUID() + "@example.test");
+		String token = account.get("token").asText();
+		String date = LocalDate.now(ZoneOffset.UTC).toString();
+		String auth = "Bearer " + token;
+
+		mvc.perform(post("/risk/outcome/no-attack").header("Authorization", auth)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"date\":\"" + date + "\",\"timezone\":\"UTC\"}"))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.status").value("NO_ATTACK"));
+		mvc.perform(get("/risk/outcome").header("Authorization", auth).param("date", date))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.status").value("NO_ATTACK"));
+
+		String attack = mvc.perform(post("/attacks").header("Authorization", auth)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"startDate\":\"" + date + "\",\"startTime\":\"00:01\","
+						+ "\"endDate\":\"" + date + "\",\"endTime\":\"01:00\","
+						+ "\"ongoing\":false,\"intensity\":5,\"type\":\"PULSATING\","
+						+ "\"symptoms\":[],\"triggers\":[],\"painZones\":{}}"))
+				.andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+		mvc.perform(get("/risk/outcome").header("Authorization", auth).param("date", date))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.status").value("ATTACK_PRESENT"));
+		mvc.perform(delete("/attacks/" + json.readTree(attack).get("id").asText())
+					.header("Authorization", auth)).andExpect(status().isNoContent());
+		mvc.perform(get("/risk/outcome").header("Authorization", auth).param("date", date))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.status").value("UNKNOWN"));
+	}
 
 	@Test
 	void registrationEmailVerificationAndAttackOwnership() throws Exception {
@@ -50,6 +83,11 @@ class FirstReleaseFlowTest {
 				.andExpect(status().isOk()).andExpect(jsonPath("$.user.role").value("USER"));
 
 		verifyNoInteractions(email);
+		mvc.perform(patch("/users/me").header("Authorization", "Bearer " + firstToken)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"latitude\":55.75,\"longitude\":37.62,\"city\":\"Москва\"}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.notificationsEnabled").value(false));
 		mvc.perform(patch("/users/me").header("Authorization", "Bearer " + firstToken)
 				.contentType(MediaType.APPLICATION_JSON).content("{\"notificationsEnabled\":true}"))
 				.andExpect(status().isConflict());
@@ -96,6 +134,32 @@ class FirstReleaseFlowTest {
 		String medicationId = json.readTree(medication).get("id").asText();
 		mvc.perform(get("/medications/" + medicationId).header("Authorization", "Bearer " + secondToken))
 				.andExpect(status().isNotFound());
+		String customBody = """
+				{"name":"Мой препарат","category":"Другое","dosage":"100",
+				 "date":"2026-05-25","time":"12:00"}
+				""";
+		String custom = mvc.perform(post("/medications").header("Authorization", "Bearer " + firstToken)
+				.contentType(MediaType.APPLICATION_JSON).content(customBody))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.name").value("Мой препарат"))
+				.andReturn().getResponse().getContentAsString();
+		String customId = json.readTree(custom).get("id").asText();
+		String personalId = json.readTree(custom).get("personalMedicationId").asText();
+		assertThat(medications.findById(customId).orElseThrow().getName()).isEqualTo("Свой препарат");
+		mvc.perform(get("/medications/personal").header("Authorization", "Bearer " + firstToken))
+				.andExpect(status().isOk()).andExpect(jsonPath("$[0].name").value("Мой препарат"));
+		mvc.perform(get("/medications/personal").header("Authorization", "Bearer " + secondToken))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+		mvc.perform(delete("/medications/personal/" + personalId)
+				.header("Authorization", "Bearer " + secondToken))
+				.andExpect(status().isNotFound());
+		mvc.perform(delete("/medications/personal/" + personalId)
+				.header("Authorization", "Bearer " + firstToken))
+				.andExpect(status().isNoContent());
+		mvc.perform(get("/medications/personal").header("Authorization", "Bearer " + firstToken))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+		mvc.perform(get("/medications/" + customId).header("Authorization", "Bearer " + firstToken))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Мой препарат"));
 		mvc.perform(get("/stats").header("Authorization", "Bearer " + secondToken))
 				.andExpect(status().isOk()).andExpect(jsonPath("$.kpis.total").value(0));
 	}
