@@ -70,6 +70,8 @@ const setup = () => {
 			name: 'test medicine', therapeuticClass: 'nsaid', purpose: 'acute',
 			attackId: 'attack-1', effectiveness: 3, note: 'private medicine note',
 		}]),
+		personal_medications: collection([]),
+		dictionaries: collection([{ type: 'MEDICATION_PRESET', value: 'test_medicine', label: 'test medicine' }]),
 		risk_training_input_snapshots: collection([{
 			userId: 'u1', targetDate: date(target),
 			capturedAt: new Date(date(target).getTime() - 12 * 3_600_000),
@@ -117,6 +119,7 @@ test('exports detailed outcomes and frozen history under new consent without ide
 	assert.equal(row.diaryOutcome.medications[0].effectiveness, 3)
 	assert.equal(row.diaryOutcome.medications[0].linkedAttackKey, row.diaryOutcome.attacks[0].attackKey)
 	assert.equal(row.historyDetails.symptomsLast30Days[0].code, 'nausea')
+	assert.equal(row.historyDetails.medicationNamesLast30Days[0].code, 'test medicine')
 	assert.equal(row.binaryPrediction, null)
 	assert.equal(row.predictionMatched, null)
 	assert.equal(row.features.weatherScore, 45)
@@ -145,4 +148,33 @@ test('requires new consent and a version 3 pre-day snapshot', () => {
 		runInNewContext(script, fixture.context)
 		assert.equal(fixture.destination.training_examples.rows.length, 0)
 	}
+})
+
+test('replaces custom medicine names in outcome and older frozen history', () => {
+	const fixture = setup()
+	fixture.source.personal_medications.rows.push({ userId: 'u1', name: 'Мой препарат' })
+	fixture.source.medications.rows[0].name = 'Свой препарат'
+	fixture.source.medications.rows[0].category = 'Другое'
+	fixture.source.medications.rows[0].personalMedicationId = 'personal-1'
+	fixture.source.risk_training_input_snapshots.rows[0].historyDetails = {
+		...historyDetails,
+		medicationNamesLast30Days: [{ code: 'Мой препарат', count: 1 }],
+	}
+
+	runInNewContext(script, fixture.context)
+	const row = fixture.destination.training_examples.rows[0]
+	assert.equal(row.diaryOutcome.medications[0].name, 'Свой препарат')
+	assert.equal(row.historyDetails.medicationNamesLast30Days[0].code, 'Свой препарат')
+})
+
+test('personal name matching the public catalog stays generic in old history', () => {
+	const fixture = setup()
+	fixture.source.personal_medications.rows.push({ userId: 'u1', name: 'test medicine' })
+	fixture.source.medications.rows[0].name = 'Свой препарат'
+	fixture.source.medications.rows[0].category = 'Другое'
+	fixture.source.medications.rows[0].personalMedicationId = 'personal-1'
+	runInNewContext(script, fixture.context)
+	const row = fixture.destination.training_examples.rows[0]
+	assert.equal(row.diaryOutcome.medications[0].name, 'Свой препарат')
+	assert.equal(row.historyDetails.medicationNamesLast30Days[0].code, 'Свой препарат')
 })

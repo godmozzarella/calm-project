@@ -34,7 +34,9 @@ const RegisterForm = props => {
 
 			<Input
 				id="registerName"
+				name="registerName"
 				type="text"
+				autoComplete="name"
 				label="Имя"
 				placeholder="Как вас зовут?"
 				value={userName}
@@ -43,7 +45,9 @@ const RegisterForm = props => {
 
 			<Input
 				id="registerEmail"
+				name="registerEmail"
 				type="email"
+				autoComplete="email"
 				label="Электронная почта"
 				placeholder="you@example.com"
 				value={email}
@@ -54,7 +58,9 @@ const RegisterForm = props => {
 			<div className={s.passwordGroup}>
 				<Input
 					id="registerPassword"
+					name="registerPassword"
 					type={showPassword ? 'text' : 'password'}
+					autoComplete="new-password"
 					label="Пароль"
 					placeholder="••••••••"
 					value={password}
@@ -77,7 +83,9 @@ const RegisterForm = props => {
 
 			<Input
 				id="confirmPassword"
+				name="registerPasswordConfirmation"
 				type={showConfirm ? 'text' : 'password'}
+				autoComplete="new-password"
 				label="Повторите пароль"
 				placeholder="••••••••"
 				value={confirmPassword}

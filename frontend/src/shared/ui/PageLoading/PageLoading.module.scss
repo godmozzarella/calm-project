@@ -1,0 +1,44 @@
+@use 'app/styles/globals.scss' as *;
+
+.overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 1100;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	background: $main-color;
+	color: $fc-secondary;
+	font-size: .9rem;
+}
+
+.spinner {
+	width: 2rem;
+	height: 2rem;
+	border: 2px solid $quiet-line;
+	border-top-color: $fc-contrast;
+	border-radius: 50%;
+	animation: spin .8s linear infinite;
+}
+
+.continue {
+	padding: .55rem 1rem;
+	border: 0;
+	border-radius: .75rem;
+	background: $quiet-surface;
+	color: $fc-main;
+	font: inherit;
+	cursor: pointer;
+	&:hover { background: $quiet-surface-raised; }
+	&:focus-visible { outline: 2px solid $fc-contrast; outline-offset: 2px; }
+}
+
+@keyframes spin {
+	to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.spinner { animation: none; }
+}

@@ -7,7 +7,7 @@ import { formatPressure } from '@/shared/lib/pressure'
 import { advice, conclusion, dayLabel, helpfulMedication, LEVEL_LABELS, longDate, riskFactors, shortDate, weatherTiles } from './forecastViewModel'
 import s from './ForecastSection.module.scss'
 
-const ForecastSection = ({ user, onOpenLocationModal }) => {
+const ForecastSection = ({ user, onOpenLocationModal, onInitialReady }) => {
 	const [data, setData] = useState(null)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState(null)
@@ -16,6 +16,7 @@ const ForecastSection = ({ user, onOpenLocationModal }) => {
 	const [riskErrors, setRiskErrors] = useState({})
 	const [medications, setMedications] = useState([])
 	const hasLocation = user?.latitude != null && user?.longitude != null
+	useEffect(() => { if (!hasLocation) onInitialReady?.('forecast') }, [hasLocation, onInitialReady])
 
 	useEffect(() => {
 		if (!hasLocation) return
@@ -27,23 +28,32 @@ const ForecastSection = ({ user, onOpenLocationModal }) => {
 		setRiskErrors({})
 		setSelectedDay(0)
 		forecastApi.getForecast({ lat: user.latitude, lon: user.longitude })
-			.then(result => { if (!cancelled) setData(result) })
-			.catch(e => { if (!cancelled) setError(e.message || 'Не удалось получить прогноз') })
+			.then(result => {
+				if (cancelled) return
+				setData(result)
+				if (!result.days?.length) onInitialReady?.('forecast')
+			})
+			.catch(e => {
+				if (cancelled) return
+				setError(e.message || 'Не удалось получить прогноз')
+				onInitialReady?.('forecast')
+			})
 			.finally(() => { if (!cancelled) setLoading(false) })
 		return () => { cancelled = true }
-	}, [hasLocation, user?.latitude, user?.longitude])
+	}, [hasLocation, user?.latitude, user?.longitude, onInitialReady])
 
 	useEffect(() => {
 		if (!hasLocation || !data?.days?.length) return
 		let cancelled = false
 		// Запросы будущих дат также сохраняют предварительные оценки для проверки качества.
-		data.days.slice(0, 7).forEach(day => {
+		const requests = data.days.slice(0, 7).map(day =>
 			riskApi.getByDate(day.date)
 				.then(result => { if (!cancelled) setRisks(previous => ({ ...previous, [day.date]: result })) })
 				.catch(e => { if (!cancelled) setRiskErrors(previous => ({ ...previous, [day.date]: e.message || 'Не удалось рассчитать риск' })) })
-		})
+		)
+		Promise.allSettled(requests).then(() => { if (!cancelled) onInitialReady?.('forecast') })
 		return () => { cancelled = true }
-	}, [hasLocation, data])
+	}, [hasLocation, data, onInitialReady])
 
 	useEffect(() => {
 		if (!hasLocation) return
@@ -92,7 +102,7 @@ const ForecastSection = ({ user, onOpenLocationModal }) => {
 				</span>}
 			</div>
 
-			{!hasLocation && <div className={s.card}><p>Укажите город, чтобы видеть прогноз.</p>{onOpenLocationModal && <button type="button" className={s.action} onClick={onOpenLocationModal}>Указать город</button>}</div>}
+			{!hasLocation && <div className={s.card}><p>Укажите город, чтобы видеть прогноз.</p>{onOpenLocationModal && <button type="button" className={s.action} onClick={onOpenLocationModal} data-help="Выбрать город, для которого приложение покажет погоду и оценку риска.">Указать город</button>}</div>}
 			{hasLocation && loading && !data && <div className={s.card} role="status">Загружаем прогноз…</div>}
 			{hasLocation && <ErrorNotice message={error} title="Не удалось загрузить прогноз" />}
 			{hasLocation && !loading && !error && !days.length && <div className={s.card} role="status">Прогноз временно недоступен. Попробуйте обновить позже.</div>}
@@ -103,7 +113,7 @@ const ForecastSection = ({ user, onOpenLocationModal }) => {
 					{days.map((day, index) => {
 						const dayRisk = risks[day.date]
 						const dayLevel = dayRisk?.dataAvailable ? dayRisk.level : null
-						return <button key={day.date} type="button" className={`${s.day} ${dayLevel ? s[`level_${dayLevel}`] : ''} ${index === selectedDay ? s.selected : ''}`} aria-pressed={index === selectedDay} onClick={() => setSelectedDay(index)}>
+						return <button key={day.date} type="button" className={`${s.day} ${dayLevel ? s[`level_${dayLevel}`] : ''} ${index === selectedDay ? s.selected : ''}`} aria-pressed={index === selectedDay} onClick={() => setSelectedDay(index)} data-help={`Показать оценку и причины риска на ${shortDate(day.date)}. Балл от 0 до 100 — оценка по правилам, не вероятность приступа.`}>
 							<span className={s.dayName}>{dayLabel(day.date, index === 0)}</span>
 							<span className={s.dayDate}>{shortDate(day.date)}</span>
 							<span className={s.dayScore}>{dayRisk?.dataAvailable ? dayRisk.score : riskErrors[day.date] ? '—' : '…'}<small>{dayRisk?.dataAvailable ? '/100' : ''}</small></span>
@@ -132,7 +142,7 @@ const ForecastSection = ({ user, onOpenLocationModal }) => {
 
 					<article className={s.card} aria-live="polite">
 						<h2 className={s.sectionLabel}>Что влияет на прогноз</h2>
-						{lowData && <div className={s.lowData}><p>Добавьте записи о приступах — прогноз станет точнее.</p><button type="button" className={s.action} onClick={() => emit(OPEN_ATTACK_FORM)}>Добавить приступ</button></div>}
+						{lowData && <div className={s.lowData}><p>Добавьте записи о приступах — прогноз станет точнее.</p><button type="button" className={s.action} onClick={() => emit(OPEN_ATTACK_FORM)} data-help="Открыть форму записи приступа в дневнике.">Добавить приступ</button></div>}
 						{score == null && <p className={s.pending}>Факторы появятся вместе с оценкой.</p>}
 						{score != null && !factors.length && <p className={s.pending}>Заметных факторов для этого дня нет.</p>}
 						{factors.map(factor => <div key={factor.key} className={`${s.factor} ${factor.points >= 25 ? s.factorStrong : factor.points >= 15 ? s.factorMedium : factor.points >= 8 ? s.factorNoticeable : s.factorWeak}`}>

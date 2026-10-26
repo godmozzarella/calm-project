@@ -48,8 +48,8 @@
 	padding: .7rem 1rem;
 	border: 1px solid transparent;
 	border-radius: 2rem;
-	background: rgba(92, 173, 228, 1);
-	color: rgba(23, 25, 29, 1);
+	background: var(--fc-contrast);
+	color: #101113;
 	font-size: inherit;
 	font-weight: 600;
 	cursor: pointer;
@@ -58,6 +58,6 @@
 
 	@media (hover: hover) { &:hover:not(:disabled) { filter: brightness(1.08); } }
 	&:active:not(:disabled) { transform: scale(.985); }
-	&:focus-visible { outline: 2px solid rgba(212, 212, 212, 1); outline-offset: 2px; }
+	&:focus-visible { outline: 2px solid var(--fc-main); outline-offset: 2px; }
 	&:disabled { opacity: .55; cursor: not-allowed; }
 }

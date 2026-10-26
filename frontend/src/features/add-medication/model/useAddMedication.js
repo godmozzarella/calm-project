@@ -30,6 +30,7 @@ export const useAddMedication = ({ date, onSuccess }) => {
     setSelected(members.map(m => ({
       sourceId: m.id,
       name: m.name,
+      personalMedicationId: m.personalMedicationId ?? null,
       dosage: m.dosage ?? '',
       category: m.category ?? 'Другое',
     })))
@@ -45,7 +46,8 @@ export const useAddMedication = ({ date, onSuccess }) => {
       const key = itemKey(item)
       return prev.some(s => itemKey(s) === key)
         ? prev.filter(s => itemKey(s) !== key)
-        : [...prev, { name: item.name, dosage: item.dosage, category: item.category, clientId: generateId() }]
+        : [...prev, { name: item.name, personalMedicationId: item.personalMedicationId ?? null,
+            dosage: item.dosage, category: item.category, clientId: generateId() }]
     })
   }
 
@@ -97,6 +99,7 @@ export const useAddMedication = ({ date, onSuccess }) => {
               ...original,
               ...common,
               name: item.name,
+              personalMedicationId: item.personalMedicationId ?? null,
               dosage: item.dosage,
               category: sameMedicine ? original.category : item.category,
               effectiveness: sameMedicine && original.dosage === item.dosage ? original.effectiveness : null,
@@ -109,6 +112,7 @@ export const useAddMedication = ({ date, onSuccess }) => {
             ...common,
             clientId: item.clientId,
             name: item.name,
+            personalMedicationId: item.personalMedicationId ?? null,
             dosage: item.dosage,
             category: item.category,
             effectiveness: null,
@@ -124,6 +128,7 @@ export const useAddMedication = ({ date, onSuccess }) => {
             clientId: item.clientId,
             intakeId: draftIntakeId,
             name:          item.name,
+            personalMedicationId: item.personalMedicationId ?? null,
             dosage:        item.dosage,
             category:      item.category,
             date:          meta.date,

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import SpaOutlinedIcon from '@mui/icons-material/SpaOutlined'
 import { BackIcon, ChevronLeftIcon, ChevronRightIcon, LocationOnIcon } from '@/shared/ui/icons'
 import { statsApi } from '@/shared/api'
@@ -66,6 +67,8 @@ const DayBar = ({ date, setDate, city, userId }) => {
 	const [streakGain, setStreakGain] = useState(0)
 	const [streakInfoOpen, setStreakInfoOpen] = useState(false)
 	const animationTimer = useRef(null)
+	const streakButtonRef = useRef(null)
+	const streakCloseRef = useRef(null)
 	const streakRequest = useRef(0)
 	const streakPreviewApplied = useRef(false)
 	const loadStreak = useCallback(() => {
@@ -101,11 +104,27 @@ const DayBar = ({ date, setDate, city, userId }) => {
 	useEffect(() => () => window.clearTimeout(animationTimer.current), [])
 	useEffect(() => {
 		if (!streakInfoOpen) return undefined
+		const appRoot = document.getElementById('root')
+		const wasInert = appRoot?.inert
+		const previousOverflow = document.body.style.overflow
+		const returnFocus = streakButtonRef.current
+		if (appRoot) appRoot.inert = true
+		document.body.style.overflow = 'hidden'
+		streakCloseRef.current?.focus()
 		const closeOnEscape = event => {
 			if (event.key === 'Escape') setStreakInfoOpen(false)
+			if (event.key === 'Tab') {
+				event.preventDefault()
+				streakCloseRef.current?.focus()
+			}
 		}
 		window.addEventListener('keydown', closeOnEscape)
-		return () => window.removeEventListener('keydown', closeOnEscape)
+		return () => {
+			window.removeEventListener('keydown', closeOnEscape)
+			if (appRoot) appRoot.inert = wasInert
+			document.body.style.overflow = previousOverflow
+			returnFocus?.focus()
+		}
 	}, [streakInfoOpen])
 	const today = midnight()
 	const isToday = date.getTime() === today.getTime()
@@ -122,7 +141,7 @@ const DayBar = ({ date, setDate, city, userId }) => {
 
 	return (
 		<div className={s.dayBar}>
-			<button className={s.navBtn} onClick={() => shift(-1)} aria-label="Предыдущий день">
+			<button className={s.navBtn} onClick={() => shift(-1)} aria-label="Предыдущий день" data-help="Показать записи дневника за предыдущий день.">
 				<ChevronLeftIcon />
 			</button>
 
@@ -145,7 +164,7 @@ const DayBar = ({ date, setDate, city, userId }) => {
 					</span>
 				)}
 				{!isToday && (
-					<button className={s.returnBtn} onClick={() => setDate(today)}>
+					<button className={s.returnBtn} onClick={() => setDate(today)} data-help="Вернуться к записям за сегодня.">
 						<BackIcon style={{ fontSize: '1rem' }} /> к сегодня
 					</button>
 				)}
@@ -153,9 +172,10 @@ const DayBar = ({ date, setDate, city, userId }) => {
 
 			<div className={`${s.streak} ${streakGain ? s.streakIncreased : ''}`}>
 				<button
+					ref={streakButtonRef}
 					className={s.streakButton}
 					type="button"
-					title={`Серия без приступов: ${currentStreak} дн. подряд`}
+					data-help={`Серия без приступов: ${currentStreak} ${dayWord(currentStreak)} подряд. Нажмите, чтобы узнать, как она считается.`}
 					aria-label={`Серия без приступов: ${currentStreak} дней. Открыть памятку`}
 					aria-expanded={streakInfoOpen}
 					aria-controls="streak-info"
@@ -165,15 +185,17 @@ const DayBar = ({ date, setDate, city, userId }) => {
 				<strong key={currentStreak}>{currentStreak}</strong>
 				{streakGain > 0 && <span className={s.streakGain} aria-hidden="true">+{streakGain}</span>}
 				</button>
-				{streakInfoOpen && (
-					<div className={s.streakInfo} id="streak-info" role="dialog" aria-label="Как работает серия без приступов">
-						<strong>Стрик без боли</strong>
-						<p>Это число подряд идущих дней, которые вы отметили как дни без приступов.</p>
-						<p>Подтвердите отсутствие приступа за день, чтобы серия продолжилась. День с приступом сбрасывает текущую серию. Неподтверждённые дни в неё не засчитываются.</p>
-						<button className={s.streakInfoClose} type="button" onClick={() => setStreakInfoOpen(false)}>Понятно</button>
-					</div>
-				)}
 			</div>
+			{streakInfoOpen && createPortal(
+				<div className={s.streakOverlay}>
+					<div className={s.streakInfo} id="streak-info" role="dialog" aria-modal="true" aria-labelledby="streak-info-title">
+						<strong id="streak-info-title">Что такое серия дней без приступа?</strong>
+						<p>Это количество дней подряд без приступа, которые вы отметили в дневнике.</p>
+						<p>Если приступ был или вы не отметили день, серия прерывается. Сегодняшнюю отметку можно изменить, если приступ начнётся позже.</p>
+						<button ref={streakCloseRef} className={s.streakInfoClose} type="button" onClick={() => setStreakInfoOpen(false)} data-help="">Понятно</button>
+					</div>
+				</div>, document.body,
+			)}
 
 			<div className={s.weekStrip}>
 				{weekDays.map(d => {
@@ -192,6 +214,7 @@ const DayBar = ({ date, setDate, city, userId }) => {
 							onClick={() => !future && setDate(midnight(d))}
 							disabled={future}
 							aria-label={`${d.getDate()} ${MONTHS[d.getMonth()]}`}
+							data-help={`Показать записи дневника за ${d.getDate()} ${MONTHS[d.getMonth()]}.`}
 						>
 							<span className={s.pillName}>{WEEKDAYS_SHORT[d.getDay()]}</span>
 							<span className={s.pillNum}>{d.getDate()}</span>
@@ -205,6 +228,7 @@ const DayBar = ({ date, setDate, city, userId }) => {
 				onClick={() => !isToday && shift(1)}
 				disabled={isToday}
 				aria-label="Следующий день"
+				data-help="Показать записи дневника за следующий день."
 			>
 				<ChevronRightIcon />
 			</button>

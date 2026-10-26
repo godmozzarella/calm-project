@@ -21,9 +21,9 @@
 	overflow-y: auto;
 	overscroll-behavior: contain;
 	padding: clamp(1.25rem, 4vw, 2rem);
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 1.2rem;
-	background: #1c1f24;
+	background: var(--surface-strong);
 	box-shadow: 0 1.25rem 4rem rgba(0, 0, 0, .5);
 	color: $fc-main;
 	font-family: 'Roboto', Arial, sans-serif;
@@ -57,7 +57,7 @@
 	overflow-y: auto;
 	margin-bottom: 1rem;
 	padding: .8rem 1rem;
-	border: 1px solid rgba(255, 255, 255, .1);
+	border: 0;
 	border-radius: .75rem;
 	background: $quiet-surface;
 	 p { margin: 0 0 .7rem; }
@@ -74,7 +74,7 @@
 .declineButton {
 	min-height: 2.9rem;
 	padding: .7rem .8rem;
-	border: 1px solid $contrast-color;
+	border: 0;
 	border-radius: .7rem;
 	font: inherit;
 	font-size: .9rem;
@@ -89,7 +89,7 @@
 }
 
 .declineButton {
-	background: transparent;
+	background: $quiet-surface-raised;
 	color: $fc-main;
 }
 

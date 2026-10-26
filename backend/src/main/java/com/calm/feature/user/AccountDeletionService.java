@@ -4,6 +4,7 @@ import com.calm.common.exception.NotFoundException;
 import com.calm.feature.attack.AttackRepository;
 import com.calm.feature.auth.AuthSessionRepository;
 import com.calm.feature.medication.MedicationRepository;
+import com.calm.feature.medication.PersonalMedicationRepository;
 import com.calm.feature.risk.RiskPredictionRecordRepository;
 import com.calm.feature.risk.DailyOutcomeRepository;
 import com.calm.feature.risk.SharedModelParticipationRepository;
@@ -31,6 +32,7 @@ public class AccountDeletionService {
 	private final UserRepository userRepository;
 	private final AttackRepository attackRepository;
 	private final MedicationRepository medicationRepository;
+	private final PersonalMedicationRepository personalMedicationRepository;
 	private final AuthSessionRepository authSessionRepository;
 	private final RiskPredictionRecordRepository predictionRecordRepository;
 	private final DailyOutcomeRepository dailyOutcomeRepository;
@@ -42,6 +44,7 @@ public class AccountDeletionService {
 			UserRepository userRepository,
 			AttackRepository attackRepository,
 			MedicationRepository medicationRepository,
+			PersonalMedicationRepository personalMedicationRepository,
 			AuthSessionRepository authSessionRepository,
 			RiskPredictionRecordRepository predictionRecordRepository,
 			DailyOutcomeRepository dailyOutcomeRepository,
@@ -52,6 +55,7 @@ public class AccountDeletionService {
 		this.userRepository = userRepository;
 		this.attackRepository = attackRepository;
 		this.medicationRepository = medicationRepository;
+		this.personalMedicationRepository = personalMedicationRepository;
 		this.authSessionRepository = authSessionRepository;
 		this.predictionRecordRepository = predictionRecordRepository;
 		this.dailyOutcomeRepository = dailyOutcomeRepository;
@@ -66,6 +70,7 @@ public class AccountDeletionService {
 
 		long attacks = attackRepository.deleteByUserId(userId);
 		long meds = medicationRepository.deleteByUserId(userId);
+		personalMedicationRepository.deleteByUserId(userId);
 		authSessionRepository.deleteByUserId(userId);
 		predictionRecordRepository.deleteByUserId(userId);
 		dailyOutcomeRepository.deleteByUserId(userId);

@@ -23,7 +23,6 @@ const AuthForm = () => {
 		loginFormError,
 		registerFormError,
 		retryAfter,
-		clearAuthForms,
 		setLoginPassword,
 		setRegisterPassword,
 		setConfirmPassword,
@@ -39,14 +38,14 @@ const AuthForm = () => {
 				<button
 					type="button"
 					className={`${s.tab} ${activeTab === 'login' ? s.tabActive : ''}`}
-					onClick={() => { clearAuthForms(); setActiveTab('login') }}
+					onClick={() => setActiveTab('login')}
 				>
 					Вход
 				</button>
 				<button
 					type="button"
 					className={`${s.tab} ${activeTab === 'register' ? s.tabActive : ''}`}
-					onClick={() => { clearAuthForms(); setActiveTab('register') }}
+					onClick={() => setActiveTab('register')}
 				>
 					Регистрация
 				</button>

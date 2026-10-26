@@ -49,7 +49,7 @@ const LocationOnboarding = ({ open, onClose, setUser }) => {
 		<>
 			<div className={s.overlay} onClick={onClose} />
 			<div className={s.modal} role="dialog" aria-labelledby="loc-onboarding-title">
-				<button className={s.closeBtn} onClick={onClose} aria-label="Закрыть">
+				<button className={s.closeBtn} onClick={onClose} aria-label="Закрыть" data-help="Закрыть выбор города. Его можно указать позже в меню профиля.">
 					<CloseIcon fontSize="small" />
 				</button>
 
@@ -64,6 +64,7 @@ const LocationOnboarding = ({ open, onClose, setUser }) => {
 					icon={geoLocating ? <span className={s.spinner} /> : <LocationOnIcon />}
 					onClick={handleGeo}
 					disabled={saving || geoLocating}
+					data-help="Разрешить браузеру определить город для погодного прогноза."
 					className={s.geoBtn}
 				>
 					{geoLocating ? 'Определяем местоположение...' : 'Определить автоматически'}
@@ -79,6 +80,7 @@ const LocationOnboarding = ({ open, onClose, setUser }) => {
 					<Input
 						id="locationSearch"
 						label="Город"
+						data-help="Введите название города, для которого нужен прогноз погоды."
 						placeholder="Москва, Санкт-Петербург, Новосибирск..."
 						value={draft}
 						onChange={e => setDraft(e.target.value)}
@@ -100,6 +102,7 @@ const LocationOnboarding = ({ open, onClose, setUser }) => {
 									className={s.resultBtn}
 									onClick={() => handlePick(r)}
 									disabled={saving}
+									data-help={`Выбрать город «${r.name}» для прогноза.`}
 								>
 									<span className={s.resultName}>{r.name}</span>
 									<span className={s.resultMeta}>
@@ -114,7 +117,7 @@ const LocationOnboarding = ({ open, onClose, setUser }) => {
 				<ErrorNotice message={error} title="Не удалось определить город" />
 				{saving && <p className={s.hint}>Сохраняем...</p>}
 
-				<button type="button" className={s.skipBtn} onClick={onClose}>
+				<button type="button" className={s.skipBtn} onClick={onClose} data-help="Продолжить без выбора города. Прогноз появится после настройки города.">
 					Пропустить — настрою позже
 				</button>
 			</div>

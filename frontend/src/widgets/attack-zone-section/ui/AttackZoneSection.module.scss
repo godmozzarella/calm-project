@@ -4,7 +4,7 @@
 	display: flex;
 	flex-direction: column;
 	background-color: $block-color;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 1.25rem;
 	overflow: hidden;
 	height: 100%;
@@ -17,7 +17,7 @@
 	flex-wrap: wrap;
 	gap: .5rem;
 	padding: 1.125rem 1.25rem 0.875rem;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+	border-bottom: 1px solid $quiet-line;
 }
 
 .title {
@@ -30,7 +30,7 @@
 	background: none;
 	border: none;
 	@include fluid-text(11, 10);
-	color: rgba(140, 150, 170, 0.6);
+	color: var(--fc-subtle);
 	cursor: pointer;
 	padding: 0.2rem 0.5rem;
 	border-radius: 0.4rem;
@@ -41,7 +41,7 @@
 
 .editBtn, .editActions button {
 	background: $quiet-surface;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: .5rem;
 	color: $fc-main;
 	cursor: pointer;
@@ -66,7 +66,7 @@
 
 .emptyHint {
 	@include fluid-text(12, 11);
-	color: rgba(140, 150, 170, 0.75);
+	color: var(--fc-subtle);
 	text-align: center;
 	margin: 0;
 	padding: 0.25rem 0.5rem 0;
@@ -92,7 +92,7 @@
 	font-weight: $fw-semibold;
 	letter-spacing: 0.07em;
 	text-transform: uppercase;
-	color: rgba(140, 150, 170, 0.6);
+	color: var(--fc-subtle);
 }
 
 .attackPills {
@@ -105,8 +105,8 @@
 	min-height: 2.25rem;
 	padding: 0.35rem 0.65rem;
 	border-radius: .75rem;
-	border: 1px solid $quiet-line;
-	background: $quiet-surface;
+	border: 0;
+	background: transparent;
 	color: $fc-secondary;
 	@include fluid-text(11, 10);
 	cursor: pointer;
@@ -116,22 +116,22 @@
 	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 
 	&:hover {
-		background: rgba(255, 255, 255, 0.06);
+		background: color-mix(in srgb, var(--fc-main) 6%, transparent);
 		color: $fc-main;
 	}
 	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: 2px; }
 }
 
 .attackPillActive {
-	background: $quiet-surface-raised;
-	border-color: rgba(255, 255, 255, .2);
+	background: $quiet-surface;
 	color: $fc-main;
-	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
 }
 
+.attackPillActive:hover { background: $quiet-surface; color: $fc-main; }
+
 @media (hover: none) {
-	.attackPill:hover { background: $quiet-surface; color: $fc-secondary; }
-	.attackPillActive:hover { background: $quiet-surface-raised; color: $fc-main; }
+	.attackPill:hover { background: transparent; color: $fc-secondary; }
+	.attackPillActive:hover { background: $quiet-surface; color: $fc-main; }
 }
 
 /* ── Two head views ── */
@@ -156,13 +156,13 @@
 	font-weight: $fw-semibold;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
-	color: rgba(140, 150, 170, 0.55);
+	color: var(--fc-subtle);
 }
 
 .dividerV {
 	width: 1px;
 	align-self: stretch;
-	background: rgba(255, 255, 255, 0.05);
+	background: color-mix(in srgb, var(--fc-main) 5%, transparent);
 	flex-shrink: 0;
 	margin-top: 0.5rem;
 }
@@ -182,8 +182,8 @@
 	gap: 0.35rem;
 	padding: 0.25rem 0.55rem 0.25rem 0.45rem;
 	border-radius: 2rem;
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	background: rgba(255, 255, 255, 0.05);
+	border: 0;
+	background: color-mix(in srgb, var(--fc-main) 5%, transparent);
 	color: $fc-secondary;
 	@include fluid-text(11, 10);
 	cursor: pointer;
@@ -191,21 +191,18 @@
 }
 
 .zoneTag_green {
-	border-color: rgba(34, 197, 94, 0.38);
 	background:   rgba(34, 197, 94, 0.1);
 	color:        rgba(134, 239, 172, 0.9);
 	&:hover { background: rgba(34, 197, 94, 0.18); }
 }
 
 .zoneTag_yellow {
-	border-color: rgba(234, 179, 8, 0.38);
 	background:   rgba(234, 179, 8, 0.1);
 	color:        rgba(253, 224, 71, 0.9);
 	&:hover { background: rgba(234, 179, 8, 0.18); }
 }
 
 .zoneTag_red {
-	border-color: rgba(239, 68, 68, 0.38);
 	background:   rgba(239, 68, 68, 0.1);
 	color:        rgba(252, 165, 165, 0.9);
 	&:hover { background: rgba(239, 68, 68, 0.2); }
@@ -237,7 +234,7 @@
 	align-items: center;
 	gap: 0.6rem;
 	@include fluid-text(10, 9);
-	color: rgba(140, 150, 170, 0.5);
+	color: var(--fc-subtle);
 }
 
 .legendDot {
@@ -249,14 +246,14 @@
 
 .hint {
 	@include fluid-text(11, 10);
-	color: rgba(190, 190, 190, 0.3);
+	color: var(--fc-subtle);
 	text-align: center;
 	line-height: 1.5;
 }
 
 .intensityHint {
 	@include fluid-text(10, 9);
-	color: rgba(140, 150, 170, 0.4);
+	color: var(--fc-subtle);
 	text-align: center;
 }
 

@@ -9,21 +9,26 @@ import { subscribe, ATTACKS_CHANGED, MEDICATIONS_CHANGED } from '@/shared/lib/da
 
 import s from './MedicationSection.module.scss'
 
-const EFFECTIVENESS_COLORS = { 1: '#ef4444', 2: '#eab308', 3: '#22c55e' }
 
-const MedicationSection = ({ date }) => {
+const MedicationSection = ({ date, onInitialReady }) => {
 	const [medications, setMedications] = useState([])
 	const [attacks,     setAttacks]     = useState([])
 	const [overuseDays, setOveruseDays] = useState(0)
 
 	const reload = useCallback(() => {
 		const [year, month] = date.split('-').map(Number)
-		medicationApi.getByDate(date).then(setMedications)
-		attackApi.getByDate(date).then(list => setAttacks(sortAttacksNewest(list)))
-		medicationApi.getOveruseDays(year, month).then(setOveruseDays)
+		return Promise.allSettled([
+			medicationApi.getByDate(date).then(setMedications),
+			attackApi.getByDate(date).then(list => setAttacks(sortAttacksNewest(list))),
+			medicationApi.getOveruseDays(year, month).then(setOveruseDays),
+		])
 	}, [date])
 
-	useEffect(() => { reload() }, [reload])
+	useEffect(() => {
+		let active = true
+		reload().then(() => { if (active) onInitialReady?.('medications') })
+		return () => { active = false }
+	}, [reload, onInitialReady])
 
 	useEffect(() => {
 		const off1 = subscribe(ATTACKS_CHANGED, reload)
@@ -39,6 +44,9 @@ const MedicationSection = ({ date }) => {
 	} = useAddMedication({ date, onSuccess: reload })
 
 	const handleDelete = id => medicationApi.delete(id)
+	const handleCardClick = event => {
+		if (!event.target.closest('button, a, input, select, textarea')) openForm()
+	}
 
 	const handleEffectiveness = (id, value) => {
 		const med = medications.find(m => m.id === id)
@@ -50,10 +58,10 @@ const MedicationSection = ({ date }) => {
 
 	return (
 		<>
-			<div className={s.card}>
+			<div className={s.card} onClick={handleCardClick} data-help="Препараты: здесь можно записать приём лекарства и позже оценить, помогло ли оно.">
 				<div className={s.cardHeader}>
 					<h2 className={s.title}>Препараты</h2>
-					<button className={s.addBtn} onClick={openForm} aria-label="Добавить препарат">
+					<button className={s.addBtn} onClick={openForm} aria-label="Добавить препарат" data-help="Записать препарат, который вы приняли в выбранный день, его дозировку и время приёма.">
 						<AddIcon fontSize="small" />
 						<span>Добавить</span>
 					</button>
@@ -92,6 +100,7 @@ const MedicationSection = ({ date }) => {
 													onClick={() => openEditForm(med, medications)}
 													aria-label="Редактировать приём препаратов"
 													title="Изменить все препараты этого приёма"
+												data-help="Изменить препараты и время этого приёма."
 												>
 													<EditIcon style={{ fontSize: '1rem' }} />
 												</button>
@@ -99,6 +108,7 @@ const MedicationSection = ({ date }) => {
 													className={s.deleteBtn}
 													onClick={() => handleDelete(med.id)}
 													aria-label="Удалить"
+												data-help="Удалить эту запись о приёме препарата."
 												>
 													<DeleteIcon style={{ fontSize: '1rem' }} />
 												</button>
@@ -119,8 +129,10 @@ const MedicationSection = ({ date }) => {
 												<button
 													key={v}
 													className={`${s.effectBtn} ${med.effectiveness === v ? s.effectBtnActive : ''}`}
-													style={med.effectiveness === v ? { color: EFFECTIVENESS_COLORS[v] } : {}}
+											data-effectiveness={v}
+													aria-pressed={med.effectiveness === v}
 													onClick={() => handleEffectiveness(med.id, med.effectiveness === v ? null : v)}
+													data-help={`Оценить действие препарата: «${EFFECTIVENESS_LABELS[v]}». Повторное нажатие снимет оценку.`}
 												>
 													{EFFECTIVENESS_LABELS[v]}
 												</button>

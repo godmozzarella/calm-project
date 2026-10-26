@@ -10,6 +10,9 @@ public interface MedicationRepository extends MongoRepository<Medication, String
 
 	List<Medication> findByUserIdOrderByDateDescTimeDesc(String userId);
 
+	@Query("{ 'userId': ?0, 'category': 'Другое', 'personalMedicationId': null }")
+	List<Medication> findLegacyPersonal(String userId);
+
 	long deleteByUserId(String userId);
 
 	@Query(value  = "{ 'userId': ?0, 'date': { $gte: ?1, $lte: ?2 } }",

@@ -42,6 +42,20 @@ class StatsServiceStreakTest {
 		assertThat(withAttackToday.currentStreak()).isZero();
 	}
 
+	@Test
+	void confirmedTodayExtendsCurrentSeriesImmediately() {
+		LocalDate today = LocalDate.now();
+		var confirmations = List.of(
+				new DailyOutcome("u", today.minusDays(2), Instant.now()),
+				new DailyOutcome("u", today.minusDays(1), Instant.now()),
+				new DailyOutcome("u", today, Instant.now()));
+
+		var kpis = service(confirmations, false).compute("u", "month").kpis();
+
+		assertThat(kpis.currentStreak()).isEqualTo(3);
+		assertThat(kpis.longestStreak()).isEqualTo(2);
+	}
+
 	private StatsService service(List<DailyOutcome> confirmations, boolean attackToday) {
 		var attacks = mock(AttackRepository.class);
 		var medications = mock(MedicationRepository.class);

@@ -60,7 +60,7 @@
 	align-items: center;
 	justify-content: center;
 	min-height: 12rem;
-	color: rgba(140, 150, 170, 0.4);
+	color: var(--fc-subtle);
 	@include fluid-text(13, 12);
 }
 
@@ -70,7 +70,7 @@
 	bottom: calc(100% - 2.25rem);
 	transform: translateX(-50%);
 	background: var(--surface-overlay);
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 0.625rem;
 	padding: 0.5rem 0.75rem;
 	min-width: 9rem;

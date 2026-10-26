@@ -27,19 +27,6 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(false)
   const [retryAfter, setRetryAfter] = useState(0)
 
-  const clearAuthForms = () => {
-    setLoginEmailState('')
-    setLoginPasswordState('')
-    setRegisterEmail('')
-    setRegisterPassword('')
-    setConfirmPassword('')
-    setConfirmTouched(false)
-    setUserNameState('')
-    setLoginFormError('')
-    setRegisterFormError('')
-    setRetryAfter(0)
-  }
-
   const startCountdown = (seconds, setError) => {
     setRetryAfter(seconds)
     setError(`Слишком много попыток. Подождите ${seconds} сек.`)
@@ -157,7 +144,6 @@ export const useAuth = () => {
     registerFormError,
     loading,
     retryAfter,
-    clearAuthForms,
     setLoginPassword:    e => { setLoginPasswordState(e.target.value);    setLoginFormError('') },
     setRegisterPassword: e => { setRegisterPassword(e.target.value);      setRegisterFormError('') },
     setConfirmPassword:  e => { setConfirmPassword(e.target.value); setConfirmTouched(true); setRegisterFormError('') },

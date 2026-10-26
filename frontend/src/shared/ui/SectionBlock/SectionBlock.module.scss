@@ -16,7 +16,6 @@
 	align-items: center;
 	text-align: center;
 	background-color: $block-color;
-	border: 1px solid $quiet-line;
 	box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.18);
 
 	&:hover {
@@ -28,7 +27,6 @@
 	align-items: flex-start;
 	text-align: left;
 	background-color: $quiet-surface;
-	border: 1px solid $quiet-line;
 
 	&:hover {
 		background-color: $quiet-surface-raised;

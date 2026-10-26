@@ -9,7 +9,7 @@ const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', '�
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 const MARK_TYPES = {
 	headache: { label: 'Приступ', color: '#ef4444' },
-	medication: { label: 'Лекарство', color: '#5cade4' },
+	medication: { label: 'Лекарство', color: 'var(--fc-contrast)' },
 	note: { label: 'Заметка', color: '#eab308' },
 }
 
@@ -51,9 +51,10 @@ const marksFromEntries = (attacks, medications) => {
 	return marks
 }
 
-const SidebarCalendar = ({ openCalendar, setOpenCalendar }) => {
+const SidebarCalendar = ({ openCalendar, setOpenCalendar, currentDate }) => {
 	const today = midnight()
 	const todayKey = dateKey(today)
+	const currentDateKey = dateKey(currentDate)
 	const [viewYear, setViewYear] = useState(today.getFullYear())
 	const [viewMonth, setViewMonth] = useState(today.getMonth())
 	const [selected, setSelected] = useState(null)
@@ -65,6 +66,12 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar }) => {
 			.catch(() => {})
 	}, [])
 	useEffect(() => { if (openCalendar) loadMarks() }, [openCalendar, loadMarks])
+	useEffect(() => {
+		if (!openCalendar) return
+		setViewYear(currentDate.getFullYear())
+		setViewMonth(currentDate.getMonth())
+		setSelected(null)
+	}, [openCalendar, currentDate])
 	useEffect(() => subscribe(ATTACKS_CHANGED, loadMarks), [loadMarks])
 	useEffect(() => subscribe(MEDICATIONS_CHANGED, loadMarks), [loadMarks])
 
@@ -96,12 +103,12 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar }) => {
 		<aside className={`${s.sidebar} ${openCalendar ? s.active : ''}`}>
 			<div className={s.header}>
 				<span className={s.title}>Календарь</span>
-				<button className={s.iconBtn} onClick={() => setOpenCalendar(false)} aria-label="Закрыть"><CloseIcon fontSize="small" /></button>
+				<button className={s.iconBtn} onClick={() => setOpenCalendar(false)} aria-label="Закрыть" data-help="Закрыть календарь и вернуться к дневнику."><CloseIcon fontSize="small" /></button>
 			</div>
 			<div className={s.monthNav}>
-				<button className={s.navBtn} onClick={prevMonth} aria-label="Предыдущий месяц"><ChevronLeftIcon fontSize="small" /></button>
+				<button className={s.navBtn} onClick={prevMonth} aria-label="Предыдущий месяц" data-help="Показать предыдущий месяц в календаре."><ChevronLeftIcon fontSize="small" /></button>
 				<div className={s.monthInfo}><span className={s.monthName}>{MONTHS[viewMonth]}</span><span className={s.yearLabel}>{viewYear}</span></div>
-				<button className={s.navBtn} onClick={nextMonth} disabled={isViewingCurrentMonth} aria-label="Следующий месяц"><ChevronRightIcon fontSize="small" /></button>
+				<button className={s.navBtn} onClick={nextMonth} disabled={isViewingCurrentMonth} aria-label="Следующий месяц" data-help="Показать следующий месяц в календаре."><ChevronRightIcon fontSize="small" /></button>
 			</div>
 			<div className={s.weekRow}>{WEEKDAYS.map(d => <span key={d} className={s.weekLabel}>{d}</span>)}</div>
 			<div className={s.grid}>
@@ -110,8 +117,10 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar }) => {
 					const dayMarks = [...(marks[key] ?? [])]
 					const isFuture = key > todayKey
 					return <button key={key + current}
-						className={[s.cell, !current && s.cellOther, key === todayKey && s.cellToday, selected === key && s.cellSelected, isFuture && s.cellFuture].filter(Boolean).join(' ')}
+						className={[s.cell, !current && s.cellOther, key === todayKey && s.cellToday, (selected === key || (!selected && current && key === currentDateKey)) && s.cellSelected, isFuture && s.cellFuture].filter(Boolean).join(' ')}
 						onClick={() => setSelected(selected === key ? null : key)}
+						data-help={`Выбрать ${date.getDate()} ${MONTHS[date.getMonth()]} и открыть записи дневника за этот день.`}
+						aria-current={current && key === currentDateKey ? 'date' : undefined}
 						disabled={!current || isFuture} tabIndex={current && !isFuture ? 0 : -1}>
 						<span className={s.cellNum}>{date.getDate()}</span>
 						{dayMarks.length > 0 && <span className={s.dotRow}>{dayMarks.map(type => <span key={type} className={s.dot} style={{ background: MARK_TYPES[type]?.color }} />)}</span>}
@@ -120,7 +129,7 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar }) => {
 			</div>
 			{selected && <div className={s.actionPanel}>
 				<span className={s.actionPanelDate}>{selected.split('-').reverse().slice(0, 2).join('.')}</span>
-				<div className={s.actionList}><button className={s.actionBtn} onClick={() => goToDate(selected)}>
+				<div className={s.actionList}><button className={s.actionBtn} onClick={() => goToDate(selected)} data-help="Открыть дневник за выбранную в календаре дату.">
 					<span className={s.actionIcon}><ArrowForwardIcon fontSize="small" /></span><span className={s.actionLabel}>Перейти к дате</span>
 				</button></div>
 			</div>}

@@ -22,7 +22,7 @@ import s from './ChartSection.module.scss'
 const EMPTY_KPIS = { total: 0, avgIntensity: 0, longestStreak: 0, overuseDays: 0, overuseRisk: false }
 const EMPTY_PATTERNS = { topTriggers: [], topSymptoms: [], zones: { freq: {}, colorMap: {}, max: 0 }, meds: [] }
 
-const ChartSection = ({ showPatterns = true, statsLink = false }) => {
+const ChartSection = ({ showPatterns = true, statsLink = false, onInitialReady }) => {
 	const [period, setPeriod] = useState('month')
 	const [metric, setMetric] = useState('intensity')
 	const [buckets, setBuckets]   = useState([])
@@ -30,16 +30,19 @@ const ChartSection = ({ showPatterns = true, statsLink = false }) => {
 	const [patterns, setPatterns] = useState(EMPTY_PATTERNS)
 	const [weather, setWeather]   = useState(null)
 
-	const load = useCallback(() => {
+	const load = useCallback(() =>
 		statsApi.getSummary(period).then(data => {
 			setBuckets(data.buckets ?? [])
 			setKpis(data.kpis ?? EMPTY_KPIS)
 			setPatterns(data.patterns ?? EMPTY_PATTERNS)
 			setWeather(data.weather ?? null)
-		}).catch(() => {})
-	}, [period])
+		}).catch(() => {}), [period])
 
-	useEffect(() => { load() }, [load])
+	useEffect(() => {
+		let active = true
+		load().then(() => { if (active) onInitialReady?.('chart') })
+		return () => { active = false }
+	}, [load, onInitialReady])
 	useEffect(() => subscribe(ATTACKS_CHANGED,     load), [load])
 	useEffect(() => subscribe(MEDICATIONS_CHANGED, load), [load])
 	useEffect(() => subscribe(OUTCOMES_CHANGED, load), [load])
@@ -64,6 +67,7 @@ const ChartSection = ({ showPatterns = true, statsLink = false }) => {
 								onClick={() => setMetric(o.value)}
 								role="tab"
 								aria-selected={metric === o.value}
+								data-help={`Показать на графике показатель «${o.label}».`}
 							>
 								{o.label}
 							</button>
@@ -77,13 +81,14 @@ const ChartSection = ({ showPatterns = true, statsLink = false }) => {
 								onClick={() => setPeriod(o.value)}
 								role="tab"
 								aria-selected={period === o.value}
+								data-help={`Показать данные на графике за период «${o.label}».`}
 							>
 								{o.label}
 							</button>
 						))}
 					</div>
 					{statsLink && (
-						<Link to="/stats" className={s.statsLink}>
+						<Link to="/stats" state={{ from: 'diary' }} className={s.statsLink} data-help="Открыть подробную статистику ваших записей дневника.">
 							Подробная статистика
 							<OpenInNewIcon style={{ fontSize: '0.875rem' }} />
 						</Link>

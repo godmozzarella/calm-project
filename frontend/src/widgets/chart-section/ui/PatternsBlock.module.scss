@@ -13,7 +13,7 @@
 	gap: 0.75rem;
 	padding: 1rem 1.125rem;
 	background: $quiet-surface;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 0.875rem;
 	min-width: 0;
 }
@@ -27,7 +27,7 @@
 
 .empty {
 	@include fluid-text(12, 11);
-	color: rgba(140, 150, 170, 0.5);
+	color: var(--fc-subtle);
 	line-height: 1.5;
 }
 
@@ -55,7 +55,7 @@
 
 .barTrack {
 	height: 0.5rem;
-	background: rgba(255, 255, 255, 0.06);
+	background: color-mix(in srgb, var(--fc-main) 6%, transparent);
 	border-radius: 2rem;
 	overflow: hidden;
 	min-width: 0;
@@ -76,7 +76,7 @@
 }
 
 .barShare {
-	color: rgba(140, 150, 170, 0.6);
+	color: var(--fc-subtle);
 	font-weight: $fw-medium;
 }
 
@@ -106,7 +106,7 @@
 	font-weight: $fw-semibold;
 	letter-spacing: 0.07em;
 	text-transform: uppercase;
-	color: rgba(140, 150, 170, 0.6);
+	color: var(--fc-subtle);
 }
 
 .legend {
@@ -115,7 +115,7 @@
 	justify-content: center;
 	gap: 0.75rem;
 	@include fluid-text(10, 9);
-	color: rgba(140, 150, 170, 0.55);
+	color: var(--fc-subtle);
 }
 
 .legendDot {
@@ -142,13 +142,13 @@
 	max-height: 22rem;
 	overflow-y: auto;
 	scrollbar-width: thin;
-	scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+	scrollbar-color: color-mix(in srgb, var(--fc-main) 12%, transparent) transparent;
 
 	&::-webkit-scrollbar {
 		width: 6px;
 	}
 	&::-webkit-scrollbar-thumb {
-		background: rgba(255, 255, 255, 0.12);
+		background: color-mix(in srgb, var(--fc-main) 12%, transparent);
 		border-radius: 3px;
 	}
 }
@@ -159,8 +159,8 @@
 	justify-content: space-between;
 	gap: 0.5rem;
 	padding: 0.5rem 0.75rem;
-	background: rgba(255, 255, 255, 0.025);
-	border: 1px solid rgba(255, 255, 255, 0.04);
+	background: color-mix(in srgb, var(--fc-main) 2%, transparent);
+	border: 0;
 	border-radius: 0.625rem;
 }
 
@@ -182,7 +182,7 @@
 
 .medCount {
 	@include fluid-text(11, 10);
-	color: rgba(140, 150, 170, 0.6);
+	color: var(--fc-subtle);
 }
 
 .medBadge {

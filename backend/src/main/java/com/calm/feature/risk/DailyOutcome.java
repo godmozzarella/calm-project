@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.Instant;
 import java.time.LocalDate;
 
-/** Явно подтверждённый день без нового начала приступа. */
+/** Явная отметка дня без приступа; для обучения используется только после завершения дня. */
 @Document(collection = "risk_daily_outcomes")
 @CompoundIndex(name = "user_date_unique", def = "{'userId': 1, 'date': 1}", unique = true)
 public class DailyOutcome {

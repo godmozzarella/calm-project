@@ -4,7 +4,7 @@
 	display: flex;
 	flex-direction: column;
 	background-color: $block-color;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 1.25rem;
 	overflow: hidden;
 	width: 100%;
@@ -17,7 +17,7 @@
 	justify-content: space-between;
 	gap: 0.75rem;
 	padding: 1.125rem 1.25rem 0.875rem;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+	border-bottom: 1px solid $quiet-line;
 }
 
 .title {
@@ -36,7 +36,6 @@
 .tabs {
 	display: inline-flex;
 	background: $quiet-surface;
-	border: 1px solid rgba(255, 255, 255, 0.05);
 	border-radius: 0.625rem;
 	padding: 0.2rem;
 	gap: 0.2rem;
@@ -55,26 +54,32 @@
 	@include fluid-text(12, 11);
 	font-weight: $fw-semibold;
 	padding: 0.35rem 0.7rem;
-	border-radius: 0.4rem;
+	border-radius: inherit !important;
 	cursor: pointer;
 	white-space: nowrap;
 	flex-shrink: 0;
 	transition: background-color 0.15s ease, color 0.15s ease;
 	-webkit-tap-highlight-color: transparent;
 
-	&:hover { color: $fc-main; }
+	&:hover { background: var(--selection-hover); color: $fc-main; }
 	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: 1px; }
 }
 
 .tabActive {
-	background: $quiet-surface-raised;
-	color: $fc-main;
-	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06);
+	background: var(--selected-control-bg);
+	color: var(--selected-control-fg);
+}
+
+.tabActive:hover { background: var(--selected-control-bg); color: var(--selected-control-fg); }
+
+:root[data-theme='light'] {
+	.tab:hover { background: none; }
+	.tabActive:hover { background: var(--selected-control-bg); color: var(--selected-control-fg); }
 }
 
 @media (hover: none) {
-	.tab:hover { color: $fc-secondary; }
-	.tabActive:hover { color: $fc-main; }
+	.tab:hover { background: none; color: $fc-secondary; }
+	.tabActive:hover { background: var(--selected-control-bg); color: var(--selected-control-fg); }
 }
 
 .statsLink {
@@ -87,7 +92,7 @@
 	text-decoration: none;
 	padding: 0.4rem 0.75rem;
 	border-radius: 0.625rem;
-	border: 1px solid $quiet-line;
+	border: 0;
 	background: $quiet-surface;
 	transition: background-color 0.15s ease, border-color 0.15s ease;
 
@@ -105,7 +110,7 @@
 
 .hint {
 	@include fluid-text(11, 10);
-	color: rgba(190, 190, 190, 0.4);
+	color: var(--fc-subtle);
 	text-align: center;
 	line-height: 1.5;
 }

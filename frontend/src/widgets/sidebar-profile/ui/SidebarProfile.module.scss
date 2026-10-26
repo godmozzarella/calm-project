@@ -34,6 +34,7 @@
 	inset: 0;
 	overflow-y: auto;
 	overflow-x: hidden;
+	overscroll-behavior: contain;
 	display: flex;
 	flex-direction: column;
 	padding: 1.25rem 0 1rem;
@@ -193,7 +194,7 @@
 	font-weight: $fw-semibold;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
-	color: rgba(140, 150, 170, 0.7);
+	color: var(--fc-subtle);
 }
 
 /* ── Nav items ── */
@@ -242,7 +243,7 @@
 .navChevron {
 	display: flex;
 	align-items: center;
-	color: rgba(140, 150, 170, 0.5);
+	color: var(--fc-subtle);
 }
 
 /* ── "Soon" badge ── */
@@ -261,7 +262,7 @@
 /* ── Подсказка справа в navItem (например город) ── */
 .navHint {
 	@include fluid-text(11, 10);
-	color: rgba(140, 150, 170, 0.7);
+	color: var(--fc-subtle);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -275,7 +276,7 @@
 	flex: 0 0 2.65rem;
 	width: 2.65rem;
 	height: 1.5rem;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 999px;
 	background: $quiet-surface-raised;
 	transition: background-color .2s ease, border-color .2s ease;
@@ -288,16 +289,17 @@
 
 .toggleThumb {
 	position: absolute;
-	top: 2px;
-	left: 2px;
+	top: 50%;
+	left: 3px;
 	width: 1.125rem;
 	height: 1.125rem;
-	border-radius: 50%;
+	border-radius: inherit;
 	background: #fff;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
 	transition: transform .2s ease;
+	transform: translateY(-50%);
 
-	.toggleChecked & { transform: translateX(1.15rem); }
+	.toggleChecked & { transform: translate(1.15rem, -50%); }
 }
 
 .navItem[role='switch']:focus-visible .toggleTrack {
@@ -335,6 +337,10 @@
 	}
 }
 
+.logoutItem:hover:not(:disabled) {
+	background-color: transparent !important;
+}
+
 /* ── Spacer ── */
 .spacer {
 	flex: 1;
@@ -363,7 +369,7 @@
 	gap: 0.35rem;
 	background: none;
 	border: none;
-	color: rgba(190, 190, 190, 0.6);
+	color: var(--fc-subtle);
 	cursor: pointer;
 	@include fluid-text(12, 11);
 	padding: 0.25rem 0.5rem;
@@ -403,7 +409,7 @@
 
 	p {
 		@include fluid-text(11, 10);
-		color: rgba(190, 190, 190, .55);
+		color: var(--fc-subtle);
 		line-height: 1.45;
 	}
 }
@@ -454,7 +460,7 @@
 .participationButtonSecondary {
 	min-height: 2.75rem;
 	padding: .65rem .85rem;
-	border: 1px solid $contrast-color;
+	border: 0;
 	border-radius: .65rem;
 	background: $contrast-color;
 	color: $fc-dark;
@@ -466,7 +472,7 @@
 }
 
 .participationButtonSecondary {
-	background: transparent;
+	background: $quiet-surface-raised;
 	color: $fc-main;
 }
 
@@ -490,7 +496,7 @@
 	max-height: min(90dvh, 42rem);
 	overflow-y: auto;
 	padding: 1.25rem;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 1.25rem;
 	background: $quiet-surface;
 	box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .4);
@@ -537,15 +543,15 @@
 	box-sizing: border-box;
 	-webkit-appearance: none;
 	appearance: none;
-	&::placeholder { color: rgba(190, 190, 190, .25); }
-	&:focus { outline: none; border-color: rgba(255, 255, 255, .3); }
-	&:focus-visible { box-shadow: 0 0 0 2px rgba(255, 255, 255, .1); }
+	&::placeholder { color: color-mix(in srgb, var(--fc-secondary) 25%, transparent); }
+	&:focus { outline: none; border-color: color-mix(in srgb, var(--fc-main) 30%, transparent); }
+	&:focus-visible { box-shadow: 0 0 0 2px color-mix(in srgb, var(--fc-main) 10%, transparent); }
 	&:disabled { opacity: .55; }
 }
 
 .verificationCodeHint {
 	min-height: 1rem;
-	color: rgba(190, 190, 190, .55);
+	color: var(--fc-subtle);
 	@include fluid-text(11, 10);
 }
 
@@ -582,7 +588,7 @@
 .logoutConfirmButton {
 	min-height: 2.85rem;
 	padding: .65rem .85rem;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: .75rem;
 	background: $quiet-surface-raised;
 	color: $fc-main;
@@ -600,7 +606,7 @@
 }
 
 .verificationSendButton {
-	border: 1px solid $quiet-line;
+	border: 0;
 	background: $quiet-surface-raised;
 	color: $fc-main;
 	&:hover:not(:disabled) { background: $quiet-surface; }
@@ -644,7 +650,7 @@
 
 .copyright {
 	@include fluid-text(10, 9);
-	color: rgba(140, 150, 170, 0.45);
+	color: var(--fc-subtle);
 }
 
 /* ── Overlay ── */

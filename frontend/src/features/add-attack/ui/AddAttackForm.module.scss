@@ -22,7 +22,7 @@
 /* ── Bottom sheet / modal ── */
 .sheet {
 	background: var(--surface-strong);
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 1.5rem 1.5rem 0 0;
 	width: 100%;
 	min-width: 0;
@@ -213,7 +213,7 @@
 	min-height: 2.5rem;
 	padding: 0.45rem 0.875rem;
 	border-radius: 0.75rem;
-	border: 1px solid $quiet-line;
+	border: 0;
 	background: $quiet-surface;
 	color: $fc-secondary;
 	@include fluid-text(13, 11);
@@ -224,22 +224,22 @@
 	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 
 	&:hover {
-		background: var(--surface-hover);
+		background: var(--selection-hover);
 		color: $fc-main;
 	}
 	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: 2px; }
 }
 
 .chipActive {
-	background: $quiet-surface-raised;
-	border-color: var(--line-muted);
-	color: $fc-main;
-	box-shadow: inset 0 0 0 1px var(--line-muted);
+	background: var(--selected-control-bg);
+	color: var(--selected-control-fg);
 }
+
+.chipActive:hover { background: var(--selected-control-bg); color: var(--selected-control-fg); }
 
 @media (hover: none) {
 	.chip:hover { background: $quiet-surface; color: $fc-secondary; }
-	.chipActive:hover { background: $quiet-surface-raised; color: $fc-main; }
+	.chipActive:hover { background: var(--selected-control-bg); color: var(--selected-control-fg); }
 }
 
 /* ── Time ── */
@@ -265,7 +265,7 @@
 
 .timeInput {
 	background: var(--surface-hover);
-	border: 1px solid -line;
+	border: 0;
 	border-radius: 0.625rem;
 	color: $fc-main;
 	padding: 0.5rem 0.75rem;
@@ -276,16 +276,15 @@
 	box-sizing: border-box;
 	font-size: 16px;
 	cursor: pointer;
-	transition: border-color 0.15s ease;
+	transition: background-color 0.15s ease;
 
 	&:focus {
 		outline: none;
-		border-color: var(--line-muted);
+		background: var(--selection-surface);
 	}
-	&:focus-visible { box-shadow: 0 0 0 2px var(--line-muted); }
 
 	/* Chrome time picker dark */
-	color-scheme: dark;
+	color-scheme: inherit;
 }
 
 .ongoingToggle {
@@ -312,16 +311,17 @@
 	width: 2.6rem;
 	height: 1.5rem;
 	flex: 0 0 2.6rem;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 2rem;
 	background: $quiet-surface-raised;
 	transition: background-color .18s ease;
 }
 
 .toggleTrackActive {
-	background: $fc-contrast;
-	border-color: $fc-contrast;
+	background: var(--selection-surface);
 }
+
+:root[data-theme='light'] .toggleTrackActive { background: $fc-contrast; }
 
 .toggleThumb {
 	position: absolute;
@@ -329,7 +329,7 @@
 	left: .15rem;
 	width: 1.1rem;
 	height: 1.1rem;
-	border-radius: 50%;
+	border-radius: inherit;
 	background: var(--toggle-thumb);
 	transition: transform .18s ease;
 
@@ -367,7 +367,7 @@
 /* ── Note ── */
 .textarea {
 	background: var(--surface-hover);
-	border: 1px solid var(--surface-hover);
+	border: 0;
 	border-radius: 0.75rem;
 	color: $fc-main;
 	padding: 0.75rem;
@@ -375,13 +375,13 @@
 	resize: none;
 	width: 100%;
 	font-family: 'Roboto', Arial, sans-serif;
-	transition: border-color 0.15s ease;
+	transition: background-color 0.15s ease;
 
 	&::placeholder { color: color-mix(in srgb, var(--fc-secondary) 55%, transparent); }
 
 	&:focus {
 		outline: none;
-		border-color: rgba(92, 173, 228, 0.3);
+		background: var(--selection-surface);
 	}
 }
 
@@ -404,5 +404,5 @@
 
 @media (hover: none) {
 	.chip:hover { background: $quiet-surface; color: $fc-secondary; }
-	.chipActive:hover { background: $quiet-surface-raised; color: $fc-main; }
+	.chipActive:hover { background: var(--selected-control-bg); color: var(--selected-control-fg); }
 }

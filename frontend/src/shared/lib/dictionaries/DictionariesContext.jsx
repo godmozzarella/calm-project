@@ -1,16 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { dictionaryApi } from '@/shared/api'
 import { getToken } from '@/shared/api'
 import { subscribe, AUTH_CHANGED } from '@/shared/lib/dataEvents'
-
-const Ctx = createContext({
-	symptoms: {},
-	triggers: {},
-	medications: [],
-	getLabel: (_type, value) => value,
-	refresh: () => {},
-})
+import { DictionariesContext } from './dictionariesState'
 
 const toMap = list => Object.fromEntries(list.map(e => [e.value, e.label]))
 
@@ -47,10 +40,8 @@ export const DictionariesProvider = ({ children }) => {
 	}, [symptoms, triggers])
 
 	return (
-		<Ctx.Provider value={{ symptoms, triggers, medications, getLabel, refresh: load }}>
+		<DictionariesContext.Provider value={{ symptoms, triggers, medications, getLabel, refresh: load }}>
 			{children}
-		</Ctx.Provider>
+		</DictionariesContext.Provider>
 	)
 }
-
-export const useDictionaries = () => useContext(Ctx)

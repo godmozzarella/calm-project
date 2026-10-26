@@ -1,0 +1,32 @@
+.tooltip {
+	position: fixed;
+	z-index: 10000;
+	width: max-content;
+	max-width: min(20rem, calc(100vw - 1.5rem));
+	padding: .8rem .9rem;
+	border-radius: .65rem;
+	background: var(--surface-overlay);
+	color: var(--fc-main);
+	box-shadow: 0 .6rem 1.8rem rgba(0, 0, 0, .22);
+	font-size: 1rem;
+	line-height: 1.5;
+	text-align: left;
+	pointer-events: none;
+	animation: tooltipEnter .22s ease-out both;
+}
+
+.touchTarget,
+.touchTarget * {
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
+}
+
+@keyframes tooltipEnter {
+	from { opacity: 0; translate: 0 var(--tooltip-enter-y); }
+	to { opacity: 1; translate: 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tooltip { animation: none; }
+}

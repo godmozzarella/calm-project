@@ -2,7 +2,7 @@
 
 .page {
 	min-height: 100vh;
-	background: $main-color;
+	background: transparent;
 	padding: 1rem 2rem 4rem;
 	display: flex;
 	flex-direction: column;
@@ -34,7 +34,7 @@
 	display: flex;
 	gap: 0.25rem;
 	background: $quiet-surface;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 0.75rem;
 	padding: 0.25rem;
 	width: fit-content;
@@ -67,7 +67,7 @@
 
 .content {
 	background: $quiet-surface;
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 1rem;
 	padding: 1.5rem;
 	min-height: 20rem;

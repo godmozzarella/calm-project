@@ -351,13 +351,14 @@ public class StatsService {
 	private int currentStreak(String userId, LocalDate today) {
 		if (attackRepo.findInRange(userId, today, today).stream().anyMatch(a -> a.overlaps(today))) return 0;
 		LocalDate yesterday = today.minusDays(1);
-		List<DailyOutcome> confirmations = outcomeRepo.findByUserIdAndDateBetween(userId, LocalDate.of(2000, 1, 1), yesterday);
+		List<DailyOutcome> confirmations = outcomeRepo.findByUserIdAndDateBetween(userId, LocalDate.of(2000, 1, 1), today);
 		Set<LocalDate> confirmed = confirmations.stream().map(DailyOutcome::getDate).collect(Collectors.toSet());
 		for (Attack attack : attackRepo.findInRange(userId, LocalDate.of(2000, 1, 1), yesterday)) {
 			confirmed.removeIf(attack::overlaps);
 		}
 		int run = 0;
-		for (LocalDate day = yesterday; confirmed.contains(day); day = day.minusDays(1)) run++;
+		LocalDate firstDay = confirmed.contains(today) ? today : yesterday;
+		for (LocalDate day = firstDay; confirmed.contains(day); day = day.minusDays(1)) run++;
 		return run;
 	}
 

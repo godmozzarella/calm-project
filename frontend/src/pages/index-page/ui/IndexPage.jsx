@@ -1,7 +1,7 @@
 import { Header } from '@/widgets/header'
 import { Footer } from '@/widgets/footer'
 import { AuthForm } from '@/features/auth'
-import { Button } from '@/shared/ui/Button'
+import BlueOrb from '@/shared/ui/BlueOrb/BlueOrb'
 import { Section } from '@/shared/ui/Section'
 import { SectionBlock } from '@/shared/ui/SectionBlock'
 import {
@@ -10,8 +10,6 @@ import {
 	CircleIcon,
 	ConnectIcon,
 	ForwardToInboxIcon,
-	InstallDesktopIcon,
-	InstallMobileIcon,
 	MedicalInformationIcon,
 	PersonIcon,
 	SecurityIcon
@@ -22,30 +20,34 @@ import s from './IndexPage.module.scss'
 const IndexPage = () => {
 	return (
 		<div className={s.indexBody}>
+			<div className={s.ambientLayer} aria-hidden="true">
+				<BlueOrb className={s.ambientOrbOne} />
+				<BlueOrb className={s.ambientOrbTwo} />
+				<BlueOrb className={s.ambientOrbThree} />
+				<BlueOrb className={s.ambientOrbFour} />
+				<BlueOrb className={s.ambientOrbFive} />
+			</div>
 			<Header />
 
-			<Section colored>
-				<div className={s.rowContent}>
-					<div className={s.containerItem}>
-						<h1>Отслеживай. Понимай. Живи легче!</h1>
-						<p className={s.description}>
-							Мы рядом, чтобы помочь тебе разобраться с головной болью и сделать
-							каждый день немного легче.
-						</p>
-					</div>
-					<div className={s.containerItem}>
-						<p className={s.bigLogo}>Calm</p>
-						<div className={s.buttons}>
-							<Button colored icon={<InstallMobileIcon />}>
-								<p className={s.buttonText}>Для вашего телефона</p>
-							</Button>
-							<Button colored icon={<InstallDesktopIcon />}>
-								<p className={s.buttonText}>Для вашего компьютера</p>
-							</Button>
+			<div className={s.heroGlowArea}>
+				<BlueOrb className={s.logoOrb} />
+				<Section colored>
+					<div className={s.rowContent}>
+						<div className={s.containerItem}>
+							<h1>Отслеживай. Понимай. Живи легче!</h1>
+							<p className={s.description}>
+								Мы рядом, чтобы помочь тебе разобраться с головной болью и сделать
+								каждый день немного легче.
+							</p>
+						</div>
+						<div className={s.containerItem}>
+							<div className={s.logoStage}>
+								<p className={s.bigLogo}>Calm</p>
+							</div>
 						</div>
 					</div>
-				</div>
-			</Section>
+				</Section>
+			</div>
 
 			<Section
 				id="for_who"
@@ -130,19 +132,22 @@ const IndexPage = () => {
 				/>
 			</Section>
 
-			<Section
-				id="regAndLog"
-				title={
-					<>
-						Используй <span className={s.inTextLogo}>Calm</span> прямо сейчас!
-					</>
-				}
-				colored
-			>
-				<AuthForm />
-			</Section>
+			<div className={s.bottomGlowArea}>
+				<BlueOrb className={s.bottomOrb} />
+				<Section
+					id="regAndLog"
+					title={
+						<>
+							Используй <span className={s.inTextLogo}>Calm</span> прямо сейчас!
+						</>
+					}
+					colored
+				>
+					<AuthForm />
+				</Section>
 
-			<Footer />
+				<Footer />
+			</div>
 		</div>
 	)
 }

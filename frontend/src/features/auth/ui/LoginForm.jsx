@@ -27,7 +27,9 @@ const LoginForm = props => {
 
 			<Input
 				id="loginEmail"
+				name="loginEmail"
 				type="email"
+				autoComplete="username"
 				label="Электронная почта"
 				placeholder="you@example.com"
 				value={email}
@@ -36,7 +38,9 @@ const LoginForm = props => {
 
 			<Input
 				id="loginPassword"
+				name="loginPassword"
 				type={showPassword ? 'text' : 'password'}
+				autoComplete="current-password"
 				label="Пароль"
 				placeholder="••••••••"
 				value={password}

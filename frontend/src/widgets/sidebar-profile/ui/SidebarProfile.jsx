@@ -32,7 +32,7 @@ import { useEditProfile } from '@/features/edit-profile'
 import { LocationOnboarding } from '@/features/onboarding-location'
 import { clearCurrentUser, setCurrentUser } from '@/entities/user'
 import { authApi, userApi, forecastApi, riskApi } from '@/shared/api'
-import { useTheme } from '@/app/providers/theme/ThemeProvider'
+import { useTheme } from '@/app/providers/theme/themeContext'
 
 import s from './SidebarProfile.module.scss'
 
@@ -285,18 +285,18 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 						<div className={s.divider} />
 
 						<nav className={s.navSection}>
-							<button className={s.navItem} onClick={handleOpenEdit}>
+							<button className={s.navItem} onClick={handleOpenEdit} data-help="Открыть настройки имени, почты и других данных профиля.">
 								<span className={s.navIcon}><PersonIcon fontSize="small" /></span>
 								<span className={s.navLabel}>Редактировать профиль</span>
 								<span className={s.navChevron}><ChevronRightIcon fontSize="small" /></span>
 							</button>
-							<Link to="/stats" className={s.navItem} onClick={handleClose}>
+						<Link to="/stats" state={{ from: 'menu' }} className={s.navItem} onClick={handleClose} data-help="Открыть статистику приступов, препаратов и дней без приступа.">
 								<span className={s.navIcon}><AnalyticsIcon fontSize="small" /></span>
 								<span className={s.navLabel}>Статистика</span>
 								<span className={s.navChevron}><ChevronRightIcon fontSize="small" /></span>
 							</Link>
 							{user?.role === 'ADMIN' && (
-								<Link to="/admin" className={s.navItem} onClick={handleClose}>
+								<Link to="/admin" className={s.navItem} onClick={handleClose} data-help="Открыть настройки и данные администратора.">
 									<span className={s.navIcon}><SecurityIcon fontSize="small" /></span>
 									<span className={s.navLabel}>Админка</span>
 									<span className={s.navChevron}><ChevronRightIcon fontSize="small" /></span>
@@ -308,7 +308,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 
 						<div className={s.sectionLabel}>Настройки</div>
 						<nav className={s.navSection}>
-							<button className={s.navItem} onClick={openParticipation}>
+							<button className={s.navItem} onClick={openParticipation} data-help="Узнать об участии в общей модели и при желании изменить своё согласие.">
 								<span className={s.navIcon}><AnalyticsIcon fontSize="small" /></span>
 								<span className={s.navLabel}>Пилот общей модели</span>
 								<span className={s.navChevron}><ChevronRightIcon fontSize="small" /></span>
@@ -317,6 +317,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 								className={s.navItem}
 								onClick={() => setLocationModalOpen(true)}
 								title={user?.city || 'Локация не задана'}
+								data-help="Выбрать город для погодного прогноза и оценки риска приступа."
 							>
 								<span className={s.navIcon}><EditLocationIcon fontSize="small" /></span>
 								<span className={s.navLabel}>Город для прогноза</span>
@@ -329,6 +330,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 								disabled={togglingNotif}
 								role="switch"
 								aria-checked={Boolean(user?.emailVerified && user?.notificationsEnabled)}
+								data-help="Включить или выключить письма с прогнозом на электронную почту."
 							>
 								<span className={s.navIcon}><NotificationsNoneIcon fontSize="small" /></span>
 								<span className={s.navLabel}>Email-уведомления</span>
@@ -356,7 +358,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 							{testMessage && (
 								<div className={s.testMessage}>{testMessage}</div>
 							)}
-			<button className={s.navItem} onClick={toggleTheme} role="switch" aria-checked={theme === 'light'} aria-label={theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'}>
+			<button className={s.navItem} onClick={toggleTheme} role="switch" aria-checked={theme === 'light'} aria-label={theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'} data-help="Переключить приложение между светлым и тёмным оформлением.">
 								<span className={s.navIcon}>{theme === 'dark' ? <LightModeOutlinedIcon fontSize="small" /> : <DarkModeOutlinedIcon fontSize="small" />}</span>
 								<span className={s.navLabel}>Тема</span>
 				<span className={`${s.toggleTrack} ${theme === 'light' ? s.toggleChecked : ''}`} aria-hidden="true">
@@ -373,10 +375,12 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 						<div className={s.spacer} />
 
 						<div className={s.divider} />
-						<button className={`${s.navItem} ${s.logoutItem}`} onClick={() => setLogoutConfirmOpen(true)}>
-							<span className={s.navIcon}><LogoutIcon fontSize="small" /></span>
-							<span className={s.navLabel}>Выйти из аккаунта</span>
-						</button>
+						<div className={s.navSection}>
+							<button className={`${s.navItem} ${s.logoutItem}`} onClick={() => setLogoutConfirmOpen(true)} data-help="Завершить сеанс и выйти из своего аккаунта на этом устройстве.">
+								<span className={s.navIcon}><LogoutIcon fontSize="small" /></span>
+								<span className={s.navLabel}>Выйти из аккаунта</span>
+							</button>
+						</div>
 						<div className={s.divider} />
 
 						{/* ── Socials + copyright ── */}

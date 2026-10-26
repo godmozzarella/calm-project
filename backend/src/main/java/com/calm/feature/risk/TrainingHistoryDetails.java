@@ -48,7 +48,7 @@ public record TrainingHistoryDetails(
 		for (Medication medication : medications) {
 			LocalDate date = medication.getDate();
 			if (date == null || date.isBefore(from) || date.isAfter(knownThrough)) continue;
-			increment(medicationNames, medication.getName());
+			increment(medicationNames, medication.trainingName());
 			increment(classes, medication.getTherapeuticClass());
 			if (medication.getEffectiveness() != null && medication.getEffectiveness() >= 1
 					&& medication.getEffectiveness() <= 3) {

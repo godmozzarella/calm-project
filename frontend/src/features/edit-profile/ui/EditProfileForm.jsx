@@ -34,9 +34,9 @@ const EditProfileForm = props => {
 			>
 				<div className={s.header}>
 					<h2 className={s.title}>Редактирование профиля</h2>
-					<span className={s.close} onClick={onClose}>
+					<button type="button" className={s.close} onClick={onClose} aria-label="Закрыть редактирование профиля" data-help="Закрыть настройки профиля без сохранения изменений.">
 						<CloseIcon />
-					</span>
+					</button>
 				</div>
 
 				<div className={s.avatarContainer}>
@@ -62,7 +62,14 @@ const EditProfileForm = props => {
 						onChange={handleAvatarUpload}
 						className={s.uploadAvatarInput}
 					/>
-					<label className={s.uploadAvatar} htmlFor="uploadAvatar">
+					<label className={s.uploadAvatar} htmlFor="uploadAvatar" role="button" tabIndex={0}
+						aria-label="Загрузить фотографию профиля" data-help="Выбрать фотографию профиля с этого устройства."
+						onKeyDown={event => {
+							if (event.key === 'Enter' || event.key === ' ') {
+								event.preventDefault()
+								document.getElementById('uploadAvatar')?.click()
+							}
+						}}>
 						<UploadIcon />
 					</label>
 				</div>
@@ -71,6 +78,7 @@ const EditProfileForm = props => {
 					type="button"
 					className={s.deleteAvatar}
 					onClick={handleAvatarDelete}
+					data-help="Удалить фотографию профиля."
 				>
 					Удалить аватар
 				</Button>
@@ -81,6 +89,7 @@ const EditProfileForm = props => {
 					value={editData.name}
 					onChange={handleInputChange}
 					placeholder="Имя"
+					data-help="Укажите имя, которое будет видно в вашем профиле."
 				/>
 				<Input
 					type="email"
@@ -88,6 +97,7 @@ const EditProfileForm = props => {
 					value={editData.email}
 					onChange={handleInputChange}
 					placeholder="Email"
+					data-help="Укажите адрес электронной почты для входа и уведомлений."
 				/>
 				<Input
 					type="password"
@@ -96,6 +106,7 @@ const EditProfileForm = props => {
 					value={editData.password}
 					onChange={handleInputChange}
 					placeholder="Пароль"
+					data-help="Введите текущий пароль, чтобы изменить данные аккаунта."
 				/>
 				<Input
 					type="password"
@@ -105,9 +116,10 @@ const EditProfileForm = props => {
 					onChange={handleInputChange}
 					pattern={PASSWORD_PATTERN}
 					placeholder="Новый пароль"
+					data-help="Введите новый пароль, если хотите его изменить."
 				/>
 
-				<Button type="submit" colored>
+				<Button type="submit" colored data-help="Сохранить изменённые данные профиля.">
 					Сохранить
 				</Button>
 			</form>
