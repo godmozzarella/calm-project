@@ -56,3 +56,20 @@ test('exports a header only when there is no active snapshot', () => {
 	assert.equal(output.length, 1)
 	assert.match(output[0], /^participantKey,targetDate,outcome,baselineScore,baselineLevel,/)
 })
+
+test('v3 CSV retains historical details and empty feature cells from the same dataset', () => {
+    const output = runExport([{
+        generation: 'current', participantKey: 'p', targetDate: '2020-01-01', outcome: 1,
+        baselineScore: null, features: { weatherScore: null, pressureMmHg: null },
+        attackCount: 1, trainingEligible: false, snapshotTiming: 'MISSING',
+        diaryOutcome: { attacks: [{ symptoms: ['nausea'], painZones: [{ zone: 'forehead', color: 'red' }] }],
+            medications: [{ effectiveness: null, linkedAttackKey: 'key' }] },
+    }], { generation: 'current', featureSchemaVersion: 3 })
+    assert.equal(output.length, 2)
+    assert.match(output[0], /pressureMmHg,pressureDelta24hMmHg/)
+    assert.match(output[0], /diaryOutcome,historyDetails/)
+    assert.match(output[1], /^p,2020-01-01,1,,,,/)
+    assert.match(output[1], /nausea/)
+    assert.match(output[1], /forehead/)
+    assert.match(output[1], /linkedAttackKey/)
+})

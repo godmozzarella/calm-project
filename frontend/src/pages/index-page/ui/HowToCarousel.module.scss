@@ -1,0 +1,187 @@
+@use 'app/styles/globals.scss' as *;
+
+.section {
+	position: relative;
+	width: 100%;
+	background-color: color-mix(in srgb, var(--secondary-color) 48%, transparent);
+	-webkit-backdrop-filter: blur(26px) saturate(145%);
+	backdrop-filter: blur(26px) saturate(145%);
+}
+
+.container {
+	width: min(90%, 87.5rem);
+	margin: 0 auto;
+	padding: clamp(2.5rem, 5.5vw, 5.5rem) 0;
+}
+
+.heading {
+	margin: 0 auto 2rem;
+	text-align: center;
+
+	h2 {
+		margin: 0;
+		@include fluid-text(32, 24);
+		font-weight: $fw-semibold;
+		text-wrap: balance;
+	}
+
+	p {
+		margin: .65rem 0 0;
+		color: $fc-secondary;
+		@include fluid-text(17, 14);
+		line-height: 1.5;
+	}
+}
+
+.inTextLogo {
+	font-weight: $fw-medium;
+	font-family: 'LilyScriptOne', cursive;
+}
+
+.carousel {
+	width: min(100%, 70rem);
+	margin: 0 auto;
+	outline: none;
+	touch-action: pan-y;
+}
+
+.slide {
+	display: grid;
+	flex: 0 0 100%;
+	min-width: 0;
+	box-sizing: border-box;
+	grid-template-columns: minmax(14rem, .8fr) minmax(0, 1fr);
+	align-items: center;
+	gap: clamp(2rem, 7vw, 7rem);
+	min-height: 34rem;
+}
+
+.slideViewport {
+	position: relative;
+	width: 100%;
+	overflow: hidden;
+}
+
+.slideTrack {
+	display: flex;
+	width: 100%;
+	transition: transform .72s cubic-bezier(.22, .75, .25, 1);
+	will-change: transform;
+}
+
+.phoneStage {
+	display: grid;
+	place-items: center;
+	perspective: 1300px;
+}
+
+.phone {
+	position: relative;
+	width: clamp(14rem, 22vw, 17rem);
+	aspect-ratio: 636 / 1312;
+}
+
+.phoneScreen {
+	position: absolute;
+	z-index: 1;
+	left: 5.66%;
+	top: 2.13%;
+	width: 89.15%;
+	height: 95.35%;
+	border-radius: 8% / 3.5%;
+	background: #050607;
+	overflow: hidden;
+}
+
+.screenshot {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	border-radius: inherit;
+	object-fit: cover;
+	object-position: center top;
+	transform: scale(1.05);
+	transform-origin: center top;
+}
+
+.phoneMockup {
+	position: absolute;
+	left: -30.5%;
+	top: -8.99%;
+	z-index: 2;
+	width: 161%;
+	height: 117.07%;
+	object-fit: fill;
+	pointer-events: none;
+}
+
+.slideCopy { max-width: 30rem; }
+.slideCopy h3 { margin: 0 0 .75rem; @include fluid-text(22, 18); font-weight: $fw-semibold; text-wrap: balance; }
+.slideCopy p { max-width: 28rem; margin: 0; @include fluid-text(18, 14); font-weight: $fw-light; line-height: 1.5; text-wrap: pretty; }
+
+.controls { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: .3rem; }
+.dot:focus-visible { outline: 2px solid $fc-contrast; outline-offset: 3px; }
+.dots { display: flex; align-items: center; gap: .55rem; }
+.dot { width: .24rem; height: .24rem; padding: 0; border: 0; border-radius: 1rem; background: $quiet-surface-raised; cursor: pointer; transition: width .2s ease, background-color .2s ease; }
+.activeDot { width: 2.8rem; height: .24rem; background: $quiet-surface-raised; overflow: hidden; }
+.dotProgress { display: block; width: 100%; height: 100%; border-radius: inherit; background: $fc-contrast; transform: scaleX(0); transform-origin: left center; animation: dotTimer 10s linear forwards; }
+@keyframes dotTimer { to { transform: scaleX(1); } }
+
+.edgeControl { display: none; }
+
+@media (min-width: 48.01rem) and (hover: hover) and (pointer: fine) {
+    .edgeControl {
+        display: flex;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 10%;
+        align-items: center;
+        border: 0;
+        border-radius: 0;
+        padding: 0 1rem;
+        color: var(--fc-main);
+        background: transparent;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+
+        &::before {
+            content: '';
+            position: absolute;
+            inset-block: 0;
+            width: 5rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity .2s ease;
+        }
+        &:hover::before, &:focus-visible::before { opacity: 1; }
+        &:focus-visible { outline: 2px solid $fc-contrast; outline-offset: -2px; }
+    }
+    .edgeLeft {
+        left: 0;
+        justify-content: flex-start;
+        &::before { left: 0; background: radial-gradient(ellipse 100% 50% at left center, color-mix(in srgb, var(--fc-main) 16%, transparent), transparent 100%); }
+    }
+    .edgeRight {
+        right: 0;
+        justify-content: flex-end;
+        &::before { right: 0; background: radial-gradient(ellipse 100% 50% at right center, color-mix(in srgb, var(--fc-main) 16%, transparent), transparent 100%); }
+    }
+}
+
+@media (max-width: 48rem) {
+	.container { width: min(90%, 30rem); }
+	.heading { margin-bottom: 1.5rem; }
+	.slide { grid-template-columns: 1fr; gap: 1.4rem; min-height: 0; }
+	.phone { width: min(60vw, 15rem); }
+	.slideCopy { text-align: center; }
+	.slideCopy p { margin-inline: auto; }
+	.controls { margin-top: .3rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.slideTrack { transition: none; }
+	.dot { transition: none; }
+	.dotProgress { animation: none; transform: scaleX(0); }
+}

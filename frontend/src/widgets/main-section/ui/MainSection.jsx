@@ -28,7 +28,7 @@ const MainSection = ({ user, date, setDate, onOpenLocationModal, onInitialReady 
 			<h1 className={s.logo}>Calm</h1>
 
 			<DayBar date={date} setDate={setDate} city={user?.city} userId={user?.id} />
-			<DailyOutcome key={dateKey(date)} date={dateKey(date)} isToday={dateKey(date) === dateKey(midnight())} onInitialReady={onInitialReady} />
+			<DailyOutcome date={dateKey(date)} isToday={dateKey(date) === dateKey(midnight())} onInitialReady={onInitialReady} />
 
 			<div className={s.grid}>
 				<div className={s.topRow}>

@@ -180,9 +180,9 @@ const AttackZoneSection = ({ date, onInitialReady }) => {
 					<>
 						<p className={s.hint}>{editing ? 'Нажмите на область, чтобы отметить зону боли' : 'Нажмите карандаш, чтобы отметить зоны боли'}</p>
 						<div className={s.legend}>
-							<span className={`${s.legendDot} ${s.dot_green}`}  /> Слабая
-							<span className={`${s.legendDot} ${s.dot_yellow}`} /> Умеренная
-							<span className={`${s.legendDot} ${s.dot_red}`}    /> Сильная
+							<span className={s.legendItem}><span className={`${s.legendDot} ${s.dot_green}`} />Слабая</span>
+							<span className={s.legendItem}><span className={`${s.legendDot} ${s.dot_yellow}`} />Умеренная</span>
+							<span className={s.legendItem}><span className={`${s.legendDot} ${s.dot_red}`} />Сильная</span>
 						</div>
 					</>
 				)}

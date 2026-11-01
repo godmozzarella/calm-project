@@ -88,6 +88,9 @@
       ageMinutes,
       stale: ageMinutes == null || ageMinutes > 15,
       rows: activeRows.length,
+      coverageVersion: metadata?.coverageVersion ?? null,
+      trainingEligibleRows: metadata?.trainingEligibleCount ?? null,
+      incompleteInputRows: metadata?.incompleteInputCount ?? null,
       attackDays: activeRows.filter(row => row.outcome === 1).length,
       noAttackDays: activeRows.filter(row => row.outcome === 0).length,
       recordedLabeledDaysWithoutRow: missingRows,
@@ -166,6 +169,8 @@
       historyDetails: row.historyDetails ?? null, diaryOutcome: row.diaryOutcome ?? null,
       binaryPrediction: row.binaryPrediction ?? null, predictionMatched: row.predictionMatched ?? null,
       features: row.features,
+      snapshotTiming: row.snapshotTiming ?? null, dayCompleted: row.dayCompleted ?? null,
+      trainingEligible: row.trainingEligible ?? null,
     } : null,
   }, null, 2))
 })()

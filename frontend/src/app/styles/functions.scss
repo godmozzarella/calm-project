@@ -34,7 +34,7 @@
 		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .28), transparent);
 		mix-blend-mode: screen;
 		opacity: .7;
-		transition: transform .65s ease;
+		transition: transform 1.6s ease;
 		pointer-events: none;
 	}
 
@@ -44,12 +44,12 @@
 
 @mixin contrast-button {
 	@include button-shine;
-	min-height: 2.85rem;
-	padding: .7rem 1rem;
+	min-height: 2.65rem;
+	padding: .4rem .8rem;
 	border: 1px solid transparent;
-	border-radius: 2rem;
+	border-radius: .75rem;
 	background: var(--fc-contrast);
-	color: #101113;
+	color: var(--contrast-button-text, #101113);
 	font-size: inherit;
 	font-weight: 600;
 	cursor: pointer;

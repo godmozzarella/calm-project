@@ -17,20 +17,17 @@
 	text-align: center;
 	background-color: $block-color;
 	box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.18);
-
-	&:hover {
-		background-color: $quiet-surface-raised;
-	}
 }
 
 .coloredBlock {
 	align-items: flex-start;
 	text-align: left;
 	background-color: $quiet-surface;
+}
 
-	&:hover {
-		background-color: $quiet-surface-raised;
-	}
+@media (hover: hover) and (pointer: fine) {
+	.block:hover,
+	.coloredBlock:hover { background-color: $quiet-surface-raised; }
 }
 
 .title {
@@ -57,8 +54,8 @@
 	justify-content: center;
 	width: 3.5rem;
 	height: 3.5rem;
-	border-radius: 50%;
-	background: $quiet-surface-raised;
+	border-radius: 0;
+	background: transparent;
 	margin-bottom: 0.25rem;
 
 	svg {

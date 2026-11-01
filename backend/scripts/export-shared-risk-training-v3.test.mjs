@@ -25,7 +25,8 @@ const collection = initial => {
 		deleteMany: query => {
 			for (let i = rows.length - 1; i >= 0; i--) if (matches(rows[i], query)) rows.splice(i, 1)
 		},
-		replaceOne: (_query, replacement) => { rows.splice(0, rows.length, replacement) },
+		findOne: query => rows.find(row => matches(row, query)) ?? null,
+        replaceOne: (_query, replacement) => { rows.splice(0, rows.length, replacement) },
 	}
 }
 
@@ -54,6 +55,7 @@ const setup = () => {
 	const start = key(2)
 	const source = {
 		getName: () => 'calm_risk_pipeline_test_source',
+        users: collection([{ _id: 'u1', latitude: 55.75, longitude: 37.62, city: 'City A' }]),
 		risk_model_participation: collection([
 			{ userId: 'u1', participating: true, consentVersion: 'shared-model-pilot-v2' },
 			{ userId: 'u2', participating: false, consentVersion: 'shared-model-pilot-v2' },
@@ -67,7 +69,7 @@ const setup = () => {
 		}]),
 		medications: collection([{
 			_id: 'med-1', userId: 'u1', date: date(target), time: '11:00:00',
-			name: 'test medicine', therapeuticClass: 'nsaid', purpose: 'acute',
+			name: 'test medicine', dosage: '400 mg', intakeId: 'private-intake-id', therapeuticClass: 'nsaid', purpose: 'acute',
 			attackId: 'attack-1', effectiveness: 3, note: 'private medicine note',
 		}]),
 		personal_medications: collection([]),
@@ -82,6 +84,7 @@ const setup = () => {
 	}
 	const destination = {
 		training_examples: collection([{ _id: 'old', generation: 'old' }]),
+		diary_events: collection([]),
 		risk_model_candidates: collection([]),
 		risk_model_evaluations: collection([]),
 		export_metadata: collection([]),
@@ -102,10 +105,10 @@ const setup = () => {
 	return { source, destination, context, target }
 }
 
-test('exports detailed outcomes and frozen history under new consent without identifiers or notes', () => {
+test('exports detailed outcomes and frozen history under new consent without identifiers or notes', async () => {
 	const { source, destination, context, target } = setup()
-	runInNewContext(script, context)
-	assert.equal(destination.training_examples.rows.length, 1)
+	await runInNewContext(script, context)
+	assert.equal(destination.training_examples.rows.length, 2)
 	const row = destination.training_examples.rows[0]
 	assert.equal(row.targetDate, target)
 	assert.equal(row.outcome, 1)
@@ -117,6 +120,8 @@ test('exports detailed outcomes and frozen history under new consent without ide
 	assert.equal(row.diaryOutcome.attacks[0].endTime, '11:45')
 	assert.equal(row.diaryOutcome.attacks[0].medicationTaken, true)
 	assert.equal(row.diaryOutcome.medications[0].effectiveness, 3)
+	assert.equal(row.diaryOutcome.medications[0].dosage, '400 mg')
+	assert.equal(row.diaryOutcome.medications[0].intakeKey.length, 64)
 	assert.equal(row.diaryOutcome.medications[0].linkedAttackKey, row.diaryOutcome.attacks[0].attackKey)
 	assert.equal(row.historyDetails.symptomsLast30Days[0].code, 'nausea')
 	assert.equal(row.historyDetails.medicationNamesLast30Days[0].code, 'test medicine')
@@ -136,21 +141,26 @@ test('exports detailed outcomes and frozen history under new consent without ide
 	assert.equal(source.attacks.rows[0].note, 'private note')
 })
 
-test('requires new consent and a version 3 pre-day snapshot', () => {
-	for (const change of [
-		setup => { setup.source.risk_model_participation.rows[0].consentVersion = 'shared-model-pilot-v1' },
-		setup => { setup.source.risk_model_participation.rows[0].adminBlocked = true },
-		setup => { setup.source.risk_training_input_snapshots.rows[0].featureSchemaVersion = 2 },
-		setup => { setup.source.risk_training_input_snapshots.rows[0].capturedAt = date(setup.target) },
-	]) {
-		const fixture = setup()
-		change(fixture)
-		runInNewContext(script, fixture.context)
-		assert.equal(fixture.destination.training_examples.rows.length, 0)
-	}
+test('consent remains required but a missing or late snapshot does not exclude diary data', async () => {
+    for (const change of [
+        fixture => { fixture.source.risk_model_participation.rows[0].consentVersion = 'old' },
+        fixture => { fixture.source.risk_model_participation.rows[0].adminBlocked = true },
+    ]) {
+        const fixture = setup(); change(fixture); await runInNewContext(script, fixture.context)
+        assert.equal(fixture.destination.training_examples.rows.length, 0)
+    }
+    for (const change of [
+        fixture => { fixture.source.risk_training_input_snapshots.rows.splice(0) },
+        fixture => { fixture.source.risk_training_input_snapshots.rows[0].featureSchemaVersion = 2 },
+        fixture => { fixture.source.risk_training_input_snapshots.rows[0].capturedAt = date(fixture.target) },
+    ]) {
+        const fixture = setup(); change(fixture); await runInNewContext(script, fixture.context)
+        assert.equal(fixture.destination.training_examples.rows.length, 2)
+        assert.equal(fixture.destination.training_examples.rows.some(row => row.trainingEligible), false)
+    }
 })
 
-test('replaces custom medicine names in outcome and older frozen history', () => {
+test('replaces custom medicine names in outcome and older frozen history', async () => {
 	const fixture = setup()
 	fixture.source.personal_medications.rows.push({ userId: 'u1', name: 'Мой препарат' })
 	fixture.source.medications.rows[0].name = 'Свой препарат'
@@ -161,20 +171,150 @@ test('replaces custom medicine names in outcome and older frozen history', () =>
 		medicationNamesLast30Days: [{ code: 'Мой препарат', count: 1 }],
 	}
 
-	runInNewContext(script, fixture.context)
+	await runInNewContext(script, fixture.context)
 	const row = fixture.destination.training_examples.rows[0]
 	assert.equal(row.diaryOutcome.medications[0].name, 'Свой препарат')
 	assert.equal(row.historyDetails.medicationNamesLast30Days[0].code, 'Свой препарат')
 })
 
-test('personal name matching the public catalog stays generic in old history', () => {
+test('personal name matching the public catalog stays generic in old history', async () => {
 	const fixture = setup()
 	fixture.source.personal_medications.rows.push({ userId: 'u1', name: 'test medicine' })
 	fixture.source.medications.rows[0].name = 'Свой препарат'
 	fixture.source.medications.rows[0].category = 'Другое'
 	fixture.source.medications.rows[0].personalMedicationId = 'personal-1'
-	runInNewContext(script, fixture.context)
+	await runInNewContext(script, fixture.context)
 	const row = fixture.destination.training_examples.rows[0]
 	assert.equal(row.diaryOutcome.medications[0].name, 'Свой препарат')
 	assert.equal(row.historyDetails.medicationNamesLast30Days[0].code, 'Свой препарат')
+})
+
+
+test('keeps old attacks, symptoms, zones and medicines in the same dataset with null forecast fields', async () => {
+    const fixture = setup()
+    fixture.source.risk_training_input_snapshots.rows.splice(0)
+    await runInNewContext(script, fixture.context)
+    assert.equal(fixture.destination.training_examples.rows.length, 2)
+    assert.equal(fixture.destination.diary_events.rows.length, 0)
+    const row = fixture.destination.training_examples.rows.find(row => row.targetDate === fixture.target)
+    assert.equal(row.outcome, 1)
+    assert.equal(row.features.weatherScore, null)
+    assert.equal(row.features.overuseRisk, null)
+    assert.equal(row.baselineScore, null)
+    assert.equal(row.forecastTimezone, null)
+    assert.equal(row.historyDetails, null)
+    assert.equal(row.trainingEligible, false)
+    assert.equal(row.diaryOutcome.attacks[0].symptoms[0], 'nausea')
+    assert.equal(row.diaryOutcome.attacks[0].painZones[0].zone, 'forehead')
+    assert.equal(row.diaryOutcome.attacks[0].linkedMedications[0].effectiveness, 3)
+    assert.equal(row.diaryOutcome.medications[0].linkedAttackKey, row.diaryOutcome.attacks[0].attackKey)
+    const text = JSON.stringify(fixture.destination.training_examples.rows)
+    for (const secret of ['private note', 'private medicine note', 'userId', 'attack-1', 'private-intake-id']) assert.equal(text.includes(secret), false)
+    fixture.source.risk_model_participation.rows[0].participating = false
+    await runInNewContext(script, fixture.context)
+    assert.equal(fixture.destination.training_examples.rows.length, 0)
+    assert.equal(fixture.source.attacks.rows.length, 1)
+})
+
+test('multiple attacks on the same day remain distinct and later edits do not duplicate rows', async () => {
+    const fixture = setup()
+    fixture.source.risk_training_input_snapshots.rows.splice(0)
+    const first = fixture.source.attacks.rows[0]
+    first.startDate = date(fixture.target)
+    fixture.source.attacks.rows.push({ ...first, _id: 'second', intensity: 9, symptoms: null, painZones: null })
+    await runInNewContext(script, fixture.context)
+    let row = fixture.destination.training_examples.rows[0]
+    assert.equal(fixture.destination.training_examples.rows.length, 1)
+    assert.equal(row.attackCount, 2)
+    assert.equal(new Set(row.diaryOutcome.attacks.map(a => a.attackKey)).size, 2)
+    assert.equal(row.diaryOutcome.attacks[1].symptoms, null)
+    assert.equal(row.diaryOutcome.attacks[1].painZones, null)
+    first.intensity = 4
+    fixture.source.attacks.rows.splice(1)
+    await runInNewContext(script, fixture.context)
+    row = fixture.destination.training_examples.rows[0]
+    assert.equal(row.attackCount, 1)
+    assert.equal(row.diaryOutcome.attacks[0].intensity, 4)
+    assert.equal(fixture.destination.training_examples.rows.length, 1)
+})
+
+test('includes ongoing/current attacks and medicine-only days without inventing negative labels', async () => {
+    const fixture = setup()
+    fixture.source.risk_training_input_snapshots.rows.splice(0)
+    fixture.source.attacks.rows[0].ongoing = true
+    fixture.source.attacks.rows[0].endDate = null
+    fixture.source.medications.rows.push({ _id: 'unlinked', userId: 'u1', date: date(key(10)), effectiveness: null })
+    await runInNewContext(script, fixture.context)
+    const rows = fixture.destination.training_examples.rows
+    assert.equal(rows.find(row => row.targetDate === key(0)).outcome, 1)
+    assert.equal(rows.find(row => row.targetDate === key(0)).dayCompleted, false)
+    const medicineOnly = rows.find(row => row.targetDate === key(10))
+    assert.equal(medicineOnly.outcome, null)
+    assert.equal(medicineOnly.diaryOutcome.medications[0].effectiveness, null)
+    assert.equal(medicineOnly.diaryOutcome.medications[0].linkedAttackKey, null)
+})
+
+test('preserves available partial and late forecast values without filling missing values', async () => {
+    const fixture = setup()
+    const snapshot = fixture.source.risk_training_input_snapshots.rows[0]
+    snapshot.features = { pressureMmHg: 750, overuseRisk: false }
+    snapshot.capturedAt = new Date(date(fixture.target).getTime() + 3600000)
+    snapshot.historyDetails = null
+    await runInNewContext(script, fixture.context)
+    const row = fixture.destination.training_examples.rows.find(row => row.targetDate === fixture.target)
+    assert.equal(row.features.pressureMmHg, 750)
+    assert.equal(row.features.weatherScore, null)
+    assert.equal(row.features.overuseRisk, false)
+    assert.equal(row.snapshotTiming, 'LATE')
+    assert.equal(row.trainingEligible, false)
+})
+
+test('future forecast snapshots do not turn an ongoing attack into invented future outcomes', async () => {
+    const fixture = setup()
+    fixture.source.attacks.rows[0].ongoing = true
+    fixture.source.attacks.rows[0].endDate = null
+    fixture.source.risk_training_input_snapshots.rows.push({ ...fixture.source.risk_training_input_snapshots.rows[0], targetDate: date(key(-1)) })
+    await runInNewContext(script, fixture.context)
+    assert.equal(fixture.destination.training_examples.rows.some(row => row.targetDate > key(0)), false)
+})
+
+test('an old attack missing dates is retained with null dates instead of silently discarded', async () => {
+    const fixture = setup()
+    fixture.source.attacks.rows.push({ _id: 'undated', userId: 'u1', intensity: 6 })
+    await runInNewContext(script, fixture.context)
+    const row = fixture.destination.training_examples.rows.find(row => row.targetDate === null)
+    assert.equal(row.diaryOutcome.attacks[0].startDate, null)
+    assert.equal(row.diaryOutcome.attacks[0].intensity, 6)
+    assert.equal(row.features.weatherScore, null)
+})
+
+test('frozen event city survives a profile move and cached archive fills only absent parameters', async () => {
+    const fixture = setup()
+    fixture.source.risk_training_input_snapshots.rows.splice(0)
+    fixture.source.attacks.rows[0].eventLocation = { latitude: 50, longitude: 30, source: 'CONFIRMED_AUTO' }
+    fixture.destination.export_metadata.rows.push({ _id: 'active', generation: 'old' })
+    fixture.destination.training_examples.rows.push({ generation: 'old', historicalWeather: {
+        cacheKey: `50.0,30.0|${fixture.target}`, locationGrid: '50.0,30.0', source: 'OPEN_METEO_ARCHIVE', features: { pressureMmHg: 750 },
+    } })
+    await runInNewContext(script, fixture.context)
+    const row = fixture.destination.training_examples.rows.find(row => row.targetDate === fixture.target)
+    assert.equal(row.diaryOutcome.attacks[0].location.locationGrid, '50.0,30.0')
+    assert.equal(row.diaryOutcome.attacks[0].historicalWeather.features.pressureMmHg, 750)
+    assert.equal(row.profileLocation.locationGrid, '55.8,37.6')
+    assert.equal(row.weatherLocationsMixed, true) // medicine has a different assumed profile location
+    assert.equal(row.features.pressureMmHg, null)
+})
+
+test('retrospective filling never silently becomes an eligible pre-day feature', async () => {
+    const fixture = setup()
+    fixture.source.risk_training_input_snapshots.rows[0].features = { ...features, pressureMmHg: null }
+    fixture.destination.export_metadata.rows.push({ _id: 'active', generation: 'old' })
+    fixture.destination.training_examples.rows.push({ generation: 'old', historicalWeather: {
+        cacheKey: `55.8,37.6|${fixture.target}`, locationGrid: '55.8,37.6', features: { pressureMmHg: 750 },
+    } })
+    await runInNewContext(script, fixture.context)
+    const row = fixture.destination.training_examples.rows.find(row => row.targetDate === fixture.target)
+    assert.equal(row.features.pressureMmHg, 750)
+    assert.equal(row.weatherFeatureSources.pressureMmHg, 'HISTORICAL_ARCHIVE')
+    assert.equal(row.trainingEligible, false)
 })

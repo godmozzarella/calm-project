@@ -32,7 +32,7 @@
 	gap: 0.35rem;
 	background: $quiet-surface;
 	border: 0;
-	border-radius: 2rem;
+	border-radius: 0.75rem;
 	color: $fc-contrast;
 	padding: 0.3rem 0.75rem 0.3rem 0.5rem;
 	@include fluid-text(12, 11);
@@ -182,11 +182,13 @@
 	&.editBtn:hover {
 		color: $fc-main;
 		background-color: var(--surface-hover);
+		border-radius: 0.75rem;
 	}
 
 	&.deleteBtn:hover {
 		color: $error-color;
 		background-color: rgba(239, 100, 100, 0.1);
+		border-radius: 0.75rem;
 	}
 }
 
@@ -211,7 +213,7 @@
 .effectBtn {
 	min-height: 2rem;
 	padding: 0.2rem 0.6rem;
-	border-radius: 2rem;
+	border-radius: 0.75rem;
 	border: 0;
 	background: $block-color;
 	color: $fc-secondary;
@@ -226,7 +228,7 @@
 	@media (hover: none) { &:hover { background: $block-color; } }
 }
 
-:root[data-theme='light'] .effectBtn { background: $quiet-surface; }
+:root[data-theme='light'] .effectBtn { background: var(--selection-surface); }
 :root[data-theme='light'] .effectBtn:hover { background: $quiet-surface-raised; }
 .effectBtn[data-effectiveness='1'] { color: #ef4444; }
 .effectBtn[data-effectiveness='2'] { color: #eab308; }

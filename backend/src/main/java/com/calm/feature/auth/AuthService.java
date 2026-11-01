@@ -8,9 +8,13 @@ import com.calm.feature.user.User;
 import com.calm.feature.user.UserService;
 import com.calm.feature.user.dto.UserDto;
 import com.calm.security.JwtService;
+import com.calm.common.exception.ConflictException;
+import java.util.Optional;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AuthService {
@@ -28,9 +32,32 @@ public class AuthService {
 		this.jwtService = jwtService;
 	}
 
-	public AuthResponse register(RegisterRequest req) {
-		User user = userService.create(req.email(), req.name(), req.password());
-		return issueTokenPair(user);
+	public User registerPending(RegisterRequest req) {
+		Optional<User> existing = userService.findByEmail(req.email());
+		if (existing.isPresent()) {
+			User user = existing.get();
+			if (user.isRegistrationPending() && !user.isEmailVerified()) {
+				if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
+					throw new ConflictException("Регистрация с этой почтой уже начата. Введите тот же пароль, чтобы продолжить");
+				}
+				return userService.updatePendingRegistration(user.getId(), req.name());
+			}
+			throw new ConflictException("Аккаунт с такой почтой уже зарегистрирован");
+		}
+		return userService.createPendingRegistration(req.email(), req.name(), req.password());
+	}
+
+	public User authenticatePendingRegistration(String email, String password) {
+		User user = userService.findByEmail(email)
+				.filter(User::isRegistrationPending)
+				.filter(candidate -> !candidate.isEmailVerified())
+				.filter(candidate -> passwordEncoder.matches(password, candidate.getPasswordHash()))
+				.orElseThrow(() -> new BadCredentialsException("Проверьте email и пароль регистрации"));
+		return user;
+	}
+
+	public void discardPendingRegistration(String userId) {
+		userService.deletePendingRegistration(userId);
 	}
 
 	public AuthResponse login(LoginRequest req) {
@@ -38,6 +65,10 @@ public class AuthService {
 				.orElseThrow(() -> new BadCredentialsException("invalid credentials"));
 		if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
 			throw new BadCredentialsException("invalid credentials");
+		}
+		if (user.isRegistrationPending() && !user.isEmailVerified()) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+					"Сначала подтвердите email: откройте регистрацию и введите тот же email и пароль, чтобы получить код");
 		}
 		return issueTokenPair(user);
 	}
@@ -53,7 +84,7 @@ public class AuthService {
 		sessionService.revoke(sessionId, userId);
 	}
 
-	private AuthResponse issueTokenPair(User user) {
+	public AuthResponse issueTokenPair(User user) {
 		return response(user, sessionService.create(user.getId()));
 	}
 

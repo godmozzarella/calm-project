@@ -1,33 +1,43 @@
 @use 'app/styles/globals.scss' as *;
 
-header {
+.header {
 	display: flex;
 	align-items: center;
 	gap: 2.5rem;
 
-	background-color: color-mix(in srgb, var(--secondary-color) 88%, transparent);
-	backdrop-filter: blur(10px);
-	-webkit-backdrop-filter: blur(10px);
-	border-radius: 2rem;
-	padding: 0.625rem 1rem;
-	margin: 1.25rem auto;
+	background-color: color-mix(in srgb, var(--secondary-color) 48%, transparent);
+	backdrop-filter: blur(26px) saturate(145%);
+	-webkit-backdrop-filter: blur(26px) saturate(145%);
+	border-radius: 0 0 .75rem .75rem;
+	box-shadow: 0 3px 10px rgba(0, 0, 0, .12);
+	padding: .625rem 1rem;
+	margin: 0 auto;
 	width: min(70%, 87.5rem);
 
-	filter: drop-shadow(0px 0px 0.625rem rgba(0, 0, 0, 0.25));
-
 	position: fixed;
+	top: 0;
 	left: 0;
 	right: 0;
-	top: 0;
 	z-index: 1000;
+	transform: translateY(0);
+	transition: transform .28s cubic-bezier(.2, .7, .2, 1);
+}
+
+.hidden {
+	transform: translateY(-100%);
+	pointer-events: none;
 }
 
 nav {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+	flex: 1;
+	min-width: 0;
+}
 
-	width: 100%;
+@media (max-width: 90rem) {
+	.header { width: min(90%, 87.5rem); }
 }
 
 .logo{
@@ -52,11 +62,11 @@ a {
 		font-family: 'Roboto', Arial, sans-serif;
 		@include fluid-text(16, 12);
 		transition: all 0.3s ease;
-
-		&:hover {
-			color: $fc-contrast;
-		}
 	}
+}
+
+.mobileNavigation {
+	display: none;
 }
 
 .inTextLogo {
@@ -64,26 +74,99 @@ a {
     font-family: 'LilyScriptOne', cursive;
 }
 
-@media (max-width: 90rem) {
-	header {
-		width: min(90%, 87.5rem);
-	}
-}
-
 @media (max-width: 48rem) {
-	header {
+	.header {
 		padding: 0.5rem 0.75rem;
-		margin: 0.75rem auto;
-		gap: 1rem;
+		gap: 0.75rem;
 
 		nav {
+			position: relative;
+			gap: 0.5rem;
 			justify-content: flex-end;
 
-			.tagline:first-child {
+			> .tagline {
 				display: none;
 			}
 		}
 	}
+
+	.mobileNavigation {
+		position: relative;
+		display: flex;
+		flex: 0 0 auto;
+	}
+
+	.mobileMenuButton {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.75rem;
+		min-width: 2.75rem;
+		min-height: 2.75rem;
+		padding: 0;
+		border-radius: 0;
+		background: transparent;
+		color: $fc-main;
+		cursor: pointer;
+		transition: color 0.18s ease;
+
+		&:hover { background: transparent; color: $fc-main; }
+		&:focus-visible { outline: 2px solid $fc-contrast; outline-offset: 2px; }
+	}
+
+	.mobileDropdown {
+		position: absolute;
+		top: calc(100% + 0.5rem);
+		right: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		width: max-content;
+		min-width: 13rem;
+		max-width: min(18rem, calc(100vw - 2rem));
+		padding: 0.4rem;
+		border: 0;
+		border-radius: 0.75rem;
+		background: color-mix(in srgb, var(--secondary-color) 96%, transparent);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		box-shadow: 0 0.6rem 1.8rem rgba(0, 0, 0, 0.2);
+		animation: mobileMenuEnter 0.18s ease-out both;
+
+		a {
+			padding: 0.7rem 0.8rem;
+			border-radius: 0.5rem;
+			color: $fc-main;
+			font-weight: $fw-semibold;
+			@include fluid-text(14, 12);
+			white-space: normal;
+			transition: color 0.16s ease;
+
+			&:active { color: $fc-main; }
+			&:focus-visible { outline: 2px solid $fc-contrast; outline-offset: -2px; }
+		}
+	}
+
+	@keyframes mobileMenuEnter {
+		from { opacity: 0; transform: translateY(-0.35rem); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.header nav .tagline a:hover,
+	.header .mobileDropdown a:hover {
+		color: $fc-contrast;
+	}
+}
+
+.header nav .tagline a:active,
+.header .mobileDropdown a:active {
+	color: $fc-main;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.header { transition: none; }
 }
 
 

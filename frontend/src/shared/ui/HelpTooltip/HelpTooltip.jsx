@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import s from './HelpTooltip.module.scss'
 
 const CONTROL = '[data-help], button, a[href], input, select, textarea, [role="button"], [role="switch"]'
+const HELP_DISABLED = '[data-disable-help-tooltip]'
 const HOVER_DELAY_MS = 700
 const TOUCH_HOLD_MS = 700
 const TOUCH_MOVE_LIMIT_PX = 12
@@ -70,6 +71,7 @@ const HelpTooltip = () => {
 		}
 		const show = (element, preferAbove = false) => {
 			if (!element?.isConnected) return
+			if (element.closest(HELP_DISABLED)) return
 			if (element.closest('[inert]')) return
 			if (element.disabled || element.getAttribute('aria-disabled') === 'true') return
 			const text = helpFor(element)
@@ -87,6 +89,10 @@ const HelpTooltip = () => {
 		}
 		const onPointerOver = event => {
 			if (event.pointerType === 'touch' || !(event.target instanceof Element)) return
+			if (event.target.closest(HELP_DISABLED)) {
+				hide()
+				return
+			}
 			const element = event.target.closest(CONTROL)
 			if (!element || element === activeElement || element === hoverElement) return
 			hide()
@@ -106,6 +112,7 @@ const HelpTooltip = () => {
 			if (event.pointerType !== 'touch') return
 			clearTouch()
 			if (!(event.target instanceof Element)) return
+			if (event.target.closest(HELP_DISABLED)) return
 			const element = event.target.closest(CONTROL)
 			if (!element || element.disabled || element.getAttribute('aria-disabled') === 'true' || !helpFor(element)) return
 			const noSelect = !event.target.closest('input, textarea, select, [contenteditable="true"]')
@@ -148,7 +155,9 @@ const HelpTooltip = () => {
 			if (touch?.noSelect && event.target instanceof Node && touch.element.contains(event.target)) event.preventDefault()
 		}
 		const onFocusIn = event => {
-			if (inputMode === 'keyboard' && event.target instanceof Element) show(event.target.closest(CONTROL))
+			if (inputMode !== 'keyboard' || !(event.target instanceof Element)) return
+			if (event.target.closest(HELP_DISABLED)) { hide(); return }
+			show(event.target.closest(CONTROL))
 		}
 		const onFocusOut = () => { if (inputMode === 'keyboard') hide() }
 		const onKeyDown = event => {

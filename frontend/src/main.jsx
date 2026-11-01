@@ -4,6 +4,9 @@ import { BrowserRouter } from 'react-router-dom'
 
 import App from '@/app/App'
 import '@/app/styles/main.scss'
+import { initializeAppInstallation } from '@/shared/lib/appInstallation'
+
+initializeAppInstallation()
 
 try {
 	document.documentElement.dataset.theme = localStorage.getItem('calm_theme') === 'light' ? 'light' : 'dark'

@@ -3,8 +3,6 @@ import HeadFront from '@/widgets/attack-zone-section/ui/HeadFront'
 import HeadBack from '@/widgets/attack-zone-section/ui/HeadBack'
 import s from './PatternsBlock.module.scss'
 
-const EFF_COLOR = { 1: '#ef4444', 2: '#eab308', 3: '#22c55e' }
-
 const formatShare = share => `${Math.round(share * 100)}%`
 
 const BarRow = ({ label, count, share, accent }) => (
@@ -50,9 +48,10 @@ const MedsBlock = ({ items }) => (
 			<ul className={s.medList}>
 				{items.map(m => {
 					const rounded = m.avgEff !== null ? Math.round(m.avgEff) : null
-					const color = rounded ? EFF_COLOR[rounded] : 'var(--fc-subtle)'
+					const score = m.avgEff == null ? null
+						: `${Number.isInteger(m.avgEff) ? m.avgEff : m.avgEff.toFixed(1)}/3`
 					const label = rounded
-						? `${EFFECTIVENESS_LABELS[rounded]} · ${m.avgEff.toFixed(1)}/3`
+						? `${EFFECTIVENESS_LABELS[rounded]} ${score}`
 						: 'Не оценено'
 					return (
 						<li key={m.name} className={s.medItem}>
@@ -62,7 +61,7 @@ const MedsBlock = ({ items }) => (
 							</div>
 							<span
 								className={s.medBadge}
-								style={{ color }}
+								data-effectiveness={rounded || undefined}
 							>
 								{label}
 							</span>

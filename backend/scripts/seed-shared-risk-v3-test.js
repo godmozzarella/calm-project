@@ -26,25 +26,32 @@
     linkedMedicationEntriesLast30Days: 1,
     ongoingAttackAtCutoff: false,
   }
+  db.users.insertOne({ _id: new ObjectId('507f1f77bcf86cd799439011'), latitude: 55.75, longitude: 37.62, city: 'Synthetic city' })
   db.risk_model_consent_policy.insertOne({ _id: 'current', version: 'shared-model-pilot-v2', digest: 'a'.repeat(64) })
   db.risk_model_participation.insertMany([
-    { _id: 'v3-participant', userId: 'v3-user', participating: true,
+    { _id: 'v3-participant', userId: '507f1f77bcf86cd799439011', participating: true,
       consentVersion: 'shared-model-pilot-v2', consentDigest: 'a'.repeat(64) },
     { _id: 'old-participant', userId: 'old-user', participating: true,
       consentVersion: 'shared-model-pilot-v1', consentDigest: 'a'.repeat(64) },
   ])
   db.risk_training_input_snapshots.insertMany([threeDaysAgo, twoDaysAgo, yesterday].map(target => ({
-    userId: 'v3-user', targetDate: target, capturedAt: captured(target), timezone: 'UTC',
+    userId: '507f1f77bcf86cd799439011', targetDate: target, capturedAt: captured(target), timezone: 'UTC',
     locationKey: '55.75,37.62', baselineScore: 42, baselineLevel: 'MEDIUM',
     featureSchemaVersion: 3, scoringVersion: 'personal-rules-v1', features, historyDetails,
   })))
-  db.attacks.insertOne({ _id: 'v3-attack', userId: 'v3-user', startDate: twoDaysAgo,
+  db.attacks.insertOne({ _id: 'v3-attack', userId: '507f1f77bcf86cd799439011', startDate: twoDaysAgo,
     startTime: '10:15:00', endDate: yesterday, endTime: '11:45:00', ongoing: false,
     intensity: 7, type: 'PULSATING', symptoms: ['nausea'], triggers: ['stress'],
     painZones: { forehead: 'red' }, note: 'private note must stay in diary' })
-  db.medications.insertOne({ _id: 'v3-med', userId: 'v3-user', date: yesterday,
+  db.medications.insertOne({ _id: 'v3-med', userId: '507f1f77bcf86cd799439011', date: yesterday,
     time: '11:00:00', name: 'test medicine', therapeuticClass: 'nsaid', purpose: 'acute',
     attackId: 'v3-attack', effectiveness: 3, note: 'private medicine note' })
-  db.risk_daily_outcomes.insertOne({ userId: 'v3-user', date: threeDaysAgo })
+  db.risk_daily_outcomes.insertOne({ userId: '507f1f77bcf86cd799439011', date: threeDaysAgo })
+  const oldDay = new Date('2020-01-01T00:00:00Z')
+  db.attacks.insertOne({ _id: 'backdated-attack', userId: '507f1f77bcf86cd799439011', startDate: oldDay, endDate: oldDay,
+    startTime: '09:00:00', endTime: '09:00:00', ongoing: false, intensity: 4, symptoms: ['photophobia'],
+    painZones: { forehead: 'yellow' }, createdAt: now, note: 'private backdated note' })
+  db.medications.insertOne({ _id: 'backdated-med', userId: '507f1f77bcf86cd799439011', date: oldDay,
+    name: 'Ибупрофен', attackId: 'backdated-attack', effectiveness: null })
   print('Seeded three synthetic version-3 participant-days')
 })()

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import SpaOutlinedIcon from '@mui/icons-material/SpaOutlined'
-import { BackIcon, ChevronLeftIcon, ChevronRightIcon, LocationOnIcon } from '@/shared/ui/icons'
+import { BackIcon, CalmSparkIcon, ChevronLeftIcon, ChevronRightIcon, LocationOnIcon } from '@/shared/ui/icons'
 import { statsApi } from '@/shared/api'
 import { subscribe, ATTACKS_CHANGED, OUTCOMES_CHANGED } from '@/shared/lib/dataEvents'
 import { midnight } from '../lib/date'
@@ -181,7 +180,7 @@ const DayBar = ({ date, setDate, city, userId }) => {
 					aria-controls="streak-info"
 					onClick={() => setStreakInfoOpen(open => !open)}
 				>
-				<SpaOutlinedIcon fontSize="small" aria-hidden="true" />
+					<CalmSparkIcon className={s.streakIcon} aria-hidden="true" />
 				<strong key={currentStreak}>{currentStreak}</strong>
 				{streakGain > 0 && <span className={s.streakGain} aria-hidden="true">+{streakGain}</span>}
 				</button>

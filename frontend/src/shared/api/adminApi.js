@@ -19,4 +19,8 @@ export const adminApi = {
   // ── Системные настройки ──
   getSettings:    () => http.get('/admin/settings'),
   updateSettings: patch => http.patch('/admin/settings', patch),
+
+  // ── Email-рассылка ──
+  getBroadcastAudience: () => http.get('/admin/broadcast/audience'),
+  sendBroadcast: request => http.post('/admin/broadcast', request),
 }

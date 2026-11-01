@@ -28,16 +28,17 @@ class EmailVerificationServiceTest {
 	@Mock UserRepository users;
 	@Mock EmailService email;
 	@Mock PasswordEncoder passwordEncoder;
+	@Mock org.springframework.data.mongodb.core.MongoTemplate mongo;
 
 	@Test
 	void sendsFourDigitCodeAndVerifiesTheAuthenticatedUser() {
-		EmailVerificationService service = new EmailVerificationService(users, email, passwordEncoder);
+		EmailVerificationService service = new EmailVerificationService(users, email, passwordEncoder, mongo);
 		User user = new User("user@example.com", "User", "hash");
 		user.setId("user-1");
 		when(users.findById("user-1")).thenReturn(Optional.of(user));
 		when(email.send(eq("user@example.com"), any(), any())).thenReturn(EmailSendResult.SENT);
 		when(passwordEncoder.encode(any())).thenAnswer(inv -> "encoded:" + inv.getArgument(0));
-		when(users.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+		when(mongo.updateFirst(any(org.springframework.data.mongodb.core.query.Query.class), any(org.springframework.data.mongodb.core.query.Update.class), eq(User.class))).thenReturn(com.mongodb.client.result.UpdateResult.acknowledged(1, 1L, null));
 
 		service.sendCode("user-1");
 
@@ -52,14 +53,17 @@ class EmailVerificationServiceTest {
 
 		when(users.findById("user-1")).thenReturn(Optional.of(user));
 		when(passwordEncoder.matches(code, "encoded:" + code)).thenReturn(true);
-		service.verify("user-1", code);
+		User verified = new User("user@example.com", "User", "hash");
+        verified.setEmailVerified(true);
+        when(mongo.findAndModify(any(), any(), any(org.springframework.data.mongodb.core.FindAndModifyOptions.class), eq(User.class))).thenReturn(verified);
+        user = service.verify("user-1", code);
 		assertThat(user.isEmailVerified()).isTrue();
 		assertThat(user.getEmailVerificationCodeHash()).isNull();
 	}
 
 	@Test
 	void successfulResendReplacesPreviousCodeAndResetsAttempts() {
-		EmailVerificationService service = new EmailVerificationService(users, email, passwordEncoder);
+		EmailVerificationService service = new EmailVerificationService(users, email, passwordEncoder, mongo);
 		User user = new User("user@example.com", "User", "hash");
 		user.setId("user-1");
 		user.setEmailVerificationCodeHash("old-hash");
@@ -68,7 +72,7 @@ class EmailVerificationServiceTest {
 		when(users.findById("user-1")).thenReturn(Optional.of(user));
 		when(email.send(eq("user@example.com"), any(), any())).thenReturn(EmailSendResult.SENT);
 		when(passwordEncoder.encode(any())).thenAnswer(inv -> "encoded:" + inv.getArgument(0));
-		when(users.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+		when(mongo.updateFirst(any(org.springframework.data.mongodb.core.query.Query.class), any(org.springframework.data.mongodb.core.query.Update.class), eq(User.class))).thenReturn(com.mongodb.client.result.UpdateResult.acknowledged(1, 1L, null));
 
 		service.sendCode("user-1");
 
@@ -78,7 +82,7 @@ class EmailVerificationServiceTest {
 
 	@Test
 	void resendIsRejectedWithinThirtySeconds() {
-		EmailVerificationService service = new EmailVerificationService(users, email, passwordEncoder);
+		EmailVerificationService service = new EmailVerificationService(users, email, passwordEncoder, mongo);
 		User user = new User("user@example.com", "User", "hash");
 		user.setId("user-1");
 		user.setEmailVerificationSentAt(Instant.now());
@@ -92,9 +96,22 @@ class EmailVerificationServiceTest {
 
 	@Test
 	void malformedCodeIsRejectedBeforeDatabaseLookup() {
-		EmailVerificationService service = new EmailVerificationService(users, email, passwordEncoder);
+		EmailVerificationService service = new EmailVerificationService(users, email, passwordEncoder, mongo);
 		assertThatThrownBy(() -> service.verify("user-1", "short"))
 				.isInstanceOf(ResponseStatusException.class);
 		verifyNoInteractions(users);
 	}
+    @Test
+    void aLostConcurrentCodeReservationDoesNotSendAnEmail() {
+        var service = new EmailVerificationService(users, email, passwordEncoder, mongo);
+        User user = new User("user@example.test", "User", "hash");
+        user.setId("user-1");
+        when(users.findById("user-1")).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode(any())).thenReturn("new-code-hash");
+        when(mongo.updateFirst(any(org.springframework.data.mongodb.core.query.Query.class),
+                any(org.springframework.data.mongodb.core.query.Update.class), eq(User.class)))
+                .thenReturn(com.mongodb.client.result.UpdateResult.acknowledged(0, 0L, null));
+        assertThatThrownBy(() -> service.sendCode("user-1")).isInstanceOf(ResponseStatusException.class);
+        verifyNoInteractions(email);
+    }
 }

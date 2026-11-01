@@ -59,7 +59,8 @@ public class AdminUserController {
 	/** Список всех пользователей. Поддерживает поиск по подстроке email/имени. */
 	@GetMapping
 	public List<UserDto> list(@RequestParam(required = false) String q) {
-		Stream<User> all = userRepository.findAll().stream();
+		Stream<User> all = userRepository.findAll().stream()
+				.filter(user -> !user.isRegistrationPending());
 		if (q != null && !q.isBlank()) {
 			String needle = q.toLowerCase().trim();
 			all = all.filter(u ->
@@ -87,8 +88,8 @@ public class AdminUserController {
 			throw new ConflictException("Нельзя снять с себя роль администратора");
 		}
 
-		target.setRole(req.role());
-		User saved = userRepository.save(target);
+		userRepository.updateRole(id, req.role());
+        User saved = userRepository.findById(id).orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 		return UserDto.from(saved);
 	}
 

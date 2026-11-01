@@ -48,10 +48,18 @@ trap '"${auth[@]}" down -v' EXIT
 
 # Exercise the real Spring Boot connection and an authenticated database write.
 "${auth[@]}" up -d --build --wait backend
+# Use an already confirmed legacy account: this integration must not send real email.
+# Registration/code verification is exercised separately by FirstReleaseFlowTest.
+"${auth[@]}" exec -T mongo mongosh --quiet \
+  --username calm_app --password risk-migration-app-test-only-2026-very-long --authenticationDatabase admin \
+  calm_risk_pipeline_test_source --eval '
+    if(db.getName()!=="calm_risk_pipeline_test_source")throw new Error("Test database only");
+    db.users.insertOne({email:"migration-pilot@example.test",name:"Migration Pilot",emailVerified:true,role:"USER",
+      passwordHash:"$2y$10$fpMuq3PRtcUxk2tUVZTwO.YtHiPLS.WY/QvURnJ4igIAIzhMCb3Ey"});' > /dev/null
 registration_json="$(curl --silent --show-error --fail \
   --header 'Content-Type: application/json' \
-  --data '{"email":"migration-pilot@example.test","name":"Migration Pilot","password":"test-password-only"}' \
-  http://127.0.0.1:18081/api/auth/register)"
+  --data '{"email":"migration-pilot@example.test","password":"MigrationPassword123!"}' \
+  http://127.0.0.1:18081/api/auth/login)"
 test_user_id="$(printf '%s' "$registration_json" | jq -er '.user.id')"
 test_token="$(printf '%s' "$registration_json" | jq -er '.token')"
 unset registration_json

@@ -4,10 +4,13 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: risk_test_root
       MONGO_INITDB_ROOT_PASSWORD: risk-test-root-only-password
+    volumes:
+      - ./historical-weather.cjs:/scripts/historical-weather.cjs:ro
     tmpfs:
       - /data/db
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--username", "risk_test_root", "--password", "risk-test-root-only-password", "--authenticationDatabase", "admin", "--eval", "db.runCommand('ping').ok"]
       interval: 2s
-      timeout: 5s
-      retries: 20
+      timeout: 10s
+      start_period: 20s
+      retries: 60

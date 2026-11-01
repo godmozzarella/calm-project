@@ -15,6 +15,19 @@ html:has(.indexBody) {
 	width: 100%;
 	background-color: var(--main-color);
 	color: var(--fc-main);
+
+	:global(p:not([class*='bigLogo' i])),
+	:global(small),
+	:global([class*='description' i]),
+	:global([class*='hint' i]),
+	:global([class*='caption' i]),
+	:global([class*='note' i]),
+	:global([class*='copy' i]),
+	:global([class*='subtitle' i]) {
+		font-family: 'Roboto', Arial, sans-serif !important;
+		font-weight: $fw-light !important;
+		line-height: 1.45 !important;
+	}
 }
 
 .ambientLayer {
@@ -23,10 +36,10 @@ html:has(.indexBody) {
 	z-index: -1;
 	overflow: hidden;
 	pointer-events: none;
-	opacity: .6;
+	opacity: .9;
 }
 
-:global(:root[data-theme='light']) .ambientLayer { opacity: .48; }
+:global(:root[data-theme='light']) .ambientLayer { opacity: .72; }
 
 .ambientOrbOne {
 	width: clamp(15rem, 25vw, 25rem);
@@ -74,7 +87,13 @@ html:has(.indexBody) {
 	width: 100%;
 	overflow: hidden;
 
-	> section { position: relative; z-index: 1; }
+	> section {
+		position: relative;
+		z-index: 1;
+		background-color: color-mix(in srgb, var(--secondary-color) 48%, transparent);
+		-webkit-backdrop-filter: blur(26px) saturate(145%);
+		backdrop-filter: blur(26px) saturate(145%);
+	}
 }
 
 .rowContent {
@@ -114,6 +133,26 @@ html:has(.indexBody) {
 	align-self: stretch;
 }
 
+.forWhoSection > div {
+	container-type: inline-size;
+}
+
+.forWhoSection .forWhoBlocks {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@container (min-width: 74.5rem) {
+	.forWhoSection .forWhoBlocks {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 48rem) {
+	.forWhoSection .forWhoBlocks {
+		grid-template-columns: 1fr;
+	}
+}
+
 .logoStage {
 	display: grid;
 	place-items: center;
@@ -139,6 +178,12 @@ html:has(.indexBody) {
 		position: relative;
 		z-index: 1;
 	}
+
+	> section {
+		background-color: color-mix(in srgb, var(--secondary-color) 48%, transparent);
+		-webkit-backdrop-filter: blur(26px) saturate(145%);
+		backdrop-filter: blur(26px) saturate(145%);
+	}
 }
 
 .bottomOrb {
@@ -163,6 +208,66 @@ html:has(.indexBody) {
 	font-family: 'LilyScriptOne', cursive;
 }
 
+.protectionSection {
+	--protection-blur: 9px;
+	position: relative;
+	width: 100%;
+	padding: 3.5rem 0;
+	filter: blur(var(--protection-blur));
+}
+
+.protectionContent {
+	width: min(70%, 87.5rem);
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+.protectionTitle {
+	margin: 0;
+	color: var(--fc-main);
+	font-weight: $fw-semibold;
+	@include fluid-text(64, 36);
+	line-height: 1.08;
+	letter-spacing: -0.025em;
+	text-wrap: balance;
+}
+
+.protectionSlogan {
+	margin: 2.5rem 0 0 18%;
+	color: $fc-contrast;
+	font-weight: $fw-semibold;
+	@include fluid-text(22, 16);
+	text-wrap: balance;
+}
+
+.protectionCopy {
+	width: 82%;
+	margin: 1.5rem 0 0 18%;
+}
+
+.protectionDescription {
+	max-width: 54rem;
+	margin: 0 0 1.5rem;
+	color: var(--fc-secondary);
+	font-weight: $fw-light;
+	@include fluid-text(19, 14);
+	line-height: 1.6;
+	text-wrap: pretty;
+}
+
+.protectionButton {
+	width: fit-content;
+	margin-left: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.protectionSection {
+		filter: none;
+	}
+}
+
 /* ── Breakpoints ── */
 @media (max-width: 64rem) {
 	.rowContent {
@@ -170,9 +275,18 @@ html:has(.indexBody) {
 	}
 }
 
+@media (max-width: 90rem) {
+	.protectionContent { width: min(90%, 87.5rem); }
+}
+
 @media (max-width: 48rem) {
 	.indexBody {
 		margin-top: 5rem;
+	}
+
+	.protectionSection {
+		isolation: isolate;
+		clip-path: inset(0);
 	}
 
 	.rowContent {
@@ -196,6 +310,12 @@ html:has(.indexBody) {
 
 	.logoStage { min-height: 12rem; }
 	.logoOrb { width: 24rem; top: -10%; right: -12%; }
+	.protectionSection { padding: 2.5rem 0; }
+	.protectionContent { width: min(90%, 87.5rem); }
+	.protectionSlogan,
+	.protectionCopy { width: 88%; margin-left: 12%; }
+	.protectionTitle { @include fluid-text(48, 32); }
+	.protectionDescription { margin-bottom: 1.25rem; }
 }
 
 @media (max-width: 27rem) {
@@ -204,4 +324,7 @@ html:has(.indexBody) {
 	}
 
 	.logoOrb { right: -18%; }
+	.protectionContent { width: 90%; }
+	.protectionSlogan,
+	.protectionCopy { width: 100%; margin-left: 0; }
 }

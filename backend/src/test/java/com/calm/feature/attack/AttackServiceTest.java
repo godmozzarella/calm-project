@@ -170,7 +170,7 @@ class AttackServiceTest {
 				false, 5, AttackType.PRESSING, null, null, null, null);
 		assertThatThrownBy(() -> service.create("user-1", invalid))
 				.isInstanceOf(ResponseStatusException.class)
-				.hasMessageContaining("позже начала");
+				.hasMessageContaining("раньше начала");
 		verify(repo, never()).save(any());
 	}
 

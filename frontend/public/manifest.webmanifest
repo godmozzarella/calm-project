@@ -1,0 +1,16 @@
+{
+  "id": "/",
+  "name": "Calm — дневник головной боли",
+  "short_name": "Calm",
+  "lang": "ru",
+  "description": "Дневник головной боли, препараты и статистика",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#101113",
+  "theme_color": "#101113",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

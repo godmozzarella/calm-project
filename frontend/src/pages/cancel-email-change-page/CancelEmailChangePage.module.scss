@@ -1,0 +1,56 @@
+@use 'app/styles/globals.scss' as *;
+
+.page {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	color: $fc-main;
+}
+
+.main {
+	width: min(90%, 42rem);
+	flex: 1;
+	display: grid;
+	place-items: center;
+	padding: 3rem 0;
+}
+
+.card {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 1rem;
+	padding: clamp(1.25rem, 5vw, 2.5rem);
+	border-radius: 0.75rem;
+	background: $quiet-surface;
+}
+
+.eyebrow {
+	margin: 0;
+	color: $fc-contrast;
+	font-size: 0.8rem;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.card h1 {
+	margin: 0;
+	font-size: clamp(1.6rem, 5vw, 2.5rem);
+}
+
+.copy,
+.message {
+	margin: 0;
+	font-size: 1rem;
+	line-height: 1.5;
+}
+
+.homeLink {
+	color: $fc-contrast;
+	text-decoration: none;
+	&:hover { text-decoration: underline; }
+	&:focus-visible { outline: 2px solid $fc-contrast; outline-offset: 3px; }
+}

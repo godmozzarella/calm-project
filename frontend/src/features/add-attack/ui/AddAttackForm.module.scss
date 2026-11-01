@@ -142,15 +142,25 @@
 	appearance: none;
 	height: 4px;
 	border-radius: 2px;
+	border: 0;
 	background: $quiet-surface-raised;
 	outline: none;
+	box-shadow: none;
+	-webkit-tap-highlight-color: transparent;
 	cursor: pointer;
 	padding: 0 10px;
 	box-sizing: border-box;
+	accent-color: transparent;
+	&:focus,
+	&:focus-visible { outline: none; box-shadow: none; }
+	&::-moz-focus-outer { border: 0; }
 
 	&::-webkit-slider-runnable-track {
 		height: 4px;
 		border-radius: 2px;
+		border: 0;
+		background: $quiet-surface-raised;
+		box-shadow: none;
 	}
 
 	&::-webkit-slider-thumb {
@@ -161,6 +171,8 @@
 		background: $fc-contrast;
 		cursor: pointer;
 		border: 0;
+		outline: none;
+		box-shadow: none;
 		margin-top: -8px;
 		transition: transform 0.12s ease;
 
@@ -172,6 +184,7 @@
 		border-radius: 2px;
 		background: $quiet-surface-raised;
 		border: none;
+		box-shadow: none;
 	}
 
 	&::-moz-range-thumb {
@@ -181,6 +194,8 @@
 		background: $fc-contrast;
 		cursor: pointer;
 		border: 0;
+		outline: none;
+		box-shadow: none;
 		transition: transform 0.12s ease;
 	}
 
@@ -318,22 +333,23 @@
 }
 
 .toggleTrackActive {
-	background: var(--selection-surface);
+	background: var(--fc-contrast);
 }
-
-:root[data-theme='light'] .toggleTrackActive { background: $fc-contrast; }
 
 .toggleThumb {
 	position: absolute;
-	top: .15rem;
+	top: 50%;
 	left: .15rem;
 	width: 1.1rem;
 	height: 1.1rem;
-	border-radius: inherit;
+	box-sizing: border-box;
+	aspect-ratio: 1;
+	border-radius: 50%;
 	background: var(--toggle-thumb);
+	transform: translateY(-50%);
 	transition: transform .18s ease;
 
-	.toggleTrackActive & { transform: translateX(1.1rem); }
+	.toggleTrackActive & { transform: translate(1.2rem, -50%); }
 }
 
 @media (max-width: 480px) {

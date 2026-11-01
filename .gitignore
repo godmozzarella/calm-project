@@ -39,3 +39,6 @@ pnpm-debug.log*
 lerna-debug.log*
 .claude/
 CHANGELOG.md
+
+# Private pre-release database/avatar snapshots
+.release-backups/

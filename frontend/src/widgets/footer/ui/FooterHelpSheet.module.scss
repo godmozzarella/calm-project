@@ -1,0 +1,101 @@
+@use 'app/styles/globals.scss' as *;
+
+.overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 11000;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	background: rgba(0, 0, 0, .52);
+	backdrop-filter: blur(3px);
+}
+
+.sheet {
+	position: relative;
+	width: min(100%, 54rem);
+	max-height: min(82vh, 48rem);
+	max-height: min(82dvh, 48rem);
+	display: flex;
+	flex-direction: column;
+	padding: .65rem clamp(1rem, 4vw, 2rem) max(1.25rem, env(safe-area-inset-bottom));
+	border-radius: 1.25rem 1.25rem 0 0;
+	background: var(--surface-overlay);
+	color: $fc-main;
+	box-shadow: 0 -.75rem 3rem rgba(0, 0, 0, .3);
+	animation: sheetEnter .28s cubic-bezier(.2, .75, .25, 1) both;
+	outline: none;
+}
+
+
+.handle {
+	width: 2.5rem;
+	height: .25rem;
+	flex: 0 0 auto;
+	margin: 0 auto .8rem;
+	border-radius: 1rem;
+	background: $quiet-surface-raised;
+}
+
+.closeButton {
+	position: absolute;
+	top: 1rem;
+	right: clamp(1rem, 4vw, 2rem);
+	width: 2.5rem;
+	height: 2.5rem;
+	flex: 0 0 auto;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: $fc-main;
+	cursor: pointer;
+	transition: none;
+	&:hover { background: transparent; color: $fc-main; }
+	svg { display: block; font-size: 1.35rem; }
+	&:focus-visible { outline: 2px solid $fc-contrast; outline-offset: 2px; }
+}
+
+.content {
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	-webkit-overflow-scrolling: touch;
+	padding: .35rem .15rem .25rem;
+}
+
+.title {
+	margin: 0 3rem 1.1rem 0;
+	color: $fc-main;
+	font-size: 1.25rem;
+	line-height: 1.3;
+}
+
+.section {
+	margin-bottom: 1.15rem;
+	h3 { margin-bottom: .3rem; color: $fc-main; font-size: .95rem; font-weight: $fw-semibold; }
+	p { color: $fc-secondary; font-size: .9rem; line-height: 1.55; }
+}
+
+.sources {
+	margin: .5rem 0 1rem;
+	h3 { margin-bottom: .4rem; font-size: .9rem; }
+	ul { display: grid; gap: .35rem; list-style: none; }
+	a { color: $fc-contrast; font-size: .85rem; text-underline-offset: .15em; }
+}
+
+.disclaimer {
+	padding-top: .8rem;
+	border-top: 1px solid $quiet-line;
+	color: $fc-secondary;
+	font-size: .8rem;
+	line-height: 1.45;
+}
+
+@keyframes sheetEnter {
+	from { transform: translateY(100%); }
+	to { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sheet { animation: none; }
+}

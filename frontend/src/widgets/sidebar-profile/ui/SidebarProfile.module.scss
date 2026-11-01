@@ -9,17 +9,17 @@
 	height: 100%;
 	background-color: var(--surface-overlay);
 	border-right: 1px solid $quiet-line;
-	box-shadow: 4px 0 32px rgba(0, 0, 0, 0.5);
 	display: flex;
 	flex-direction: column;
 	transform: translateX(-100%);
-	transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
 	z-index: 1000;
 	color: $fc-main;
 }
 
 .sidebar.active {
 	transform: translateX(0);
+	box-shadow: 4px 0 32px rgba(0, 0, 0, 0.5);
 }
 
 /* ── Panel container ── */
@@ -80,6 +80,12 @@
 	color: $fc-main;
 }
 
+.editPanel {
+	.panelTitle { @include fluid-text(15, 13); }
+	:global(button) { @include fluid-text(12, 11); }
+	:global(button span) { @include fluid-text(13, 11); }
+}
+
 .iconBtn {
 	display: flex;
 	align-items: center;
@@ -97,6 +103,10 @@
 		background-color: var(--surface-hover);
 		color: $fc-main;
 	}
+}
+
+.closeIconBtn:hover {
+	border-radius: .5rem;
 }
 
 /* ── User section ── */
@@ -202,6 +212,7 @@
 	display: flex;
 	flex-direction: column;
 	padding: 0.25rem 0.75rem;
+	flex: 0;
 }
 
 .navItem {
@@ -244,6 +255,34 @@
 	display: flex;
 	align-items: center;
 	color: var(--fc-subtle);
+}
+
+.themeSelectItem {
+	cursor: pointer;
+}
+
+.themeSelect {
+	width: max-content;
+	max-width: 7.25rem;
+	margin-left: auto;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: $fc-main;
+	font: inherit;
+	font-size: .78rem;
+	text-align: right;
+	text-align-last: right;
+	cursor: pointer;
+	appearance: none;
+	-webkit-appearance: none;
+	background-image: none;
+	outline: none;
+	box-shadow: none;
+	-webkit-tap-highlight-color: transparent;
+	&:focus,
+	&:focus-visible { outline: none; box-shadow: none; }
 }
 
 /* ── "Soon" badge ── */
@@ -293,7 +332,9 @@
 	left: 3px;
 	width: 1.125rem;
 	height: 1.125rem;
-	border-radius: inherit;
+	box-sizing: border-box;
+	aspect-ratio: 1;
+	border-radius: 50%;
 	background: #fff;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
 	transition: transform .2s ease;
@@ -352,7 +393,11 @@
 	flex-direction: column;
 	gap: 1rem;
 	padding: 0.5rem 1.25rem 1.25rem;
-	flex: 1;
+	flex: 0 0 auto;
+}
+
+.securityDeleteAccount {
+	margin: 1rem 1.25rem 0;
 }
 
 .editAvatarSection {
@@ -525,28 +570,6 @@
 	gap: .65rem;
 
 	label { color: $fc-main; font-weight: $fw-semibold; @include fluid-text(13, 12); }
-}
-
-.verificationCodeInput {
-	width: 100%;
-	min-height: 3.5rem;
-	padding: .55rem .75rem;
-	border: 1px solid $quiet-line;
-	border-radius: .75rem;
-	background: $quiet-surface;
-	color: $fc-main;
-	font: inherit;
-	font-size: 1.5rem;
-	font-variant-numeric: tabular-nums;
-	letter-spacing: .65rem;
-	text-align: center;
-	box-sizing: border-box;
-	-webkit-appearance: none;
-	appearance: none;
-	&::placeholder { color: color-mix(in srgb, var(--fc-secondary) 25%, transparent); }
-	&:focus { outline: none; border-color: color-mix(in srgb, var(--fc-main) 30%, transparent); }
-	&:focus-visible { box-shadow: 0 0 0 2px color-mix(in srgb, var(--fc-main) 10%, transparent); }
-	&:disabled { opacity: .55; }
 }
 
 .verificationCodeHint {

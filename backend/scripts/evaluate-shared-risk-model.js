@@ -62,6 +62,7 @@
     .toArray().filter(row => typeof row.userId === 'string' && row.userId.length > 0)
     .map(row => crypto.createHmac('sha256', pseudonymKey).update(row.userId).digest('hex')))
   const examples = db.training_examples.find({ generation: metadata.generation }).toArray()
+    .filter(row => row.trainingEligible !== false)
   if (examples.some(row => !activeKeys.has(row.participantKey))) {
     throw new Error('Training snapshot includes withdrawn or deleted participants; rebuild before evaluation')
   }

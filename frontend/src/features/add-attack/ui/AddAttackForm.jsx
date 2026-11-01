@@ -48,7 +48,6 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 							<input
 								type="range"
 								aria-label="Сила боли от 1 до 10"
-								data-help="Выберите силу боли: 1 — слабая, 10 — очень сильная."
 								min={1} max={10}
 								value={form.intensity}
 								onChange={e => setField('intensity', Number(e.target.value))}

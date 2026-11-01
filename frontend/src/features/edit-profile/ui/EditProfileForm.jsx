@@ -1,7 +1,6 @@
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { CloseIcon, UploadIcon } from '@/shared/ui/icons'
-import { PASSWORD_PATTERN } from '@/shared/lib/validation'
 
 import s from './EditProfileForm.module.scss'
 
@@ -90,33 +89,6 @@ const EditProfileForm = props => {
 					onChange={handleInputChange}
 					placeholder="Имя"
 					data-help="Укажите имя, которое будет видно в вашем профиле."
-				/>
-				<Input
-					type="email"
-					id="email"
-					value={editData.email}
-					onChange={handleInputChange}
-					placeholder="Email"
-					data-help="Укажите адрес электронной почты для входа и уведомлений."
-				/>
-				<Input
-					type="password"
-					id="password"
-					autoComplete="off"
-					value={editData.password}
-					onChange={handleInputChange}
-					placeholder="Пароль"
-					data-help="Введите текущий пароль, чтобы изменить данные аккаунта."
-				/>
-				<Input
-					type="password"
-					id="newPassword"
-					autoComplete="new-password"
-					value={editData.newPassword}
-					onChange={handleInputChange}
-					pattern={PASSWORD_PATTERN}
-					placeholder="Новый пароль"
-					data-help="Введите новый пароль, если хотите его изменить."
 				/>
 
 				<Button type="submit" colored data-help="Сохранить изменённые данные профиля.">

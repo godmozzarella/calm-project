@@ -32,7 +32,15 @@
 
 .tabs {
 	display: flex;
+	flex: 0;
+	flex-wrap: nowrap;
+	align-items: center;
+	align-self: flex-start;
 	gap: 0.25rem;
+	height: 2.65rem;
+	min-height: 2.65rem;
+	max-height: 2.65rem;
+	box-sizing: border-box;
 	background: $quiet-surface;
 	border: 0;
 	border-radius: 0.75rem;
@@ -40,21 +48,31 @@
 	width: fit-content;
 	max-width: 100%;
 	overflow-x: auto;
+	overflow-y: hidden;
 	scrollbar-width: none;
 
 	&::-webkit-scrollbar { display: none; }
 }
 
 .tab {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	height: 2.1rem;
+	min-height: 2.1rem;
+	max-height: 2.1rem;
+	box-sizing: border-box;
 	background: none;
 	border: none;
 	color: $fc-secondary;
 	@include fluid-text(13, 12);
 	font-weight: $fw-semibold;
-	padding: 0.45rem 0.9rem;
+	padding: 0 0.9rem;
 	border-radius: 0.5rem;
 	cursor: pointer;
 	white-space: nowrap;
+	line-height: 1.2;
 	transition: background 0.15s ease, color 0.15s ease;
 
 	&:hover { color: $fc-main; }

@@ -5,9 +5,8 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonthOutlined'
 import MedicalInformationIcon from '@mui/icons-material/MedicalInformationOutlined'
 import ForwardToInboxIcon from '@mui/icons-material/ForwardToInboxOutlined'
 import TelegramIcon from '@mui/icons-material/Telegram'
-import YouTubeIcon from '@mui/icons-material/YouTube'
-import XIcon from '@mui/icons-material/X'
-import InstagramIcon from '@mui/icons-material/Instagram'
+import ThreadsIcon from './ThreadsIcon'
+import GitHubIcon from '@mui/icons-material/GitHub'
 import LanguageIcon from '@mui/icons-material/Language'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
@@ -26,6 +25,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import BackIcon from './BackIcon'
+import CalmSparkIcon from './CalmSparkIcon'
 import LogoutIcon from '@mui/icons-material/Logout'
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera'
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
@@ -55,9 +55,8 @@ export {
 	MedicalInformationIcon,
 	ForwardToInboxIcon,
 	TelegramIcon,
-	YouTubeIcon,
-	XIcon,
-	InstagramIcon,
+	ThreadsIcon,
+	GitHubIcon,
 	LanguageIcon,
 	DeleteIcon,
 	EditIcon,
@@ -76,6 +75,7 @@ export {
 	ChevronRightIcon,
 	ChevronLeftIcon,
 	BackIcon,
+	CalmSparkIcon,
 	LogoutIcon,
 	PhotoCameraIcon,
 	NotificationsNoneIcon,

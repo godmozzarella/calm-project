@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { ChartSection } from '@/widgets/chart-section'
 import { BackIcon, PrintIcon, FileDownloadIcon } from '@/shared/ui/icons'
 import { getCurrentUser } from '@/entities/user'
-import { attackApi, medicationApi, riskApi, statsApi } from '@/shared/api'
+import { attackApi, medicationApi, statsApi } from '@/shared/api'
 import {
 	subscribe,
 	ATTACKS_CHANGED,
@@ -22,7 +22,6 @@ import {
 } from '../lib/export'
 
 import s from './StatsPage.module.scss'
-import RiskQualityBlock from './RiskQualityBlock'
 
 const todayLong = () => {
 	const d = new Date()
@@ -42,12 +41,10 @@ const StatsPage = () => {
 	const [readyParts, setReadyParts] = useState({})
 	const [showBeforeReady, setShowBeforeReady] = useState(false)
 	const [pdfLoading, setPdfLoading] = useState(false)
-	const [riskQuality, setRiskQuality] = useState(null)
-	const [riskQualityError, setRiskQualityError] = useState(null)
 	const { symptoms, triggers }      = useDictionaries()
 	const markReady = useCallback(part => setReadyParts(previous =>
 		previous[part] ? previous : { ...previous, [part]: true }), [])
-	const statsReady = ['attacks', 'medications', 'quality', 'chart']
+	const statsReady = ['attacks', 'medications', 'chart']
 		.every(part => readyParts[part])
 	const statsVisible = statsReady || showBeforeReady
 	useBodyScrollLock(!statsVisible)
@@ -65,15 +62,6 @@ const StatsPage = () => {
 		loadMeds().then(() => { if (active) markReady('medications') })
 		return () => { active = false }
 	}, [loadMeds, markReady])
-	useEffect(() => {
-		let active = true
-		riskApi.getQuality()
-			.then(data => { if (active) setRiskQuality(data) })
-			.catch(e => { if (active) setRiskQualityError(e.message) })
-			.finally(() => { if (active) markReady('quality') })
-		return () => { active = false }
-	}, [markReady])
-
 	useEffect(() => subscribe(ATTACKS_CHANGED,     loadAttacks), [loadAttacks])
 	useEffect(() => subscribe(MEDICATIONS_CHANGED, loadMeds),    [loadMeds])
 
@@ -185,7 +173,6 @@ const StatsPage = () => {
 
 			<div className={s.dashboard}>
 				<ChartSection onInitialReady={markReady} />
-				<RiskQualityBlock quality={riskQuality} error={riskQualityError} />
 			</div>
 
 			<p className={s.disclaimer}>

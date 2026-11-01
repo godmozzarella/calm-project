@@ -46,7 +46,17 @@ public class RateLimitFilter extends OncePerRequestFilter {
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		String path = request.getServletPath();
 		return !path.equals("/auth/login") && !path.equals("/auth/register")
-				&& !path.equals("/auth/verify-email") && !path.equals("/auth/send-verification-code");
+				&& !path.equals("/auth/verify-email") && !path.equals("/auth/send-verification-code")
+				&& !path.equals("/auth/verify-registration") && !path.equals("/auth/resend-registration-code")
+				&& !path.equals("/auth/cancel-registration")
+				&& !path.equals("/auth/cancel-email-change")
+				&& !path.equals("/auth/password-reset/request")
+				&& !path.equals("/auth/password-reset/confirm")
+				&& !path.equals("/auth/password-reset/verify")
+				&& !path.equals("/users/me/password")
+				&& !path.equals("/users/me/email-change")
+				&& !path.equals("/users/me/email-change/resend")
+				&& !path.equals("/users/me/email-change/confirm");
 	}
 
 	@Override

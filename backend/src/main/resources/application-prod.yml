@@ -20,3 +20,10 @@ logging:
     com.calm: INFO
     org.springframework.web: WARN
     org.springframework.data.mongodb.core: WARN
+
+# Keep implementation documentation private in the public deployment.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
