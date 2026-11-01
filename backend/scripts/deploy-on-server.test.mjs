@@ -13,8 +13,20 @@ const fakeDocker = `#!/usr/bin/env node
 const fs = require('fs'), zlib = require('zlib');
 const args = process.argv.slice(2), root = process.env.TEST_RELEASE_ROOT;
 fs.appendFileSync(root+'/commands', JSON.stringify(args)+'\\n');
-if(args[0]==='inspect'){console.log('sha256:'+('backend-container'===args.at(-1)?'b':'f').repeat(64));process.exit(0)}
-if(args[0]==='image'&&args[1]==='tag')process.exit(0)
+if(args[0]==='inspect'){
+ const format=args[args.indexOf('--format')+1]||'';
+ if(format.includes('.Config.WorkingDir'))console.log('/app');
+ else if(format.includes('.Config.Entrypoint'))console.log('["java","-jar","app.jar"]');
+ else if(format.includes('.Config.Cmd'))console.log('null');
+ else if(format.includes('.Config.User'))console.log('');
+ else if(format.includes('.Config.Env'))console.log('PATH=/usr/local/bin:/usr/bin\\nMONGO_URI=mongodb://private-test-value');
+ else console.log('sha256:'+('backend-container'===args.at(-1)?'b':'f').repeat(64));
+ process.exit(0)
+}
+if(args[0]==='image'&&args[1]==='tag')process.exit(process.env.FAIL_IMAGE_TAG==='YES'?1:0)
+if(args[0]==='image'&&args[1]==='inspect')process.exit(0)
+if(args[0]==='export'){process.stdout.write('synthetic-root-filesystem');process.exit(0)}
+if(args[0]==='import')process.exit(0)
 if(args.includes('ps')&&args.some(x=>['-q','-aq','-qa'].includes(x))){if(process.env.NO_PREVIOUS_CONTAINERS!=='YES')console.log(args.at(-1)+'-container');process.exit(0)}
 if(args.includes('run')) {
  if(args.some(x=>x.includes('mongodump'))){process.stdout.write(process.env.FAIL_BACKUP==='YES'?Buffer.from('broken'):zlib.gzipSync('synthetic'));process.exit(0)}
@@ -107,6 +119,24 @@ test('failed image rollback falls back to starting existing backend and frontend
     assert(run.commands.some(line => line.includes('rollback-images.yml') && line.includes('"up"')))
     assert(run.commands.some(line => line.includes('"start"') && line.includes('"backend"') && line.includes('"frontend"')))
     assert.match(run.output, /Existing backend\/frontend containers started as a recovery fallback/)
+  } finally { run.cleanup() }
+})
+
+test('missing prior image metadata is recovered from the existing containers before building', () => {
+  const run = runRelease({ FAIL_IMAGE_TAG: 'YES' })
+  try {
+    assert.equal(run.result.status, 0, run.output)
+    const backendExport = run.commands.findIndex(line => line.includes('"export"') && line.includes('backend-container'))
+    const frontendExport = run.commands.findIndex(line => line.includes('"export"') && line.includes('frontend-container'))
+    const build = run.commands.findIndex(line => line.includes('"build"'))
+    assert(backendExport >= 0 && backendExport < build)
+    assert(frontendExport >= 0 && frontendExport < build)
+    assert.equal(run.commands.some(line => line.includes('"commit"')), false)
+    assert(run.commands.some(line => line.includes('"import"') && line.includes('ENV PATH=/usr/local/bin:/usr/bin')))
+    assert.match(run.rollbackConfig, /calm-release-rollback-backend:/)
+    assert.match(run.rollbackConfig, /calm-release-rollback-frontend:/)
+    assert.match(run.output, /Captured existing backend filesystem as a credential-free rollback image/)
+    assert.match(run.output, /Captured existing frontend filesystem as a credential-free rollback image/)
   } finally { run.cleanup() }
 })
 

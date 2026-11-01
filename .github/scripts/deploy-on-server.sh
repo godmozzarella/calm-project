@@ -40,9 +40,40 @@ fi
 # Preserve old images under valid local references before the build replaces :latest.
 rollback_backend_image="calm-release-rollback-backend:$target_sha"
 rollback_frontend_image="calm-release-rollback-frontend:$target_sha"
+preserve_rollback_image() {
+  local container_id=$1 image_id=$2 image_tag=$3 service=$4
+  if ! docker image tag "$image_id" "$image_tag" 2>/dev/null; then
+    # A container can outlive its image metadata. Export/import preserves its filesystem
+    # without copying environment variables (which may contain credentials) into the image.
+    local workdir='' entrypoint='' command='' user='' path='' environment='' safe_env=''
+    local -a import_options=()
+    workdir=$(docker inspect --format '{{.Config.WorkingDir}}' "$container_id")
+    entrypoint=$(docker inspect --format '{{json .Config.Entrypoint}}' "$container_id")
+    command=$(docker inspect --format '{{json .Config.Cmd}}' "$container_id")
+    user=$(docker inspect --format '{{.Config.User}}' "$container_id")
+    safe_env=$(docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$container_id" |
+      awk -F= '$1 ~ /^(PATH|HOME|LANG|LC_ALL|TZ|JAVA_HOME|JAVA_VERSION|JAVA_RUNTIME_VERSION|JAVA_VENDOR|NGINX_VERSION|NJS_VERSION|NJS_RELEASE|PKG_RELEASE|DYNPKG_RELEASE)$/ { print }')
+    while IFS= read -r environment; do
+      [[ -z "$environment" ]] && continue
+      import_options+=(--change "ENV $environment")
+      [[ "$environment" == PATH=* ]] && path=${environment#PATH=}
+    done <<< "$safe_env"
+    if [[ -z "$path" ]]; then
+      echo "Cannot preserve $service container: its PATH is unavailable." >&2
+      return 1
+    fi
+    [[ -z "$workdir" ]] || import_options+=(--change "WORKDIR $workdir")
+    [[ -z "$entrypoint" || "$entrypoint" == null || "$entrypoint" == '[]' ]] || import_options+=(--change "ENTRYPOINT $entrypoint")
+    [[ -z "$command" || "$command" == null || "$command" == '[]' ]] || import_options+=(--change "CMD $command")
+    [[ -z "$user" ]] || import_options+=(--change "USER $user")
+    docker export "$container_id" | docker import "${import_options[@]}" - "$image_tag" >/dev/null
+    echo "Captured existing $service filesystem as a credential-free rollback image." >&2
+  fi
+  docker image inspect "$image_tag" >/dev/null
+}
 if [[ -n "$previous_backend_image" && -n "$previous_frontend_image" ]]; then
-  docker image tag "$previous_backend_image" "$rollback_backend_image"
-  docker image tag "$previous_frontend_image" "$rollback_frontend_image"
+  preserve_rollback_image "$previous_backend" "$previous_backend_image" "$rollback_backend_image" backend
+  preserve_rollback_image "$previous_frontend" "$previous_frontend_image" "$rollback_frontend_image" frontend
 fi
 # Build before stopping writers to keep the backup window short.
 "${compose[@]}" build backend frontend
