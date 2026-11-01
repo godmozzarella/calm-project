@@ -86,10 +86,14 @@ if [[ -n "$previous_backend_image" && -n "$previous_frontend_image" ]]; then
     "$rollback_backend_image" "$rollback_frontend_image" > "$backup_dir/rollback-images.yml"
 fi
 writers_stopped=false
+deployment_phase='stopping writers'
 resume_on_failure() {
   result=$?
   trap - EXIT
   if [[ "$writers_stopped" == true ]]; then
+    # EOF or an early exit 0 is still a failed release until all checks finish.
+    [[ "$result" != 0 ]] || result=1
+    echo "Deployment aborted during '$deployment_phase' (exit=$result); restoring previous services." >&2
     if [[ -f "$backup_dir/rollback-images.yml" ]]; then
       "${compose[@]}" stop backend frontend training-worker || true
       if "${compose[@]}" -f "$backup_dir/rollback-images.yml" up -d --no-deps --no-build backend frontend; then
@@ -112,33 +116,42 @@ resume_on_failure() {
 trap resume_on_failure EXIT
 writers_stopped=true
 "${compose[@]}" stop backend training-worker
+deployment_phase='MongoDB backup'
 "${compose[@]}" run --rm --no-deps --entrypoint /bin/sh training-worker -c \
   'mongodump --quiet --uri "$CALM_TRAINING_SOURCE_URI" --archive --gzip' > "$backup_dir/calm.archive.gz"
 gzip -t "$backup_dir/calm.archive.gz"
+deployment_phase='avatar backup'
 "${compose[@]}" run --rm --no-deps --entrypoint tar backend \
   -C /app/uploads/avatars -czf - . > "$backup_dir/avatars.tar.gz"
 tar -tzf "$backup_dir/avatars.tar.gz" > /dev/null
 sha256sum "$backup_dir/calm.archive.gz" "$backup_dir/avatars.tar.gz" > "$backup_dir/SHA256SUMS"
 printf '%s\n' "$target_sha" > "$backup_dir/release-sha"
+deployment_phase='source manifest before migration'
 "${compose[@]}" run --rm -T --no-deps --entrypoint /bin/sh training-worker -c \
   'mongosh --quiet "$CALM_TRAINING_SOURCE_URI" --file /dev/stdin' \
   < backend/scripts/release-source-manifest.js > "$backup_dir/source-before.json"
 # The worker source account stays read-only. Only this backed-up migration uses the app write URI.
+deployment_phase='event location migration'
 CALM_BACKFILL_SOURCE_URI=$("${compose[@]}" run --rm -T --no-deps --entrypoint printenv backend MONGO_URI)
 test -n "$CALM_BACKFILL_SOURCE_URI"
 export CALM_BACKFILL_SOURCE_URI
 "${compose[@]}" run --rm -T --no-deps -e CALM_BACKFILL_SOURCE_URI --entrypoint /bin/sh training-worker -c \
   'mongosh --quiet "$CALM_BACKFILL_SOURCE_URI" --file /dev/stdin' < backend/scripts/backfill-event-locations.js
 unset CALM_BACKFILL_SOURCE_URI
+deployment_phase='source integrity verification'
 "${compose[@]}" run --rm -T --no-deps --entrypoint /bin/sh training-worker -c \
   'mongosh --quiet "$CALM_TRAINING_SOURCE_URI" --file /dev/stdin' \
   < backend/scripts/release-source-manifest.js > "$backup_dir/source-after.json"
 cmp "$backup_dir/source-before.json" "$backup_dir/source-after.json"
+deployment_phase='application startup'
 "${compose[@]}" up -d --no-deps --wait --wait-timeout 300 backend frontend caddy
 # Rebuild the existing dataset from all historical diary entries before starting the loop.
+deployment_phase='historical dataset export'
 "${compose[@]}" run --rm -T --no-deps --entrypoint /bin/sh training-worker -c \
   'mongosh --quiet "$CALM_TRAINING_SOURCE_URI" --file /scripts/export-shared-risk-training.js'
+deployment_phase='training worker startup'
 "${compose[@]}" up -d --no-deps --wait --wait-timeout 300 training-worker
+deployment_phase='application health check'
 "${compose[@]}" exec -T backend wget -qO- http://localhost:8080/api/actuator/health
 "${compose[@]}" ps
 writers_stopped=false
