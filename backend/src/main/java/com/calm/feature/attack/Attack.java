@@ -31,6 +31,9 @@ public class Attack {
 	private String id;
 
 	private String userId;
+    private com.calm.feature.location.EventLocation eventLocation;
+    public com.calm.feature.location.EventLocation getEventLocation() { return eventLocation; }
+    public void setEventLocation(com.calm.feature.location.EventLocation value) { eventLocation = value; }
 
 	private LocalDate startDate;
 	private LocalTime startTime;

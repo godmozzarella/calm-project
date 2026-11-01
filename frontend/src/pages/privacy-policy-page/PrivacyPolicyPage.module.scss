@@ -1,0 +1,229 @@
+@use 'app/styles/globals.scss' as *;
+
+:global(html:has([data-smooth-scroll='privacy-policy'])) {
+	scroll-behavior: smooth;
+	scroll-padding-top: 7rem;
+}
+
+.page {
+	position: relative;
+	isolation: isolate;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-height: 100vh;
+	margin-top: $margin-top-body;
+	color: var(--fc-main);
+	overflow: hidden;
+}
+
+.main {
+	width: min(70%, 70rem);
+	padding: 4rem 0 3rem;
+	a:focus,
+	a:focus-visible { outline: none; }
+}
+
+.intro {
+	max-width: 62rem;
+	margin: 0 auto 3.5rem;
+	text-align: left;
+}
+
+.eyebrow {
+	margin: 0 0 0.8rem;
+	color: $fc-contrast;
+	font-weight: $fw-semibold;
+	@include fluid-text(14, 12);
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
+.intro h1 {
+	margin: 0;
+	@include fluid-text(48, 30);
+	font-weight: $fw-semibold;
+	line-height: 1.12;
+	text-wrap: balance;
+}
+
+.lead {
+	max-width: 48rem;
+	margin: 1.25rem 0 0;
+	font-weight: $fw-light;
+	@include fluid-text(18, 14);
+	line-height: 1.5;
+	text-wrap: pretty;
+}
+
+.updated {
+	margin: 1rem 0 0;
+	color: var(--fc-subtle);
+	font-weight: $fw-light;
+	@include fluid-text(13, 11);
+}
+
+.contents {
+	display: block;
+	margin-top: 2.5rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid color-mix(in srgb, var(--fc-main) 12%, transparent);
+
+	h2 {
+		display: block;
+		width: 100%;
+		margin: 0 0 .75rem;
+		font-weight: $fw-semibold;
+		@include fluid-text(22, 18);
+	}
+
+	ol {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0 .9rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	li { min-width: 0; }
+
+	a {
+		display: grid;
+		grid-template-columns: 2rem minmax(0, 1fr) auto;
+		align-items: center;
+		gap: .7rem;
+		min-height: 3rem;
+		border-bottom: 1px solid color-mix(in srgb, var(--fc-main) 9%, transparent);
+		color: var(--fc-main);
+		@include fluid-text(16, 14);
+		text-decoration: none;
+		transition: color .18s ease;
+		-webkit-tap-highlight-color: transparent;
+
+		span:first-child { color: $fc-contrast; font-weight: $fw-semibold; }
+		&:focus, &:focus-visible { outline: none; }
+	}
+}
+
+.contents ol,
+.contents ol * {
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
+}
+
+.contentsArrow {
+	font-size: 1.15rem !important;
+	color: var(--fc-subtle);
+	transition: transform .18s ease, color .18s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.contents a:hover { color: $fc-contrast; }
+	.contents a:hover .contentsArrow { color: $fc-contrast; transform: translateX(.2rem); }
+	.backLink:hover { color: var(--fc-main); text-decoration: none; }
+}
+
+.sections {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+
+.policySection {
+	display: grid;
+	grid-template-columns: 3.5rem 1fr;
+	gap: 1.25rem;
+	padding: 2.25rem 0;
+	border-bottom: 1px solid color-mix(in srgb, var(--fc-main) 12%, transparent);
+	scroll-margin-top: 7rem;
+}
+
+.number {
+	color: $fc-contrast;
+	font-weight: $fw-semibold;
+	@include fluid-text(22, 18);
+	line-height: 1.3;
+}
+
+.policySection h2 {
+	margin: 0 0 .75rem;
+	font-weight: $fw-semibold;
+	@include fluid-text(22, 18);
+}
+
+.policySection p {
+	margin: .75rem 0 0;
+	font-weight: $fw-light;
+	@include fluid-text(18, 14);
+	line-height: 1.5;
+	text-wrap: pretty;
+}
+
+.explanationLink {
+	color: $fc-contrast;
+	font-size: .82em;
+	white-space: nowrap;
+	text-decoration: underline;
+	text-decoration-color: color-mix(in srgb, $fc-contrast 45%, transparent);
+	text-underline-offset: .16em;
+	&:focus, &:focus-visible { outline: none; }
+}
+
+.contactLink {
+	color: $fc-contrast;
+	text-underline-offset: .16em;
+	&:focus, &:focus-visible { outline: none; }
+}
+
+.explanations {
+	padding: 2.25rem 0;
+	border-bottom: 1px solid color-mix(in srgb, var(--fc-main) 12%, transparent);
+	scroll-margin-top: 7rem;
+	h2 { margin: 0 0 1.1rem; font-weight: $fw-semibold; @include fluid-text(22, 18); }
+}
+
+.explanationList {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 1.25rem 2rem;
+	article { scroll-margin-top: 7rem; }
+	h3 { margin: 0 0 .35rem; font-weight: $fw-semibold; @include fluid-text(17, 15); }
+	p { margin: 0; font-weight: $fw-light; @include fluid-text(16, 14); line-height: 1.5; }
+}
+
+.backLink {
+	display: flex;
+	width: fit-content;
+	align-items: center;
+	gap: 0.55rem;
+	margin: 2rem auto 0;
+	color: $fc-contrast;
+	font-weight: $fw-semibold;
+	@include fluid-text(15, 13);
+	text-decoration: none;
+
+	&:focus, &:focus-visible { outline: none; }
+}
+
+.backIcon { font-size: 1.15rem !important; flex: 0 0 auto; }
+
+@media (max-width: 90rem) {
+	.main { width: min(90%, 70rem); }
+}
+
+@media (max-width: 48rem) {
+	.page { margin-top: 5rem; }
+	.main { padding: 2.5rem 0 1.5rem; }
+	.intro { margin-bottom: 2rem; }
+	.contents { margin-top: 2rem; }
+	.contents ol { grid-template-columns: 1fr; }
+	.policySection { grid-template-columns: 2rem 1fr; gap: 0.8rem; padding: 1.5rem 0; }
+	.explanations { padding: 1.5rem 0; }
+	.explanationList { grid-template-columns: 1fr; gap: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:global(html:has([data-smooth-scroll='privacy-policy'])) { scroll-behavior: auto; }
+}

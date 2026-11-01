@@ -6,10 +6,28 @@
 	gap: 0.85rem;
 }
 
+.passwordInput::placeholder {
+	color: var(--fc-secondary) !important;
+	opacity: 0.42;
+}
+
 .submitBtn {
 	width: 100%;
 	margin-top: 0.25rem;
 	padding: 0.75rem;
 	@include fluid-text(16, 14);
 	font-weight: $fw-semibold;
+}
+
+.forgotButton {
+	align-self: center;
+	padding: .25rem .5rem;
+	border: 0;
+	background: transparent;
+	color: $fc-secondary;
+	font: inherit;
+	font-size: .875rem;
+	cursor: pointer;
+	&:hover { text-decoration: underline; }
+	&:focus-visible { outline: 2px solid $fc-contrast; outline-offset: 2px; }
 }

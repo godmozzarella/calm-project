@@ -1,0 +1,116 @@
+@use 'app/styles/globals.scss' as *;
+
+.audience {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: .75rem;
+	width: min(100%, 34rem);
+	padding: .75rem 1rem;
+	border-radius: .75rem;
+	background: var(--surface-hover);
+
+	p { margin: 0; }
+	strong { color: $fc-main; font-weight: $fw-semibold; }
+}
+
+.messageInput {
+	min-height: 10rem;
+	resize: vertical;
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+.counter {
+	align-self: flex-end;
+	color: $fc-secondary;
+	@include fluid-text(11, 10);
+}
+
+.result {
+	margin: 0;
+	padding: .8rem 1rem;
+	border-radius: .75rem;
+	background: color-mix(in srgb, var(--success-color) 12%, transparent);
+	color: $fc-main;
+	@include fluid-text(13, 12);
+	line-height: 1.5;
+}
+
+.confirmOverlay {
+	position: fixed;
+	inset: 0;
+	z-index: 1300;
+	display: grid;
+	place-items: center;
+	padding: 1rem;
+	background: rgba(8, 11, 15, .62);
+	backdrop-filter: blur(6px);
+}
+
+.confirmDialog {
+	width: min(100%, 34rem);
+	max-height: min(90vh, 44rem);
+	overflow: auto;
+	padding: 1.5rem;
+	border: 0;
+	border-radius: 1.25rem;
+	background: var(--surface-strong);
+	color: $fc-main;
+	box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, .3);
+}
+
+.confirmEyebrow {
+	margin: 0 0 .4rem;
+	color: $fc-contrast;
+	font-weight: $fw-semibold;
+	@include fluid-text(12, 11);
+	letter-spacing: .08em;
+	text-transform: uppercase;
+}
+
+.confirmDialog h3 {
+	margin: 0;
+	font-weight: $fw-semibold;
+	@include fluid-text(22, 19);
+}
+
+.confirmCopy {
+	margin: .8rem 0 1rem;
+	color: $fc-secondary;
+	@include fluid-text(14, 12);
+	line-height: 1.5;
+	text-wrap: pretty;
+
+	strong { color: $fc-main; }
+}
+
+.preview {
+	max-height: 14rem;
+	overflow: auto;
+	padding: .9rem 1rem;
+	border-radius: .75rem;
+	background: var(--surface-hover);
+	@include fluid-text(13, 12);
+	line-height: 1.5;
+	white-space: pre-wrap;
+	word-break: break-word;
+
+	p { margin: .45rem 0 0; color: $fc-secondary; }
+}
+
+.confirmActions {
+	display: flex;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+	gap: .65rem;
+	margin-top: 1.1rem;
+
+	button { min-height: 2.65rem; }
+}
+
+@media (max-width: 30rem) {
+	.confirmDialog { padding: 1.2rem; }
+	.confirmActions { flex-direction: column-reverse; }
+	.confirmActions button { width: 100%; }
+}

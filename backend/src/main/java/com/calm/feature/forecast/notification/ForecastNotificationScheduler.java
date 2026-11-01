@@ -103,8 +103,7 @@ public class ForecastNotificationScheduler {
 				String html = renderer.renderBody(u.getName(), u.getCity(), todayForecast, upcoming);
 
 				if (email.send(u.getEmail(), subject, html) == EmailSendResult.SENT) {
-					u.setLastNotifiedDate(today);
-					users.save(u);
+					users.markNotified(u.getId(), today);
 					sent++;
 				}
 			} catch (Exception e) {

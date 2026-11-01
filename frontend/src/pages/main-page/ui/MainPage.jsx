@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 
 import { SidebarProfile } from '@/widgets/sidebar-profile'
 import { SidebarCalendar } from '@/widgets/sidebar-calendar'
@@ -12,18 +12,21 @@ import { userApi, getToken, riskApi } from '@/shared/api'
 import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
 import PageLoading from '@/shared/ui/PageLoading/PageLoading'
 import { LocationOnboarding } from '@/features/onboarding-location'
+import AutoLocationCheck from '@/features/onboarding-location/ui/AutoLocationCheck'
 import ConsentPrompt from '@/features/shared-model-consent/ui/ConsentPrompt'
 
 import s from './MainPage.module.scss'
 
 const MainPage = () => {
 	const location = useLocation()
+	const navigate = useNavigate()
 	const [openMenu, setOpenMenu] = useState(() => location.state?.openMenu === true)
 	const [openCalendar, setOpenCalendar] = useState(false)
 	const [diaryDate, setDiaryDate] = useState(midnight)
 	// Ленивая инициализация: сразу читаем из localStorage, чтобы не было мигания
 	// «не авторизован» между первым рендером и useEffect.
 	const [user, setUser] = useState(() => getCurrentUser())
+	const [sessionVerified, setSessionVerified] = useState(false)
 	const [showLocationOnboarding, setShowLocationOnboarding] = useState(false)
 	const [onboardingDismissed, setOnboardingDismissed] = useState(false)
 	const [consentPrompt, setConsentPrompt] = useState(null)
@@ -38,6 +41,33 @@ const MainPage = () => {
 	const diaryVisible = diaryReady || showBeforeReady
 	useBodyScrollLock(openMenu || openCalendar || !diaryVisible)
 
+	// On mobile browsers the route can inherit the guest page's scroll while the diary
+	// is loading under an overflow lock. Reset again after the lock is released.
+	useEffect(() => {
+		if (!diaryVisible || location.state?.scrollToChart) return undefined
+		const root = document.documentElement
+		const body = document.body
+		const resetScroll = () => {
+			window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+			root.scrollTop = 0
+			body.scrollTop = 0
+		}
+		let settleFrame = 0
+		const resetFrame = window.requestAnimationFrame(() => {
+			resetScroll()
+			settleFrame = window.requestAnimationFrame(resetScroll)
+		})
+		return () => {
+			window.cancelAnimationFrame(resetFrame)
+			window.cancelAnimationFrame(settleFrame)
+		}
+	}, [diaryVisible, location.state?.scrollToChart])
+
+	useEffect(() => {
+		if (location.state?.openMenu !== true) return
+		navigate(`${location.pathname}${location.search}${location.hash}`, { replace: true, state: null })
+	}, [location.hash, location.pathname, location.search, location.state, navigate])
+
 	useEffect(() => {
 		if (!location.state?.scrollToChart || !diaryVisible) return undefined
 		const frame = window.requestAnimationFrame(() => {
@@ -49,15 +79,24 @@ const MainPage = () => {
 	const hasToken = !!getToken()
 
 	useEffect(() => {
-		if (!hasToken) return
+		if (!hasToken) {
+			setSessionVerified(false)
+			return undefined
+		}
+		let active = true
 		userApi.getMe().then(fresh => {
+			if (!active) return
 			setUser(fresh)
 			setCurrentUser(fresh)
-		}).catch(() => {})
+			setSessionVerified(true)
+		}).catch(() => {
+			if (active) setSessionVerified(false)
+		})
+		return () => { active = false }
 	}, [hasToken])
 
 	useEffect(() => {
-		if (!hasToken || !user) return
+		if (!sessionVerified || !user) return
 		let active = true
 		const refreshPrompt = () => {
 			riskApi.getParticipation().then(status => {
@@ -80,7 +119,7 @@ const MainPage = () => {
 			window.clearInterval(interval)
 			window.removeEventListener('focus', onFocus)
 		}
-	}, [hasToken, user])
+	}, [sessionVerified, user])
 
 	const decideParticipation = async participate => {
 		if (!consentPrompt || consentSaving) return
@@ -122,6 +161,7 @@ const MainPage = () => {
 
 	return (
 		<div className={s.mainPage}>
+            {sessionVerified && <AutoLocationCheck user={user} setUser={setUser} />}
 			{!diaryVisible && <PageLoading label="Загружаем дневник…" onContinue={() => setShowBeforeReady(true)} />}
 			<Button
 				className={`${s.icon} ${s.menu}`}

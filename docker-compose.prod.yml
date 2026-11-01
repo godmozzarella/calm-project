@@ -10,6 +10,7 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       MONGO_URI: ${CALM_MONGO_URI:?Set CALM_MONGO_URI in the project .env}
       CALM_CORS_ORIGINS: https://peaceofmindforyourhead.duckdns.org
+      CALM_PUBLIC_URL: https://peaceofmindforyourhead.duckdns.org
     mem_limit: 768m
     cpus: 0.70
 

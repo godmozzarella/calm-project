@@ -1,0 +1,134 @@
+@use 'app/styles/globals.scss' as *;
+
+.overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 1400;
+	display: grid;
+	place-items: center;
+	padding: 1rem;
+	background: rgba(8, 11, 15, .58);
+	backdrop-filter: blur(8px);
+}
+
+.dialog {
+	position: relative;
+	overflow: hidden;
+	width: min(100%, 29rem);
+	border: 0;
+	border-radius: 1.5rem;
+	background: var(--block-color);
+	box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, .28);
+}
+
+.content {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	padding: 2.25rem;
+}
+
+.closeButton {
+	position: absolute;
+	top: .85rem;
+	right: .85rem;
+	z-index: 2;
+	display: grid;
+	place-items: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	padding: 0;
+	border: 0;
+	border-radius: .55rem;
+	background: transparent;
+	color: $fc-secondary;
+	cursor: pointer;
+
+	svg { font-size: 1.25rem; }
+	&:hover:not(:disabled) { color: $fc-main; }
+	&:focus-visible { outline: 2px solid $fc-contrast; outline-offset: 2px; }
+	&:disabled { opacity: .5; cursor: default; }
+}
+
+.eyebrow {
+	margin: 0 0 .45rem;
+	color: $fc-contrast;
+	font-weight: $fw-semibold;
+	@include fluid-text(13, 11);
+	letter-spacing: .1em;
+	text-transform: uppercase;
+}
+
+.content h2 {
+	margin: 0;
+	color: $fc-main;
+	font-weight: $fw-semibold;
+	@include fluid-text(28, 23);
+}
+
+.description {
+	margin: .9rem 0 1.5rem;
+	color: $fc-secondary;
+	font-weight: $fw-light;
+	@include fluid-text(16, 14);
+	line-height: 1.5;
+	text-wrap: pretty;
+
+	strong { color: $fc-main; font-weight: $fw-semibold; overflow-wrap: anywhere; }
+}
+
+.form { display: flex; flex-direction: column; gap: .65rem; }
+
+.codeLabel {
+	color: $fc-secondary;
+	font-weight: $fw-medium;
+	@include fluid-text(13, 11);
+}
+
+.sentNote {
+	margin: 0;
+	color: $fc-secondary;
+	@include fluid-text(12, 11);
+	line-height: 1.4;
+	text-align: center;
+	word-break: break-word;
+
+	strong { color: $fc-main; font-weight: $fw-semibold; }
+}
+
+.error {
+	margin: 0;
+	color: $error-color;
+	@include fluid-text(13, 11);
+	line-height: 1.4;
+}
+
+.submitButton {
+	width: 100%;
+	min-height: 2.75rem;
+	margin-top: .3rem;
+	padding: .55rem 1rem !important;
+	@include fluid-text(15, 13);
+
+	&:disabled { cursor: default; opacity: .48; }
+}
+
+.resendButton {
+	align-self: center;
+	min-height: 2.75rem;
+	margin-top: .7rem;
+	padding: .45rem .7rem !important;
+	color: $fc-secondary;
+	@include fluid-text(14, 12);
+	white-space: normal;
+	transition: color .18s ease, opacity .18s ease;
+
+	&:disabled { cursor: default; opacity: .62; }
+}
+
+@media (max-width: 30rem) {
+	.content { padding: 1.65rem 1.25rem 1.35rem; }
+	.dialog { border-radius: 1.25rem; }
+	.closeButton { top: .6rem; right: .6rem; }
+}

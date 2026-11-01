@@ -190,10 +190,20 @@
 	@include fluid-text(11, 10);
 	font-weight: $fw-semibold;
 	padding: 0.2rem 0.55rem;
-	border-radius: 2rem;
-	background: $quiet-surface-raised;
+	border-radius: 0.75rem;
+	background: $block-color;
+	color: var(--fc-subtle);
 	white-space: nowrap;
 }
+
+:root[data-theme='light'] .medBadge { background: var(--selection-surface); }
+
+.medBadge[data-effectiveness='1'] { color: #ef4444; }
+.medBadge[data-effectiveness='2'] { color: #eab308; }
+.medBadge[data-effectiveness='3'] { color: #22c55e; }
+:root[data-theme='light'] .medBadge[data-effectiveness='1'] { color: #b91c1c; }
+:root[data-theme='light'] .medBadge[data-effectiveness='2'] { color: #a16207; }
+:root[data-theme='light'] .medBadge[data-effectiveness='3'] { color: #15803d; }
 
 @media (max-width: 900px) {
 	.grid {

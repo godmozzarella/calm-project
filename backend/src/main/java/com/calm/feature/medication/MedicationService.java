@@ -19,13 +19,20 @@ public class MedicationService {
 	private final MedicationRepository repo;
 	private final DictionaryRepository dictionaryRepo;
 	private final PersonalMedicationService personalService;
+    private final com.calm.feature.location.EventLocationService locations;
 
+	@org.springframework.beans.factory.annotation.Autowired
 	public MedicationService(MedicationRepository repo, DictionaryRepository dictionaryRepo,
-			PersonalMedicationService personalService) {
+			PersonalMedicationService personalService, com.calm.feature.location.EventLocationService locations) {
 		this.repo = repo;
+        this.locations = locations;
 		this.dictionaryRepo = dictionaryRepo;
 		this.personalService = personalService;
 	}
+
+    public MedicationService(MedicationRepository repo, DictionaryRepository dictionaries, PersonalMedicationService personal) {
+        this(repo, dictionaries, personal, null);
+    }
 
 	public List<Medication> listForUser(String userId) {
 		return repo.findByUserIdOrderByDateDescTimeDesc(userId);
@@ -98,6 +105,9 @@ public class MedicationService {
 	}
 
 	private void applyRequest(String userId, Medication m, MedicationRequest req) {
+        if (locations != null && (m.getEventLocation() == null || !Objects.equals(m.getDate(), req.date()) || !Objects.equals(m.getTime(), req.time()))) {
+            m.setEventLocation(locations.capture(userId, req.date(), req.time()));
+        }
 		m.setIntakeId(req.intakeId());
 		if (req.personalMedicationId() != null || "Другое".equals(req.category())) {
 			PersonalMedication personal = req.personalMedicationId() != null

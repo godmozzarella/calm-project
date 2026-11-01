@@ -7,6 +7,8 @@ cd "$project_dir"
 
 for required in \
   docker-compose.yml docker-compose.auth.yml docker-compose.prod.yml docker-compose.training-worker-v3.yml \
+  backend/scripts/historical-weather.cjs backend/scripts/backfill-event-locations.js \
+  backend/scripts/release-source-manifest.js \
   backend/scripts/export-shared-risk-training-v3.js backend/scripts/inspect-shared-risk-data.js \
   backend/scripts/validate-prod-training-config.py \
   backend/scripts/run-shared-risk-v3-export-loop.sh backend/scripts/health-shared-risk-export.sh \

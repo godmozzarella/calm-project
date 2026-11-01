@@ -1,25 +1,54 @@
+import { useEffect, useRef} from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Header } from '@/widgets/header'
 import { Footer } from '@/widgets/footer'
 import { AuthForm } from '@/features/auth'
 import BlueOrb from '@/shared/ui/BlueOrb/BlueOrb'
+import { Button } from '@/shared/ui/Button'
 import { Section } from '@/shared/ui/Section'
 import { SectionBlock } from '@/shared/ui/SectionBlock'
+import HowToCarousel from './HowToCarousel'
 import {
+	ArrowForwardIcon,
 	AnalyticsIcon,
-	CalendarMonthIcon,
-	CircleIcon,
-	ConnectIcon,
-	ForwardToInboxIcon,
+	MedicationIcon,
 	MedicalInformationIcon,
-	PersonIcon,
-	SecurityIcon
+	PersonIcon
 } from '@/shared/ui/icons'
-
 import s from './IndexPage.module.scss'
 
 const IndexPage = () => {
+	const protectionRef = useRef(null)
+	const navigate = useNavigate()
+
+	useEffect(() => {
+		const section = protectionRef.current
+		if (!section) return
+		let frame = 0
+		const updateReveal = () => {
+			frame = 0
+			const rect = section.getBoundingClientRect()
+			const visibleHeight = Math.max(0, Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0))
+			const visibleRatio = visibleHeight / rect.height
+			const revealProgress = Math.max(0, Math.min(1, visibleRatio / 0.8))
+			const progress = revealProgress * revealProgress * (3 - 2 * revealProgress)
+			section.style.setProperty('--protection-blur', `${((1 - progress) * 9).toFixed(2)}px`)
+		}
+		const scheduleRevealUpdate = () => {
+			if (!frame) frame = window.requestAnimationFrame(updateReveal)
+		}
+		updateReveal()
+		window.addEventListener('scroll', scheduleRevealUpdate, { passive: true })
+		window.addEventListener('resize', scheduleRevealUpdate)
+		return () => {
+			window.removeEventListener('scroll', scheduleRevealUpdate)
+			window.removeEventListener('resize', scheduleRevealUpdate)
+			if (frame) window.cancelAnimationFrame(frame)
+		}
+	}, [])
+
 	return (
-		<div className={s.indexBody}>
+		<div className={s.indexBody} data-disable-help-tooltip>
 			<div className={s.ambientLayer} aria-hidden="true">
 				<BlueOrb className={s.ambientOrbOne} />
 				<BlueOrb className={s.ambientOrbTwo} />
@@ -51,6 +80,8 @@ const IndexPage = () => {
 
 			<Section
 				id="for_who"
+				className={s.forWhoSection}
+				blocksClassName={s.forWhoBlocks}
 				title={
 					<>
 						Для кого <span className={s.inTextLogo}>Calm</span>?
@@ -59,78 +90,40 @@ const IndexPage = () => {
 			>
 				<SectionBlock
 					icon={<PersonIcon />}
-					title="Для тех, кто часто страдает от головной боли"
-					description="Отмечай приступы и их интенсивность, чтобы понять, что провоцирует боль, и снизить её влияние на повседневную жизнь."
+					title="Для тех, кто хочет разобраться в приступах"
+					description="Отмечай интенсивность, длительность, симптомы, возможные триггеры и зоны боли — история каждого приступа останется в дневнике."
 				/>
 				<SectionBlock
-					icon={<CalendarMonthIcon />}
-					title="Для заботящихся о своём здоровье"
-					description="Веди персональный дневник самочувствия и замечай закономерности, которые помогут принимать правильные решения каждый день."
-				/>
-				<SectionBlock
-					icon={<ForwardToInboxIcon />}
-					title="Для тех, кто хочет делиться данными с врачом"
-					description="Собирай подробную информацию о симптомах и триггерах — это поможет врачу назначить более точное лечение."
-				/>
-				<SectionBlock
-					icon={<MedicalInformationIcon />}
-					title="Для врачей и специалистов"
-					description="Создайте профиль, подключайте своих пациентов и получайте наглядную статистику по их головной боли. Лёгкий способ отслеживать симптомы, триггеры и эффективность лечения каждого пациента."
-				/>
-			</Section>
-
-			<Section id="about" title="О нас" colored>
-				<SectionBlock
-					colored
-					title="Наша цель"
-					description="Наша цель — помочь людям лучше понимать свою головную боль, отслеживать симптомы и улучшать качество жизни с помощью персонального подхода и технологий."
-				/>
-				<SectionBlock
-					colored
-					title="Что мы предлагаем"
-					description="Мы объединяем удобный дневник, умный анализ данных и возможность подключить врача, чтобы каждый день был легче и безопаснее."
-				/>
-				<SectionBlock
-					colored
-					title="Команда"
-					description="Наша команда — это разработчики, врачи и исследователи, объединённые одной целью: помочь людям справляться с головной болью осознанно и эффективно."
-				/>
-				<SectionBlock
-					colored
-					title="Почему нам можно доверять"
-					description="Все данные надежно защищены и используются только для улучшения вашего здоровья. Мы стремимся сделать отслеживание головной боли простым, безопасным и полезным."
-				/>
-			</Section>
-
-			<Section
-				id="benefits"
-				title={
-					<>
-						Почему именно <span className={s.inTextLogo}>Calm</span>?
-					</>
-				}
-			>
-				<SectionBlock
-					icon={<CircleIcon />}
-					title="Простота и удобство"
-					description="Легкий в использовании интерфейс, быстрый ввод данных и наглядная визуализация позволяют отслеживать состояние без лишнего стресса."
-				/>
-				<SectionBlock
-					icon={<SecurityIcon />}
-					title="Безопасность и конфиденциальность"
-					description="Все данные защищены и доступны только вам и вашему врачу. Ваше здоровье — под надежной защитой."
-				/>
-				<SectionBlock
-					icon={<ConnectIcon />}
-					title="Возможность подключения врача"
-					description="Пациенты могут делиться данными напрямую с врачом, а специалисты получают удобную аналитику по всем подключённым пациентам."
+					icon={<MedicationIcon />}
+					title="Для тех, кто отслеживает приём препаратов"
+					description="Записывай дозировку и отмечай, насколько помог препарат, чтобы сравнивать свои наблюдения в дневнике и статистике."
 				/>
 				<SectionBlock
 					icon={<AnalyticsIcon />}
-					title="Умный анализ данных"
-					description="Автоматический сбор и обработка симптомов, триггеров и интенсивности приступов помогает видеть закономерности и предсказывать возможные эпизоды."
+					title="Для тех, кто хочет видеть динамику"
+					description="Календарь, статистика и серии дней без приступа помогают наблюдать, как меняется головная боль со временем."
+				/>
+				<SectionBlock
+					icon={<MedicalInformationIcon />}
+					title="Для подготовки к визиту к врачу"
+					description="Сформируй отчёт из записей дневника и покажи его специалисту. Calm помогает подготовить наблюдения, но не ставит диагноз."
 				/>
 			</Section>
+
+			<HowToCarousel />
+
+			<section id="data-protection" ref={protectionRef} className={s.protectionSection}>
+				<div className={s.protectionContent}>
+					<h2 className={s.protectionTitle}>Ваши данные —<br />под защитой</h2>
+					<p className={s.protectionSlogan}>Ваше доверие — наша ответственность.</p>
+					<div className={s.protectionCopy}>
+						<p className={s.protectionDescription}>Вы доверяете нам личную информацию, поэтому мы открыто рассказываем, как устроена наша политика безопасности и использования данных.</p>
+						<Button type="button" colored icon={<ArrowForwardIcon fontSize="small" />} className={s.protectionButton} onClick={() => navigate('/privacy-policy')}>
+							Узнать больше
+						</Button>
+					</div>
+				</div>
+			</section>
 
 			<div className={s.bottomGlowArea}>
 				<BlueOrb className={s.bottomOrb} />

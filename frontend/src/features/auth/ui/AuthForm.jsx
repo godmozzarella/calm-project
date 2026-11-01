@@ -3,11 +3,14 @@ import { useState } from 'react'
 import { useAuth } from '../model/useAuth'
 import LoginForm from './LoginForm'
 import RegisterForm from './RegisterForm'
+import EmailVerificationModal from './EmailVerificationModal'
+import ForgotPasswordModal from './ForgotPasswordModal'
 
 import s from './AuthForm.module.scss'
 
 const AuthForm = () => {
 	const [activeTab, setActiveTab] = useState('login')
+	const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false)
 
 	const {
 		loginEmail,
@@ -23,12 +26,21 @@ const AuthForm = () => {
 		loginFormError,
 		registerFormError,
 		retryAfter,
+		loading,
+		pendingVerification,
+		verificationCode,
+		verificationError,
+		resendCountdown,
 		setLoginPassword,
 		setRegisterPassword,
 		setConfirmPassword,
+		setVerificationCode,
 		setUserName,
 		handleEmailChange,
 		handleRegistration,
+		handleVerifyRegistration,
+		handleResendRegistrationCode,
+		handleCancelRegistration,
 		handleLogin,
 	} = useAuth()
 
@@ -64,7 +76,8 @@ const AuthForm = () => {
 						setPassword={setLoginPassword}
 						passwordError={loginPasswordError}
 						formError={loginFormError}
-						disabled={retryAfter > 0}
+						disabled={loading || retryAfter > 0}
+						onForgotPassword={() => setForgotPasswordOpen(true)}
 					/>
 				) : (
 					<RegisterForm
@@ -81,9 +94,25 @@ const AuthForm = () => {
 						passwordError={registerPasswordError}
 						confirmPasswordError={confirmPasswordError}
 						formError={registerFormError}
+						loading={loading}
 					/>
 				)}
 			</div>
+			{pendingVerification && (
+				<EmailVerificationModal
+					email={pendingVerification.email}
+					code={verificationCode}
+					setCode={setVerificationCode}
+					error={verificationError}
+					countdown={resendCountdown}
+					loading={loading}
+					codeSent={pendingVerification.codeSent}
+					onSubmit={handleVerifyRegistration}
+					onResend={handleResendRegistrationCode}
+					onClose={handleCancelRegistration}
+				/>
+			)}
+			{forgotPasswordOpen && <ForgotPasswordModal initialEmail={loginEmail} onClose={() => setForgotPasswordOpen(false)} />}
 		</div>
 	)
 }

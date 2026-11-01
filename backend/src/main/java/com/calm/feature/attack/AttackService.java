@@ -16,16 +16,20 @@ public class AttackService {
 
 	private final AttackRepository repo;
 	private final DailyOutcomeRepository outcomeRepo;
+    private final com.calm.feature.location.EventLocationService locations;
 
 	@Autowired
-	public AttackService(AttackRepository repo, DailyOutcomeRepository outcomeRepo) {
+	public AttackService(AttackRepository repo, DailyOutcomeRepository outcomeRepo, com.calm.feature.location.EventLocationService locations) {
 		this.repo = repo;
+        this.locations = locations;
 		this.outcomeRepo = outcomeRepo;
 	}
 
+    public AttackService(AttackRepository repo, DailyOutcomeRepository outcomes) { this(repo, outcomes, null); }
+
 	/** Constructor retained for isolated service tests that do not exercise outcome labels. */
 	public AttackService(AttackRepository repo) {
-		this(repo, null);
+		this(repo, null, null);
 	}
 
 	public List<Attack> listForUser(String userId) {
@@ -71,10 +75,14 @@ public class AttackService {
 			}
 			if (req.endDate() != null && (req.endDate().isBefore(req.startDate())
 					|| (req.endDate().equals(req.startDate()) && req.endTime() != null
-					&& !req.endTime().isAfter(req.startTime())))) {
-				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Окончание приступа должно быть позже начала");
+					&& req.endTime().isBefore(req.startTime())))) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Окончание приступа не может быть раньше начала");
 			}
 		}
+        if (locations != null && (a.getEventLocation() == null || !java.util.Objects.equals(a.getStartDate(), req.startDate())
+                || !java.util.Objects.equals(a.getStartTime(), req.startTime()))) {
+            a.setEventLocation(locations.capture(a.getUserId(), req.startDate(), req.startTime()));
+        }
 		a.setStartDate(req.startDate());
 		a.setStartTime(req.startTime());
 		a.setOngoing(req.ongoing());

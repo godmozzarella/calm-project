@@ -16,6 +16,7 @@ const Input = props => {
 		rightElement,
 		autoComplete,
 		name,
+		inputRef,
 		...inputProps
 	} = props
 
@@ -24,6 +25,7 @@ const Input = props => {
 	const inputEl = (
 		<div className={`${s.inputRow} ${rightElement ? s.hasRight : ''}`}>
 			<input
+				ref={inputRef}
 				className={`${s.input} ${className || ''} ${error ? s.inputError : ''} ${rightElement ? s.withRight : ''}`}
 				id={id}
 				placeholder={placeholder}

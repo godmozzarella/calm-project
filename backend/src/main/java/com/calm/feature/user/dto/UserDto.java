@@ -16,7 +16,8 @@ public record UserDto(
 		Double longitude,
 		String city,
 		boolean notificationsEnabled,
-		Instant createdAt
+		Instant createdAt,
+        String locationMode, String locationTimezone, long locationVersion
 ) {
 	public static UserDto from(User u) {
 		return new UserDto(
@@ -30,7 +31,7 @@ public record UserDto(
 				u.getLongitude(),
 				u.getCity(),
 				u.isNotificationsEnabled(),
-				u.getCreatedAt()
+				u.getCreatedAt(), u.getLocationMode(), u.getLocationTimezone(), u.getLocationVersion()
 		);
 	}
 }

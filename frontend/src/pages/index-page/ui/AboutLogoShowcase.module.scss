@@ -1,0 +1,30 @@
+.showcase {
+	display: grid;
+	grid-area: center;
+	place-items: center;
+	min-width: 0;
+	width: 100%;
+}
+
+.stage {
+	position: relative;
+	width: min(100%, 22rem);
+	aspect-ratio: 1;
+	background: transparent;
+}
+
+.bluePulse {
+	top: -15%;
+	left: -15%;
+	z-index: 0;
+	width: 130%;
+	filter: blur(9px);
+}
+
+.stage canvas {
+	position: relative;
+	z-index: 1;
+	display: block;
+	width: 100%;
+	height: 100%;
+}

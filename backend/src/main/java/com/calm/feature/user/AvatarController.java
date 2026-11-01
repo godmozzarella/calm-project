@@ -53,32 +53,45 @@ public class AvatarController {
 			@RequestParam("file") MultipartFile file
 	) throws IOException {
 		User user = userService.getById(principal.getUserId());
-		if (file.isEmpty()) throw new IllegalArgumentException("Файл пустой");
-		if (file.getSize() > MAX_SIZE_BYTES) throw new IllegalArgumentException("Файл больше 5 МБ");
+		if (file.isEmpty()) throw new com.calm.common.exception.ApiException(org.springframework.http.HttpStatus.BAD_REQUEST, "Файл пустой");
+		if (file.getSize() > MAX_SIZE_BYTES) throw new com.calm.common.exception.ApiException(org.springframework.http.HttpStatus.BAD_REQUEST, "Файл больше 5 МБ");
 
 		String contentType = file.getContentType();
 		if (contentType == null || !contentType.startsWith("image/")) {
-			throw new IllegalArgumentException("Только изображения (image/*)");
+			throw new com.calm.common.exception.ApiException(org.springframework.http.HttpStatus.BAD_REQUEST, "Только изображения (image/*)");
 		}
 
 		String ext = switch (contentType) {
 			case "image/png"  -> ".png";
 			case "image/gif"  -> ".gif";
 			case "image/webp" -> ".webp";
-			default           -> ".jpg";
+			case "image/jpeg" -> ".jpg";
+            default -> throw new com.calm.common.exception.ApiException(org.springframework.http.HttpStatus.BAD_REQUEST, "Разрешены только PNG, JPEG, GIF и WebP");
 		};
 
-		String filename = UUID.randomUUID() + ext;
-		Files.copy(file.getInputStream(), uploadDir.resolve(filename));
+		try (var input = file.getInputStream()) {
+            byte[] header = input.readNBytes(16);
+            boolean valid = switch (contentType) {
+                case "image/png" -> header.length >= 8 && java.util.Arrays.equals(java.util.Arrays.copyOf(header, 8), new byte[]{(byte)137,80,78,71,13,10,26,10});
+                case "image/jpeg" -> header.length >= 3 && header[0] == (byte)255 && header[1] == (byte)216 && header[2] == (byte)255;
+                case "image/gif" -> header.length >= 6 && new String(header, 0, 6, java.nio.charset.StandardCharsets.US_ASCII).matches("GIF8[79]a");
+                case "image/webp" -> header.length >= 12 && new String(header, 0, 4, java.nio.charset.StandardCharsets.US_ASCII).equals("RIFF") && new String(header, 8, 4, java.nio.charset.StandardCharsets.US_ASCII).equals("WEBP");
+                default -> false;
+            };
+            if (!valid) throw new com.calm.common.exception.ApiException(org.springframework.http.HttpStatus.BAD_REQUEST, "Содержимое файла не соответствует формату изображения");
+        }
+        String filename = UUID.randomUUID() + ext;
+        try (var input = file.getInputStream()) {
+            Files.copy(input, uploadDir.resolve(filename));
+        }
 
 		// Относительный путь — работает с любого IP/устройства через nginx.
 		// baseUrl оставлен в конструкторе для возможного использования в email-уведомлениях.
 		String avatarUrl = "/api/public/avatars/" + filename;
 
 		// Удаляем старый файл если был
-		deleteOldFile(user.getAvatarUrl());
-		user.setAvatarUrl(avatarUrl);
-		userRepository.save(user);
+		userService.updateAvatar(user.getId(), avatarUrl);
+        deleteOldFile(user.getAvatarUrl());
 
 		log.info("Аватар загружен: user={}, file={}", principal.getUserId(), filename);
 		return Map.of("avatarUrl", avatarUrl);
@@ -90,9 +103,8 @@ public class AvatarController {
 			@AuthenticationPrincipal AuthenticatedUser principal
 	) {
 		User user = userService.getById(principal.getUserId());
-		deleteOldFile(user.getAvatarUrl());
-		user.setAvatarUrl(null);
-		userRepository.save(user);
+		userService.updateAvatar(user.getId(), null);
+        deleteOldFile(user.getAvatarUrl());
 		return ResponseEntity.noContent().build();
 	}
 

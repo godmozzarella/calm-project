@@ -11,6 +11,7 @@ services:
       CALM_TRAINING_REBUILD_CONFIRM: "YES"
       CALM_TRAINING_INTERVAL_SECONDS: "300"
     volumes:
+      - ./backend/scripts/historical-weather.cjs:/scripts/historical-weather.cjs:ro
       - ./backend/scripts/export-shared-risk-training-v3.js:/scripts/export-shared-risk-training.js:ro
       - ./backend/scripts/inspect-shared-risk-data.js:/scripts/inspect-shared-risk-data.js:ro
       - ./backend/scripts/run-shared-risk-v3-export-loop.sh:/scripts/run-shared-risk-export-loop.sh:ro
@@ -24,4 +25,4 @@ services:
       interval: 30s
       timeout: 5s
       retries: 2
-      start_period: 60s
+      start_period: 240s

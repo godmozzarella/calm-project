@@ -40,4 +40,16 @@ class AdminUserControllerTest {
 				new AuthenticatedUser("admin-id", "admin@example.test", "ADMIN", "session")));
 		verifyNoInteractions(users, participation, deletion);
 	}
+    @Test
+    void changingRoleCannotOverwritePasswordFromAStaleUserObject() {
+        UserRepository users = mock(UserRepository.class);
+        var target = new com.calm.feature.user.User("target@example.test", "Target", "old-password-hash");
+        target.setId("target");
+        org.mockito.Mockito.when(users.findById("target")).thenReturn(java.util.Optional.of(target));
+        var controller = new AdminUserController(users, mock(SharedModelParticipationService.class), mock(AccountDeletionService.class));
+        controller.changeRole("target", new com.calm.feature.admin.dto.UpdateRoleRequest(com.calm.feature.user.Role.ADMIN),
+                new AuthenticatedUser("admin", "admin@example.test", "ADMIN", "session"));
+        verify(users).updateRole("target", com.calm.feature.user.Role.ADMIN);
+        org.mockito.Mockito.verify(users, org.mockito.Mockito.never()).save(org.mockito.ArgumentMatchers.any());
+    }
 }

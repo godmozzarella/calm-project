@@ -29,6 +29,9 @@ public class Medication {
 	private String id;
 
 	private String userId;
+    private com.calm.feature.location.EventLocation eventLocation;
+    public com.calm.feature.location.EventLocation getEventLocation() { return eventLocation; }
+    public void setEventLocation(com.calm.feature.location.EventLocation value) { eventLocation = value; }
 	/** Общий идентификатор препаратов, добавленных за один приём. */
 	private String intakeId;
 

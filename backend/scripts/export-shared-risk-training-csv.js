@@ -10,13 +10,21 @@
     'attackStartsLast14Days', 'attackStartsLast30Days',
     'meanAttackIntensityLast30Days', 'daysSinceLastAttackStart',
   ]
+  if (metadata?.featureSchemaVersion === 3) featureNames.splice(0, featureNames.length,
+    'weatherScore', 'pressureMmHg', 'pressureDelta24hMmHg', 'humidity', 'humidityDelta24h',
+    'tempMin', 'tempMax', 'windKmhMax', 'kpIndex', 'attacksLast3Days', 'attacksLast7Days',
+    'medicationDaysLast7Days', 'overuseRisk', 'historyDays', 'historyAttackDays',
+    'attackStartsLast14Days', 'attackStartsLast30Days', 'meanAttackIntensityLast30Days', 'daysSinceLastAttackStart')
+  const details = ['attackCount', 'forecastTimezone', 'locationGrid', 'snapshotCapturedAt',
+    'snapshotTiming', 'dayCompleted', 'trainingEligible', 'diaryOutcome', 'historyDetails',
+    'profileLocation', 'eventLocationGrid', 'weatherLocationsMixed', 'historicalWeather', 'weatherFeatureSources']
   const columns = [
     'participantKey', 'targetDate', 'outcome', 'baselineScore', 'baselineLevel',
-    ...featureNames,
+    ...featureNames, ...details,
   ]
   const csv = value => {
     if (value === null || value === undefined) return ''
-    const text = String(value)
+    const text = typeof value === 'object' ? JSON.stringify(value) : String(value)
     return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
   }
 
@@ -31,6 +39,7 @@
     baselineScore: 1,
     baselineLevel: 1,
     features: 1,
+    ...Object.fromEntries(details.map(name => [name, 1])),
   }).sort({ targetDate: 1, participantKey: 1 }).forEach(example => {
     const row = [
       example.participantKey,
@@ -39,6 +48,7 @@
       example.baselineScore,
       example.baselineLevel,
       ...featureNames.map(name => example.features?.[name]),
+      ...details.map(name => example[name]),
     ]
     print(row.map(csv).join(','))
   })

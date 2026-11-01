@@ -23,6 +23,7 @@ const RegisterForm = props => {
 		passwordError,
 		confirmPasswordError,
 		formError,
+		loading,
 	} = props
 
 	const [showPassword, setShowPassword] = useState(false)
@@ -66,7 +67,7 @@ const RegisterForm = props => {
 					value={password}
 					onChange={setPassword}
 					error={passwordError || ''}
-					hint={!passwordError && password ? 'Минимум 8 символов, заглавная, цифра и спецсимвол' : ''}
+					hint={!passwordError && password ? 'Минимум 8 символов, заглавная буква и цифра. Спецсимвол усилит пароль' : ''}
 					rightElement={
 						<button
 							type="button"
@@ -103,8 +104,8 @@ const RegisterForm = props => {
 				}
 			/>
 
-			<Button type="submit" colored className={s.submitBtn}>
-				Зарегистрироваться
+			<Button type="submit" colored className={s.submitBtn} disabled={loading}>
+				{loading ? 'Отправляем код…' : 'Зарегистрироваться'}
 			</Button>
 		</form>
 	)

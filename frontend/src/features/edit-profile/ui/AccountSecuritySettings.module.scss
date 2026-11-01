@@ -1,0 +1,82 @@
+@use 'app/styles/globals.scss' as *;
+
+.security {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	margin-top: 1rem;
+	padding: 0 1.25rem;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 0.75rem;
+	min-width: 0;
+	padding: 0 0 1.25rem;
+	& + & {
+		padding-top: 1.25rem;
+		border-top: 1px solid $quiet-line;
+	}
+}
+
+.changeEmailButton { align-self: flex-start; border-radius: 0.75rem !important; }
+
+.title {
+	margin: 0;
+	font-size: 0.875rem;
+	font-weight: 650;
+}
+
+.currentValue,
+.description {
+	margin: 0;
+	font-size: 0.75rem;
+	line-height: 1.45;
+	color: var(--fc-secondary, currentColor);
+	word-break: break-word;
+}
+
+.form {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 0.75rem;
+}
+
+.codeLabel {
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+.actions {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 0.5rem;
+}
+
+.textButton {
+	min-height: 2.5rem;
+	padding: 0.35rem 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	font-size: 0.75rem;
+	cursor: pointer;
+	&:disabled { opacity: 0.55; cursor: default; }
+	&:focus-visible { outline: 2px solid $fc-contrast; outline-offset: 2px; }
+}
+
+.error {
+	margin: 0;
+	color: #d14343;
+	font-size: 0.75rem;
+	line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+	.security { padding-inline: 1rem; }
+}

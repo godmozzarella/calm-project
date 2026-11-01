@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 
 import { userApi, forecastApi } from '@/shared/api'
-import { setCurrentUser } from '@/entities/user'
+import { getCurrentUser, setCurrentUser } from '@/entities/user'
 
 /**
  * Хук онбординга локации: поиск города (через бэк) + геолокация браузера +
@@ -55,8 +55,8 @@ export const useLocationOnboarding = ({ setUser }) => {
 				// безликий «Моё местоположение», но lat/lon всё равно сохраняются и прогноз работает.
 				const place = await forecastApi.reverseGeocode({ lat: latitude, lon: longitude }).catch(() => null)
 				const picked = place
-					? { name: place.name, latitude, longitude, country: place.country }
-					: { name: 'Моё местоположение', latitude, longitude, country: null }
+					? { name: place.name, latitude, longitude, country: place.country, locationMode: 'AUTO' }
+					: { name: 'Моё местоположение', latitude, longitude, country: null, locationMode: 'AUTO' }
 				setGeoLocating(false)
 				resolve(picked)
 			},
@@ -72,7 +72,7 @@ export const useLocationOnboarding = ({ setUser }) => {
 		)
 	})
 
-	const save = async ({ latitude, longitude, name, country }) => {
+	const save = async ({ latitude, longitude, name, country, locationMode = 'MANUAL' }) => {
 		setSaving(true)
 		setError(null)
 		try {
@@ -81,6 +81,8 @@ export const useLocationOnboarding = ({ setUser }) => {
 				latitude,
 				longitude,
 				city: cityLabel,
+                locationMode, locationTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                expectedLocationVersion: getCurrentUser()?.locationVersion ?? 0,
 			})
 			setCurrentUser(updated)
 			setUser(updated)

@@ -75,7 +75,7 @@ $type-result: 3rem;
 	border-radius: 1rem;
 	background: $block-color;
 	color: $fc-main;
-	font-size: $type-caption;
+	@include fluid-text(14, 12);
 	text-align: left;
 	cursor: pointer;
 	transition: background .16s ease;
@@ -91,8 +91,8 @@ $type-result: 3rem;
 .level_MEDIUM { --risk: #{$warning-color}; }
 .level_HIGH { --risk: #{$error-color}; }
 
-.dayName { color: $fc-main; font-size: $type-caption; font-weight: $fw-semibold; }
-.dayDate, .dayPressure { color: $fc-secondary; font-size: $type-caption; line-height: 1.4; }
+.dayName { color: $fc-main; font-size: inherit; font-weight: $fw-semibold; }
+.dayDate, .dayPressure { color: $fc-secondary; font-size: inherit; line-height: 1.4; }
 .dayDate { margin-top: .1rem; }
 .dayScore {
 	font-size: $type-value;
@@ -101,9 +101,9 @@ $type-result: 3rem;
 	margin-top: .4rem;
 	font-variant-numeric: tabular-nums;
 	color: var(--risk);
-	small { font-size: $type-caption; color: $fc-secondary; margin-left: .2rem; }
+	small { @include fluid-text(12, 10); color: $fc-secondary; margin-left: .2rem; }
 }
-.dayLevel { font-size: $type-caption; font-weight: $fw-semibold; color: var(--risk); margin-top: .25rem; }
+.dayLevel { font-size: inherit; font-weight: $fw-semibold; color: var(--risk); margin-top: .25rem; }
 .day.level_HIGH .dayScore, .day.level_HIGH .dayLevel { color: color-mix(in srgb, var(--fc-main) 60%, var(--error-color)); }
 .dayPressure { margin-top: auto; padding-top: .5rem; }
 

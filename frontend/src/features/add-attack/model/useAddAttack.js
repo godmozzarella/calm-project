@@ -83,8 +83,8 @@ export const useAddAttack = ({ date, onSuccess }) => {
       if (form.endDate > todayStr || (form.endDate === todayStr && form.endTime > nowStr)) {
         setError('Конец не может быть в будущем'); return
       }
-      if (`${form.endDate}T${form.endTime}` <= `${form.startDate}T${form.startTime}`) {
-        setError('Время конца должно быть позже начала'); return
+      if (`${form.endDate}T${form.endTime}` < `${form.startDate}T${form.startTime}`) {
+        setError('Время окончания не может быть раньше начала'); return
       }
     }
 

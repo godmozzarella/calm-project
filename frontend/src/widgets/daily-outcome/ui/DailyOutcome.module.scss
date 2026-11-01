@@ -22,6 +22,15 @@
 	line-height: 1.35;
 }
 
+.copyPlaceholder {
+	display: block;
+	width: min(14rem, 55vw);
+	height: 1.2em;
+	border-radius: .4rem;
+	background: $quiet-surface-raised;
+	opacity: .45;
+}
+
 .text { display: flex; flex-direction: column; gap: .2rem; }
 .hint { font-size: .85rem; line-height: 1.35; color: $fc-secondary; }
 
@@ -56,16 +65,19 @@
 
 .thumb {
 	position: absolute;
-	top: .25rem;
+	top: 50%;
 	left: .25rem;
 	width: 1.2rem;
 	height: 1.2rem;
-	border-radius: inherit;
+	box-sizing: border-box;
+	aspect-ratio: 1;
+	border-radius: 50%;
 	background: var(--toggle-thumb);
 	box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+	transform: translateY(-50%);
 	transition: transform .18s ease;
 
-	.toggleOn & { transform: translateX(1.2rem); }
+	.toggleOn & { transform: translate(1.2rem, -50%); }
 }
 
 .blocked {

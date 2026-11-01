@@ -28,6 +28,7 @@
 	&:hover {
 		background-color: color-mix(in srgb, var(--fc-main) 6%, transparent);
 		color: $fc-main;
+		border-radius: 0.75rem;
 	}
 }
 
@@ -93,11 +94,6 @@
 
 .labelToday {
 	color: $fc-main;
-	background: var(--selection-surface);
-}
-
-:root:not([data-theme='light']) .labelToday {
-	color: var(--selected-control-fg);
 	background: var(--selected-control-bg);
 }
 
@@ -158,19 +154,19 @@
 	padding: 0;
 	border: 0;
 	border-radius: .7rem;
-	background: $quiet-surface;
+	background: var(--selected-control-bg);
 	color: $fc-secondary;
 	font-size: .75rem;
 	white-space: nowrap;
 
 	&:has(.streakButton:focus-visible) { outline: 2px solid $fc-secondary; outline-offset: 2px; }
 
-	svg { color: $fc-main; font-size: 1.125rem; }
+	.streakIcon { color: $fc-main; font-size: 1.125rem; }
 	strong { color: $fc-main; font-weight: $fw-semibold; }
 }
 
 @media (hover: hover) and (pointer: fine) {
-	.streak:hover { background: var(--selection-hover); }
+	.streak:hover { background: var(--selected-control-bg); }
 }
 
 .streakButton {
@@ -226,23 +222,13 @@
 }
 
 .streakInfoClose {
+	@include contrast-button;
 	margin-top: .5rem;
-	padding: .4rem .8rem;
-	border: 0;
-	border-radius: 2rem;
-	background: $fc-contrast;
-	color: $fc-dark;
-	font: inherit;
-	font-weight: $fw-semibold;
-	cursor: pointer;
-	-webkit-tap-highlight-color: transparent;
-
-	&:focus-visible { outline: 2px solid $fc-main; outline-offset: 2px; }
 }
 
 .streakIncreased {
 	strong { animation: streakCount .55s ease-out; }
-	svg { animation: streakIcon .65s ease-out; }
+	.streakIcon { animation: streakIcon .65s ease-out, streakBlueGlint 1.2s ease-in-out; }
 }
 
 .streakGain {
@@ -267,6 +253,11 @@
 	45% { transform: scale(1.2); }
 }
 
+@keyframes streakBlueGlint {
+	0%, 100% { color: var(--fc-main); filter: drop-shadow(0 0 0 transparent); }
+	35% { color: $fc-contrast; filter: drop-shadow(0 0 .4rem color-mix(in srgb, $fc-contrast 85%, transparent)); }
+}
+
 @keyframes streakGain {
 	0% { opacity: 0; transform: translate(-50%, .3rem); }
 	20% { opacity: 1; }
@@ -275,7 +266,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.streakIncreased strong, .streakIncreased svg, .streakGain { animation: none; }
+	.streakIncreased strong, .streakIncreased .streakIcon, .streakGain { animation: none; }
 }
 
 @media (max-width: 768px) {
@@ -361,32 +352,21 @@
 }
 
 .dayPillToday {
-	background-color: var(--selection-hover);
+	background-color: var(--selected-control-bg);
 
 	.pillNum {
 		color: $fc-main;
 	}
 }
 
-:root:not([data-theme='light']) {
-	.dayPillToday,
-	.dayPillToday:hover:not(:disabled) {
-		background-color: transparent;
-		color: $fc-contrast;
-	}
-	.dayPillToday .pillNum { color: $fc-contrast; }
-}
-
 :root[data-theme='light'] {
-	.labelToday { background: $quiet-surface; }
-	.streak:hover { background: $quiet-surface-raised; }
 	.dayPill:hover:not(:disabled) { background-color: color-mix(in srgb, var(--fc-main) 5%, transparent); }
 	.dayPillToday,
 	.dayPillToday:hover:not(:disabled) {
-		background-color: transparent;
-		color: $fc-contrast;
+		background-color: var(--selected-control-bg);
+		color: $fc-main;
 	}
-	.dayPillToday .pillNum { color: $fc-contrast; }
+	.dayPillToday .pillNum { color: $fc-main; }
 	.dayPillSelected:hover:not(:disabled) { background-color: var(--selected-control-bg); }
 }
 

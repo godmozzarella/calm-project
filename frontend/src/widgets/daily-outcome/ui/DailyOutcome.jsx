@@ -6,21 +6,31 @@ import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 import s from './DailyOutcome.module.scss'
 
 const DailyOutcome = ({ date, isToday, onInitialReady }) => {
-	const [outcome, setOutcome] = useState(null)
-	const [busy, setBusy] = useState(false)
-	const [error, setError] = useState('')
+	const [outcomes, setOutcomes] = useState({})
+	const [busyDates, setBusyDates] = useState({})
+	const [errors, setErrors] = useState({})
+	const outcome = outcomes[date] ?? null
+	const busy = !!busyDates[date]
+	const error = errors[date] || ''
 
 	useEffect(() => {
 		let active = true
 		let request = 0
-		setOutcome(null)
-		setError('')
 		const reload = () => {
 			const current = ++request
-			setOutcome(null)
+			setErrors(previous => {
+				if (!previous[date]) return previous
+				const next = { ...previous }
+				delete next[date]
+				return next
+			})
 			return riskApi.getOutcome(date)
-				.then(result => { if (active && current === request) { setOutcome(result.status); setError('') } })
-				.catch(() => { if (active && current === request) setError('Не удалось загрузить отметку.') })
+				.then(result => {
+					if (active && current === request) setOutcomes(previous => ({ ...previous, [date]: result.status }))
+				})
+				.catch(() => {
+					if (active && current === request) setErrors(previous => ({ ...previous, [date]: 'Не удалось загрузить отметку.' }))
+				})
 		}
 		reload().then(() => { if (active) onInitialReady?.('outcome') })
 		const unsubscribe = subscribe(ATTACKS_CHANGED, reload)
@@ -29,19 +39,27 @@ const DailyOutcome = ({ date, isToday, onInitialReady }) => {
 
 	const toggle = async () => {
 		if (busy || !outcome || outcome === 'ATTACK_PRESENT') return
-		setBusy(true)
-		setError('')
+		setBusyDates(previous => ({ ...previous, [date]: true }))
+		setErrors(previous => {
+			if (!previous[date]) return previous
+			const next = { ...previous }
+			delete next[date]
+			return next
+		})
 		try {
 			const result = outcome === 'NO_ATTACK'
 				? await riskApi.clearOutcome(date)
 				: await riskApi.confirmNoAttack(date, Intl.DateTimeFormat().resolvedOptions().timeZone)
-			setOutcome(result.status)
+			setOutcomes(previous => ({ ...previous, [date]: result.status }))
 			emit(OUTCOMES_CHANGED)
 		} catch (e) {
-			setError(e.message || 'Не удалось изменить отметку.')
-			try { setOutcome((await riskApi.getOutcome(date)).status) } catch { /* Keep the last known state. */ }
+			setErrors(previous => ({ ...previous, [date]: e.message || 'Не удалось изменить отметку.' }))
+			try {
+				const latest = await riskApi.getOutcome(date)
+				setOutcomes(previous => ({ ...previous, [date]: latest.status }))
+			} catch { /* Keep the last known state. */ }
 		} finally {
-			setBusy(false)
+			setBusyDates(previous => ({ ...previous, [date]: false }))
 		}
 	}
 
@@ -52,9 +70,11 @@ const DailyOutcome = ({ date, isToday, onInitialReady }) => {
 			: checked ? 'Отмечено: приступа не было' : 'Отметить день без приступа'
 
 	return (
-		<section className={`${s.card} ${blocked ? s.blocked : ''}`} aria-label="Отметка о приступе за день">
+		<section className={`${s.card} ${blocked ? s.blocked : ''}`} aria-label="Отметка о приступе за день" aria-busy={outcome === null}>
 			<div className={s.text}>
-				<span className={s.copy}>{copy}</span>
+				{outcome === null
+					? <span className={s.copyPlaceholder} aria-hidden="true" />
+					: <span className={s.copy}>{copy}</span>}
 				{isToday && !blocked && <span className={s.hint}>Если приступ начнётся позже, добавьте его в дневник.</span>}
 			</div>
 			{outcome === null ? <span className={s.togglePlaceholder} aria-hidden="true" /> : <button

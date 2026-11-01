@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { createPortal } from 'react-dom'
+import ContrastIcon from '@mui/icons-material/Contrast'
 
 import { Input } from '@/shared/ui/Input'
+import CodeBoxes from '@/shared/ui/CodeBoxes/CodeBoxes'
 import { notifyError } from '@/shared/lib/notifyError'
 import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 import { Button } from '@/shared/ui/Button'
@@ -20,15 +22,13 @@ import {
 	DarkModeOutlinedIcon,
 	LightModeOutlinedIcon,
 	LanguageIcon,
-	VisibilityIcon,
-	VisibilityOffIcon,
+	ThreadsIcon,
+	GitHubIcon,
 	TelegramIcon,
-	XIcon,
-	YouTubeIcon,
-	InstagramIcon,
 	EditLocationIcon,
 } from '@/shared/ui/icons'
 import { useEditProfile } from '@/features/edit-profile'
+import AccountSecuritySettings from '@/features/edit-profile/ui/AccountSecuritySettings'
 import { LocationOnboarding } from '@/features/onboarding-location'
 import { clearCurrentUser, setCurrentUser } from '@/entities/user'
 import { authApi, userApi, forecastApi, riskApi } from '@/shared/api'
@@ -37,11 +37,10 @@ import { useTheme } from '@/app/providers/theme/themeContext'
 import s from './SidebarProfile.module.scss'
 
 const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
-	const { theme, toggleTheme } = useTheme()
+	const { themePreference, setThemePreference } = useTheme()
+	const themeSelectRef = useRef(null)
 	const navigate = useNavigate()
 	const [view, setView] = useState('main')
-	const [showPassword, setShowPassword] = useState(false)
-	const [showNewPassword, setShowNewPassword] = useState(false)
 	const [locationModalOpen, setLocationModalOpen] = useState(false)
 	const [togglingNotif, setTogglingNotif] = useState(false)
 	const [sendingTest, setSendingTest] = useState(false)
@@ -58,6 +57,16 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 	const [participation, setParticipation] = useState(null)
 	const [loadingParticipation, setLoadingParticipation] = useState(false)
 	const [savingParticipation, setSavingParticipation] = useState(false)
+	const themeIcon = themePreference === 'auto'
+		? <ContrastIcon fontSize="small" aria-hidden="true" />
+		: themePreference === 'light' ? <LightModeOutlinedIcon fontSize="small" /> : <DarkModeOutlinedIcon fontSize="small" />
+	const openThemeOptions = event => {
+		if (event.target.closest('select')) return
+		const select = themeSelectRef.current
+		if (!select) return
+		if (typeof select.showPicker === 'function') select.showPicker()
+		else { select.focus(); select.click() }
+	}
 	const [participationError, setParticipationError] = useState('')
 
 	const openParticipation = async () => {
@@ -263,7 +272,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 					<div className={`${s.panel} ${view === 'main' ? s.panelVisible : s.panelHiddenLeft}`}>
 						<div className={s.panelHeader}>
 							<span className={s.panelTitle}>Профиль</span>
-							<button className={s.iconBtn} onClick={handleClose} aria-label="Закрыть">
+							<button className={`${s.iconBtn} ${s.closeIconBtn}`} onClick={handleClose} aria-label="Закрыть">
 								<CloseIcon fontSize="small" />
 							</button>
 						</div>
@@ -341,10 +350,10 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 							<button
 								className={s.navItem}
 								onClick={sendTestEmail}
-								disabled={sendingTest || !user?.emailVerified || !user?.notificationsEnabled || !user?.latitude}
+								disabled={sendingTest || !user?.emailVerified || !user?.notificationsEnabled || user?.latitude == null}
 								title={!user?.emailVerified
 									? 'Сначала подтвердите email'
-									: !user?.latitude
+									: user?.latitude == null
 									? 'Сначала укажи город'
 									: !user?.notificationsEnabled
 										? 'Сначала включи уведомления'
@@ -358,13 +367,15 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 							{testMessage && (
 								<div className={s.testMessage}>{testMessage}</div>
 							)}
-			<button className={s.navItem} onClick={toggleTheme} role="switch" aria-checked={theme === 'light'} aria-label={theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему'} data-help="Переключить приложение между светлым и тёмным оформлением.">
-								<span className={s.navIcon}>{theme === 'dark' ? <LightModeOutlinedIcon fontSize="small" /> : <DarkModeOutlinedIcon fontSize="small" />}</span>
+			<div className={`${s.navItem} ${s.themeSelectItem}`} onClick={openThemeOptions} data-help="Выбрать автоматическую, светлую или тёмную тему приложения.">
+								<span className={s.navIcon}>{themeIcon}</span>
 								<span className={s.navLabel}>Тема</span>
-				<span className={`${s.toggleTrack} ${theme === 'light' ? s.toggleChecked : ''}`} aria-hidden="true">
-					<span className={s.toggleThumb} />
-				</span>
-							</button>
+								<select ref={themeSelectRef} id="profile-theme-select" className={s.themeSelect} aria-label="Тема оформления" value={themePreference} onChange={event => setThemePreference(event.target.value)}>
+									<option value="auto">Авто</option>
+									<option value="light">Светлая</option>
+									<option value="dark">Тёмная</option>
+								</select>
+							</div>
 							<button className={s.navItem} disabled>
 								<span className={s.navIcon}><LanguageIcon fontSize="small" /></span>
 								<span className={s.navLabel}>Язык</span>
@@ -386,17 +397,16 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 						{/* ── Socials + copyright ── */}
 						<div className={s.footerBlock}>
 							<div className={s.socials}>
-								<a href="#" className={s.socialLink} aria-label="Telegram"><TelegramIcon style={{ fontSize: '1.1rem' }} /></a>
-								<a href="#" className={s.socialLink} aria-label="X"><XIcon style={{ fontSize: '1.1rem' }} /></a>
-								<a href="#" className={s.socialLink} aria-label="YouTube"><YouTubeIcon style={{ fontSize: '1.1rem' }} /></a>
-								<a href="#" className={s.socialLink} aria-label="Instagram"><InstagramIcon style={{ fontSize: '1.1rem' }} /></a>
+								<a href="https://t.me/calm_prj" className={s.socialLink} aria-label="Telegram"><TelegramIcon style={{ fontSize: '1.1rem' }} /></a>
+								<a href="https://www.threads.com/@calm.prj?igshid=NTc4MTIwNjQ2YQ==" className={s.socialLink} aria-label="Threads"><ThreadsIcon style={{ fontSize: '1.1rem' }} /></a>
+								<a href="https://github.com/godmozzarella/calm-project" className={s.socialLink} aria-label="GitHub"><GitHubIcon style={{ fontSize: '1.1rem' }} /></a>
 							</div>
 							<p className={s.copyright}>2026 © Calm</p>
 						</div>
 					</div>
 
 					{/* ── Edit profile sub-panel ── */}
-					<div className={`${s.panel} ${view === 'edit' ? s.panelVisible : s.panelHiddenRight}`}>
+					<div className={`${s.panel} ${s.editPanel} ${view === 'edit' ? s.panelVisible : s.panelHiddenRight}`}>
 						<div className={s.panelHeader}>
 							<button className={s.iconBtn} onClick={handleBackToMain} aria-label="Назад">
 								<BackIcon fontSize="small" />
@@ -405,7 +415,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 						</div>
 
 						{editData && (
-											<form
+							<form
 								className={s.editForm}
 												autoComplete="off"
 								onSubmit={e => {
@@ -454,72 +464,22 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 										value={editData.name}
 										onChange={handleInputChange}
 									/>
-									<Input
-										id="email"
-										type="email"
-										label="Электронная почта"
-										placeholder="you@example.com"
-										value={editData.email}
-										onChange={handleInputChange}
-									/>
 								</div>
-
-								<div className={s.passwordSection}>
-									<span className={s.sectionLabel}>Смена пароля</span>
-									<Input
-										id="password"
-												name="calm-profile-confirmation"
-										type={showPassword ? 'text' : 'password'}
-										label="Текущий пароль"
-													autoComplete="new-password"
-										placeholder="••••••••"
-										value={editData.password}
-										onChange={handleInputChange}
-										error={passwordError}
-										rightElement={
-											<button
-												type="button"
-												onClick={() => setShowPassword(p => !p)}
-												tabIndex={-1}
-												aria-label={showPassword ? 'Скрыть' : 'Показать'}
-											>
-												{showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
-											</button>
-										}
-									/>
-									<Input
-										id="newPassword"
-										type={showNewPassword ? 'text' : 'password'}
-										label="Новый пароль"
-														autoComplete="new-password"
-										placeholder="••••••••"
-										value={editData.newPassword}
-										onChange={handleInputChange}
-										rightElement={
-											<button
-												type="button"
-												onClick={() => setShowNewPassword(p => !p)}
-												tabIndex={-1}
-												aria-label={showNewPassword ? 'Скрыть' : 'Показать'}
-											>
-												{showNewPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
-											</button>
-										}
-									/>
-								</div>
+								{passwordError && <p className={s.testMessage} role="alert">{passwordError}</p>}
 
 								<Button type="submit" colored className={s.saveBtn}>
 									Сохранить изменения
 								</Button>
-								<div className={s.deleteAccountSection}>
-									<p>Удаление аккаунта безвозвратно удалит ваши записи и настройки.</p>
-									<button type="button" className={s.deleteAccountButton} onClick={handleDeleteAccount}>
-										<DeleteIcon fontSize="small" />
-										Удалить аккаунт
-									</button>
-								</div>
 							</form>
 						)}
+						{editData && <AccountSecuritySettings user={user} />}
+						{editData && <div className={`${s.deleteAccountSection} ${s.securityDeleteAccount}`}>
+							<p>Удаление аккаунта безвозвратно удалит ваши записи и настройки.</p>
+							<button type="button" className={s.deleteAccountButton} onClick={handleDeleteAccount}>
+								<DeleteIcon fontSize="small" />
+								Удалить аккаунт
+							</button>
+						</div>}
 					</div>
 
 					{/* ── Shared model pilot participation ── */}
@@ -598,20 +558,15 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 						<p className={s.verificationHint}>Отправим на этот адрес четырёхзначный код. Он действует 5 минут.</p>
 						<ErrorNotice message={verificationError} title="Не удалось подтвердить email" />
 						<form className={s.verificationForm} onSubmit={verifyEmailCode}>
-							<label htmlFor="emailVerificationCode">Код из письма</label>
-							<input
-								id="emailVerificationCode"
-								className={s.verificationCodeInput}
-								type="text"
-								inputMode="numeric"
-								autoComplete="one-time-code"
-								pattern="[0-9]{4}"
-								maxLength={4}
-								value={verificationCode}
-								onChange={event => setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 4))}
-								placeholder="0000"
+							<label id="emailVerificationCodeLabel" htmlFor="emailVerificationCode">Код из письма</label>
+							<CodeBoxes
+								code={verificationCode}
+								setCode={setVerificationCode}
 								disabled={!verificationSent || verificationChecking}
-								aria-describedby="emailVerificationCodeHint"
+								autoFocus={verificationSent}
+								labelId="emailVerificationCodeLabel"
+								inputId="emailVerificationCode"
+								errorId="emailVerificationCodeHint"
 							/>
 							<span id="emailVerificationCodeHint" className={s.verificationCodeHint}>
 								{verificationSent ? 'Введите код из письма' : 'Сначала отправьте код на почту'}

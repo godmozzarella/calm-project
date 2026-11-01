@@ -9,22 +9,18 @@
 	height: 100%;
 	background-color: var(--surface-overlay);
 	border-left: 1px solid $quiet-line;
-	box-shadow: -4px 0 32px rgba(0, 0, 0, 0.5);
 	display: flex;
 	flex-direction: column;
 	transform: translateX(100%);
-	transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
 	z-index: 1000;
 	color: $fc-main;
-	overflow-y: auto;
-	overscroll-behavior: contain;
-	scrollbar-width: none;
-
-	&::-webkit-scrollbar { display: none; }
+	overflow: hidden;
 }
 
 .sidebar.active {
 	transform: translateX(0);
+	box-shadow: -4px 0 32px rgba(0, 0, 0, 0.5);
 }
 
 /* ── Header ── */
@@ -56,55 +52,83 @@
 	&:hover {
 		background-color: var(--surface-hover);
 		color: $fc-main;
+		border-radius: 0.75rem;
 	}
 }
 
-/* ── Month navigation ── */
-.monthNav {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 0 0.75rem 0.75rem;
+/* ── Vertical month list ── */
+.monthList {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	scrollbar-width: none;
+	padding: 0 0.75rem 0.5rem;
+	-webkit-overflow-scrolling: touch;
+
+	&::-webkit-scrollbar { display: none; }
 }
 
-.monthInfo {
+.monthBlock {
+	padding-bottom: 1rem;
+	scroll-margin-top: .25rem;
+}
+
+.monthSeparator {
+	position: relative;
+	display: grid;
+	place-items: center;
+	height: 1rem;
+	margin: .2rem 0 .1rem;
+
+	&::before {
+		position: absolute;
+		inset: 50% 0 auto;
+		content: '';
+		border-top: 1px solid $quiet-line;
+	}
+
+	span {
+		position: relative;
+		padding: 0 .5rem;
+		background: var(--surface-overlay);
+		color: $fc-secondary;
+		font-size: .7rem;
+		font-weight: $fw-medium;
+		font-variant-numeric: tabular-nums;
+	}
+}
+
+.historyToggle {
+	display: block;
+	width: 100%;
+	padding: .6rem .25rem;
+	border: 0;
+	background: transparent;
+	color: $fc-secondary;
+	font: inherit;
+	@include fluid-text(12, 11);
+	text-align: center;
+	cursor: pointer;
+
+	&:hover { color: $fc-main; }
+	&:focus-visible { outline: 2px solid $fc-contrast; outline-offset: -2px; }
+}
+
+.monthHeading {
 	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 0.05rem;
+	align-items: baseline;
+	justify-content: space-between;
+	padding: .4rem .25rem .25rem;
 }
 
 .monthName {
 	@include fluid-text(16, 14);
-	font-weight: $fw-semibold;
+	font-weight: $fw-light;
 	color: $fc-main;
 }
 
-.yearLabel {
-	@include fluid-text(11, 10);
-	color: $fc-secondary;
-}
-
-.navBtn {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 2rem;
-	height: 2rem;
-	border-radius: 50%;
-	background: none;
-	border: none;
-	color: $fc-secondary;
-	cursor: pointer;
-	transition: background-color 0.18s ease, color 0.18s ease;
-
-	&:hover {
-		background-color: var(--surface-hover);
-		color: $fc-main;
-	}
-}
-
-.navBtn:disabled { opacity: .3; cursor: default; }
+.currentMonthName { font-weight: 700; }
 
 /* ── Weekday label row ── */
 .weekRow {
@@ -123,6 +147,8 @@
 	color: var(--fc-subtle);
 	padding: 0.25rem 0;
 }
+
+.weekend { color: $fc-contrast; }
 
 /* ── Day grid ── */
 .grid {
@@ -149,6 +175,10 @@
 	&:hover:not(:disabled) {
 		background-color: var(--selection-hover);
 	}
+}
+
+.cellPlaceholder {
+	aspect-ratio: 1 / 1;
 }
 
 .cellOther {
@@ -374,18 +404,16 @@
 }
 
 /* ── Footer ── */
-.spacer {
-	flex: 1;
-}
-
 .footer {
-	padding: 0.875rem 1.25rem 1.25rem;
+	flex: 0 0 auto;
+	padding: 0.75rem 1.25rem max(1rem, env(safe-area-inset-bottom));
 	display: flex;
 	flex-direction: column;
-	gap: 0.875rem;
+	gap: 0.65rem;
 	border-top: 1px solid $quiet-line;
-	margin-top: 1rem;
 }
+
+.footer .actionPanel { margin: 0; padding: .65rem .75rem; }
 
 .todayLink {
 	display: inline-flex;
