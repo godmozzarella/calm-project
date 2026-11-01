@@ -21,8 +21,10 @@ printf '%s\n' "$DEPLOY_SSH_KEY" > "$ssh_dir/id_ed25519"
 printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
 chmod 600 "$ssh_dir/id_ed25519" "$ssh_dir/known_hosts"
 
+# Read the entire script before executing it: Compose run can otherwise consume
+# the remaining bash -s program from the shared SSH stdin and cause a false success.
 ssh -i "$ssh_dir/id_ed25519" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
   -o UserKnownHostsFile="$ssh_dir/known_hosts" -o ConnectTimeout=15 \
   "$DEPLOY_USER@$DEPLOY_HOST" \
-  "cd '$DEPLOY_PATH' && bash -s -- '$DEPLOY_SHA'" \
+  "cd '$DEPLOY_PATH' && deploy_script=\$(cat) && bash -c \"\$deploy_script\" -- '$DEPLOY_SHA' < /dev/null" \
   < .github/scripts/deploy-on-server.sh

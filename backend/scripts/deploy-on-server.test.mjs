@@ -8,6 +8,7 @@ import { gzipSync } from 'node:zlib'
 import test from 'node:test'
 
 const deploy = fileURLToPath(new URL('../../.github/scripts/deploy-on-server.sh', import.meta.url))
+const deployViaSsh = fileURLToPath(new URL('../../.github/scripts/deploy-via-ssh.sh', import.meta.url))
 const sha = 'a'.repeat(40)
 const fakeDocker = `#!/usr/bin/env node
 const fs = require('fs'), zlib = require('zlib');
@@ -29,7 +30,10 @@ if(args[0]==='export'){process.stdout.write('synthetic-root-filesystem');process
 if(args[0]==='import')process.exit(0)
 if(args.includes('ps')&&args.some(x=>['-q','-aq','-qa'].includes(x))){if(process.env.NO_PREVIOUS_CONTAINERS!=='YES')console.log(args.at(-1)+'-container');process.exit(0)}
 if(args.includes('run')) {
- if(args.some(x=>x.includes('mongodump'))){process.stdout.write(process.env.FAIL_BACKUP==='YES'?Buffer.from('broken'):zlib.gzipSync('synthetic'));process.exit(0)}
+ if(args.some(x=>x.includes('mongodump'))){
+  if(process.env.DRAIN_DOCKER_STDIN==='YES')fs.writeFileSync(root+'/docker-stdin',fs.readFileSync(0));
+  process.stdout.write(process.env.FAIL_BACKUP==='YES'?Buffer.from('broken'):zlib.gzipSync('synthetic'));process.exit(0)
+ }
  if(args.includes('tar')){process.stdout.write(fs.readFileSync(root+'/avatars.tar.gz'));process.exit(0)}
  if(args.includes('printenv')){console.log('mongodb://test:private-test-value@mongo/calm');process.exit(0)}
  if(args.some(x=>x.includes('mongosh'))){
@@ -47,11 +51,13 @@ if(args.includes('up')&&args.some(x=>x.endsWith('rollback-images.yml'))&&process
 process.exit(0);
 `
 
-function runRelease(env = {}) {
+function runRelease(env = {}, transport = 'file') {
   const root = mkdtempSync(join(tmpdir(), 'calm-release-test-'))
   try {
     mkdirSync(join(root, 'bin'))
     mkdirSync(join(root, 'backend/scripts'), { recursive: true })
+    mkdirSync(join(root, '.github/scripts'), { recursive: true })
+    writeFileSync(join(root, '.github/scripts/deploy-on-server.sh'), readFileSync(deploy))
     writeFileSync(join(root, 'backend/scripts/check-prod-training-readiness.sh'), 'exit 0\n')
     writeFileSync(join(root, 'backend/scripts/backfill-event-locations.js'), 'backfill-stub')
     writeFileSync(join(root, 'backend/scripts/release-source-manifest.js'), 'manifest-stub')
@@ -64,9 +70,18 @@ case "$1" in
 esac
 exit 0
 `)
-    for (const name of ['git', 'docker']) chmodSync(join(root, 'bin', name), 0o700)
-    const result = spawnSync('bash', [deploy, sha], { cwd: root, encoding: 'utf8',
-      env: { ...process.env, PATH: `${join(root, 'bin')}:${process.env.PATH}`, TEST_RELEASE_ROOT: root, ...env } })
+    writeFileSync(join(root, 'bin/ssh'), `#!/usr/bin/env node
+const {spawnSync}=require('child_process');
+const result=spawnSync('bash',['-c',process.argv.at(-1)],{stdio:'inherit'});
+process.exit(result.status ?? 1);
+`)
+    for (const name of ['git', 'docker', 'ssh']) chmodSync(join(root, 'bin', name), 0o700)
+    const args = transport === 'ssh' ? [deployViaSsh] : transport === 'stdin' ? ['-s', '--', sha] : [deploy, sha]
+    const result = spawnSync('bash', args, { cwd: root, encoding: 'utf8',
+      input: transport === 'stdin' ? readFileSync(deploy) : undefined,
+      env: { ...process.env, PATH: `${join(root, 'bin')}:${process.env.PATH}`, TEST_RELEASE_ROOT: root,
+        DEPLOY_HOST: 'test.invalid', DEPLOY_USER: 'test', DEPLOY_PATH: root,
+        DEPLOY_SSH_KEY: 'synthetic-key', DEPLOY_KNOWN_HOSTS: 'synthetic-host', DEPLOY_SHA: sha, ...env } })
     const commands = readFileSync(join(root, 'commands'), 'utf8').split('\n').filter(Boolean)
     const output = result.stdout + result.stderr
     assert.doesNotMatch(output, /private-test-value/)
@@ -93,6 +108,38 @@ test('release backs up and checks source before starting updated services and re
     const backups = join(run.root, '.release-backups')
     assert.equal(statSync(backups).mode & 0o077, 0)
     assert(!run.commands.some(line => line.includes('down') || line.includes('--volumes')))
+  } finally { run.cleanup() }
+})
+
+test('truncated stdin deployment returns failure after rollback instead of a false success', () => {
+  const run = runRelease({ DRAIN_DOCKER_STDIN: 'YES' }, 'stdin')
+  try {
+    assert.notEqual(run.result.status, 0, run.output)
+    assert.match(run.output, /Previous backend\/frontend images restored/)
+    assert.match(run.output, /Deployment aborted during 'MongoDB backup'/)
+    assert.doesNotMatch(run.output, /Deployed commit/)
+    assert.match(readFileSync(join(run.root, 'docker-stdin'), 'utf8'), /gzip -t/)
+  } finally { run.cleanup() }
+})
+
+test('SSH transport finishes the release even when Docker consumes all available stdin', () => {
+  const run = runRelease({ DRAIN_DOCKER_STDIN: 'YES' }, 'ssh')
+  try {
+    assert.equal(run.result.status, 0, run.output)
+    assert.equal(readFileSync(join(run.root, 'docker-stdin'), 'utf8'), '')
+    assert.match(run.output, /Published synthetic rows/)
+    assert.match(run.output, /Deployed commit/)
+    assert.doesNotMatch(run.output, /Previous backend\/frontend images restored/)
+  } finally { run.cleanup() }
+})
+
+test('SSH transport propagates deployment failures after restoring previous images', () => {
+  const run = runRelease({ DRAIN_DOCKER_STDIN: 'YES', FAIL_NEW_START: 'YES' }, 'ssh')
+  try {
+    assert.notEqual(run.result.status, 0, run.output)
+    assert.match(run.output, /Deployment aborted during 'application startup'/)
+    assert.match(run.output, /Previous backend\/frontend images restored/)
+    assert.doesNotMatch(run.output, /Deployed commit/)
   } finally { run.cleanup() }
 })
 
