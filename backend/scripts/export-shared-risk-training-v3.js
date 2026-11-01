@@ -498,7 +498,13 @@
   training.risk_model_evaluations.deleteMany({ generation: { $ne: generation } })
   print(`Published ${examples.length} examples from ${includedParticipants.size} consenting participants to ${trainingName}`)
   } catch (error) {
-    print(`Training export failed during '${phase}': ${error.name}`)
+    const errorName = /^[A-Za-z][A-Za-z0-9_]{0,79}$/.test(String(error?.name)) ? error.name : 'Error'
+    const errorCode = typeof error?.code === 'string' && /^[A-Za-z0-9_-]{1,48}$/.test(error.code)
+      ? ` code=${error.code}` : Number.isInteger(error?.code) ? ` code=${error.code}` : ''
+    print(`Training export failed during '${phase}': ${errorName}${errorCode}`)
+    const stackFrames = String(error?.stack || '').split('\n')
+      .filter(line => /^\s*at\s/.test(line)).slice(0, 8)
+    if (stackFrames.length) print(`Training export stack frames: ${stackFrames.join(' | ')}`)
     if (process.env.CALM_RISK_TRAINING_TEST_MODE === 'YES' || phase.startsWith('check ')) {
       if (error.stack) print(error.stack)
       throw error

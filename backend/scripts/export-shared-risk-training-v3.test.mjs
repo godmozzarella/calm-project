@@ -50,11 +50,12 @@ const historyDetails = {
 	ongoingAttackAtCutoff: false,
 }
 
-const setup = () => {
+const setup = (testMode = true) => {
 	const target = key(1)
 	const start = key(2)
 	const source = {
-		getName: () => 'calm_risk_pipeline_test_source',
+		getName: () => testMode ? 'calm_risk_pipeline_test_source' : 'calm',
+		risk_model_consent_policy: collection([{ _id: 'current', version: 'shared-model-pilot-v2', digest: 'a'.repeat(64) }]),
         users: collection([{ _id: 'u1', latitude: 55.75, longitude: 37.62, city: 'City A' }]),
 		risk_model_participation: collection([
 			{ userId: 'u1', participating: true, consentVersion: 'shared-model-pilot-v2' },
@@ -91,16 +92,20 @@ const setup = () => {
 	}
 	const context = {
 		db: source,
-		Mongo: class { getDB(name) { assert.equal(name, 'calm_risk_pipeline_test_training'); return destination } },
+		Mongo: class { getDB(name) { assert.equal(name, testMode ? 'calm_risk_pipeline_test_training' : 'calm_risk_training'); return destination } },
 		process: { env: {
-			CALM_RISK_TRAINING_TEST_MODE: 'YES',
-			CALM_TRAINING_MONGO_URI: 'mongodb://localhost:27017/calm_risk_pipeline_test_training',
+			CALM_RISK_TRAINING_TEST_MODE: testMode ? 'YES' : 'NO',
+			CALM_TRAINING_MONGO_URI: `mongodb://localhost:27017/${testMode ? 'calm_risk_pipeline_test_training' : 'calm_risk_training'}`,
 			CALM_TRAINING_HMAC_KEY: secret,
 			CALM_TRAINING_REBUILD_CONFIRM: 'YES',
+			CALM_RISK_CONSENT_VERSION: 'shared-model-pilot-v2',
+			CALM_RISK_CONSENT_DIGEST: 'a'.repeat(64),
+			CALM_HISTORICAL_WEATHER_ENABLED: 'false',
 		} },
 		require: name => { assert.equal(name, 'crypto'); return crypto },
 		Buffer, Intl, Date, Map, Set, Object, Number, String, RegExp, Error,
-		print: () => {},
+		logs: [],
+		print: (...parts) => context.logs.push(parts.join(' ')),
 	}
 	return { source, destination, context, target }
 }
@@ -317,4 +322,14 @@ test('retrospective filling never silently becomes an eligible pre-day feature',
     assert.equal(row.features.pressureMmHg, 750)
     assert.equal(row.weatherFeatureSources.pressureMmHg, 'HISTORICAL_ARCHIVE')
     assert.equal(row.trainingEligible, false)
+})
+
+test('production export failures log safe stack frames without the exception message', async () => {
+    const fixture = setup(false)
+    fixture.destination.export_metadata.findOne = () => { throw new Error('synthetic private-value') }
+    await assert.rejects(runInNewContext(script, fixture.context), /Training export stopped during 'prepare training rows'/)
+    const output = fixture.context.logs.join('\n')
+    assert.match(output, /Training export failed during 'prepare training rows': Error/)
+    assert.match(output, /Training export stack frames:/)
+    assert.equal(output.includes('synthetic private-value'), false)
 })
