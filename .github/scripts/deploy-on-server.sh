@@ -29,13 +29,20 @@ sh backend/scripts/check-prod-training-readiness.sh --release
 
 compose=(docker compose -f docker-compose.yml -f docker-compose.auth.yml
   -f docker-compose.prod.yml -f docker-compose.training-worker-v3.yml)
-previous_backend=$("${compose[@]}" ps -q backend)
-previous_frontend=$("${compose[@]}" ps -q frontend)
+previous_backend=$("${compose[@]}" ps -aq backend)
+previous_frontend=$("${compose[@]}" ps -aq frontend)
 previous_backend_image=''
 previous_frontend_image=''
 if [[ -n "$previous_backend" && -n "$previous_frontend" ]]; then
   previous_backend_image=$(docker inspect --format '{{.Image}}' "$previous_backend")
   previous_frontend_image=$(docker inspect --format '{{.Image}}' "$previous_frontend")
+fi
+# Preserve old images under valid local references before the build replaces :latest.
+rollback_backend_image="calm-release-rollback-backend:$target_sha"
+rollback_frontend_image="calm-release-rollback-frontend:$target_sha"
+if [[ -n "$previous_backend_image" && -n "$previous_frontend_image" ]]; then
+  docker image tag "$previous_backend_image" "$rollback_backend_image"
+  docker image tag "$previous_frontend_image" "$rollback_frontend_image"
 fi
 # Build before stopping writers to keep the backup window short.
 "${compose[@]}" build backend frontend
@@ -45,7 +52,7 @@ backup_dir="$(mktemp -d "$PWD/.release-backups/$(date -u '+%Y%m%dT%H%M%SZ')-$tar
 printf '%s\n' "$previous_sha" > "$backup_dir/deployed-before-sha"
 if [[ -n "$previous_backend_image" && -n "$previous_frontend_image" ]]; then
   printf 'services:\n  backend:\n    image: "%s"\n  frontend:\n    image: "%s"\n' \
-    "$previous_backend_image" "$previous_frontend_image" > "$backup_dir/rollback-images.yml"
+    "$rollback_backend_image" "$rollback_frontend_image" > "$backup_dir/rollback-images.yml"
 fi
 writers_stopped=false
 resume_on_failure() {
@@ -57,11 +64,16 @@ resume_on_failure() {
       if "${compose[@]}" -f "$backup_dir/rollback-images.yml" up -d --no-deps --no-build backend frontend; then
         echo 'Previous backend/frontend images restored; source volumes preserved.' >&2
       else
-        echo "Automatic image recovery failed; use $backup_dir/rollback-images.yml" >&2
+        echo 'Rollback image recreation failed; trying to start the existing backend/frontend containers.' >&2
+        if "${compose[@]}" start backend frontend; then
+          echo 'Existing backend/frontend containers started as a recovery fallback.' >&2
+        else
+          echo "Automatic image recovery failed; use $backup_dir/rollback-images.yml" >&2
+        fi
       fi
       "${compose[@]}" start training-worker || true
     else
-      "${compose[@]}" start backend training-worker || true
+      "${compose[@]}" start backend frontend training-worker || true
     fi
   fi
   exit "$result"

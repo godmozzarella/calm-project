@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, chmodSync, rmSync, statSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, chmodSync, rmSync, statSync, readdirSync, existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -14,7 +14,8 @@ const fs = require('fs'), zlib = require('zlib');
 const args = process.argv.slice(2), root = process.env.TEST_RELEASE_ROOT;
 fs.appendFileSync(root+'/commands', JSON.stringify(args)+'\\n');
 if(args[0]==='inspect'){console.log('sha256:'+('backend-container'===args.at(-1)?'b':'f').repeat(64));process.exit(0)}
-if(args.includes('ps')&&args.includes('-q')){console.log(args.at(-1)+'-container');process.exit(0)}
+if(args[0]==='image'&&args[1]==='tag')process.exit(0)
+if(args.includes('ps')&&args.some(x=>['-q','-aq','-qa'].includes(x))){if(process.env.NO_PREVIOUS_CONTAINERS!=='YES')console.log(args.at(-1)+'-container');process.exit(0)}
 if(args.includes('run')) {
  if(args.some(x=>x.includes('mongodump'))){process.stdout.write(process.env.FAIL_BACKUP==='YES'?Buffer.from('broken'):zlib.gzipSync('synthetic'));process.exit(0)}
  if(args.includes('tar')){process.stdout.write(fs.readFileSync(root+'/avatars.tar.gz'));process.exit(0)}
@@ -30,6 +31,7 @@ if(args.includes('run')) {
  }
 }
 if(args.includes('up')&&!args.some(x=>x.endsWith('rollback-images.yml'))&&process.env.FAIL_NEW_START==='YES')process.exit(1);
+if(args.includes('up')&&args.some(x=>x.endsWith('rollback-images.yml'))&&process.env.FAIL_ROLLBACK==='YES')process.exit(1);
 process.exit(0);
 `
 
@@ -56,7 +58,10 @@ exit 0
     const commands = readFileSync(join(root, 'commands'), 'utf8').split('\n').filter(Boolean)
     const output = result.stdout + result.stderr
     assert.doesNotMatch(output, /private-test-value/)
-    return { result, commands, output, root, cleanup: () => rmSync(root, { recursive: true, force: true }) }
+    const backup = join(root, '.release-backups', readdirSync(join(root, '.release-backups'))[0])
+    const rollbackFile = join(backup, 'rollback-images.yml')
+    const rollbackConfig = existsSync(rollbackFile) ? readFileSync(rollbackFile, 'utf8') : ''
+    return { result, commands, output, root, rollbackConfig, cleanup: () => rmSync(root, { recursive: true, force: true }) }
   } catch (e) { rmSync(root, { recursive: true, force: true }); throw e }
 }
 
@@ -68,6 +73,11 @@ test('release backs up and checks source before starting updated services and re
     assert(i('mongodump') < i('MIGRATION'))
     assert(i('MIGRATION') < i('"caddy"'))
     assert(i('"caddy"') < i('/scripts/export-shared-risk-training.js'))
+    const dockerTag = run.commands.findIndex(line => line.includes('"image","tag"'))
+    assert(dockerTag >= 0 && dockerTag < i('"build"'))
+    assert.match(run.rollbackConfig, /image: "calm-release-rollback-backend:[a-f0-9]{40}"/)
+    assert.match(run.rollbackConfig, /image: "calm-release-rollback-frontend:[a-f0-9]{40}"/)
+    assert.doesNotMatch(run.rollbackConfig, /sha256:/)
     const backups = join(run.root, '.release-backups')
     assert.equal(statSync(backups).mode & 0o077, 0)
     assert(!run.commands.some(line => line.includes('down') || line.includes('--volumes')))
@@ -87,5 +97,25 @@ for (const [name, failure] of [
     if (failure === 'FAIL_BACKUP') assert(!run.commands.includes('MIGRATION'))
     if (failure === 'FAIL_MANIFEST') assert(!run.commands.some(line => line.includes('"caddy"')))
     assert.match(run.output, /Previous backend\/frontend images restored/)
+  } finally { run.cleanup() }
+})
+
+test('failed image rollback falls back to starting existing backend and frontend containers', () => {
+  const run = runRelease({ FAIL_NEW_START: 'YES', FAIL_ROLLBACK: 'YES' })
+  try {
+    assert.notEqual(run.result.status, 0)
+    assert(run.commands.some(line => line.includes('rollback-images.yml') && line.includes('"up"')))
+    assert(run.commands.some(line => line.includes('"start"') && line.includes('"backend"') && line.includes('"frontend"')))
+    assert.match(run.output, /Existing backend\/frontend containers started as a recovery fallback/)
+  } finally { run.cleanup() }
+})
+
+test('release failure without previous containers attempts to start backend, frontend and worker', () => {
+  const run = runRelease({ NO_PREVIOUS_CONTAINERS: 'YES', FAIL_BACKUP: 'YES' })
+  try {
+    assert.notEqual(run.result.status, 0)
+    assert(run.commands.some(line => line.includes('"start"') && line.includes('"backend"') &&
+      line.includes('"frontend"') && line.includes('"training-worker"')))
+    assert.equal(run.rollbackConfig, '')
   } finally { run.cleanup() }
 })
