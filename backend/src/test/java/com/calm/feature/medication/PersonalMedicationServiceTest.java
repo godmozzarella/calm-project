@@ -25,6 +25,28 @@ class PersonalMedicationServiceTest {
 	}
 
 	@Test
+	void firstSavedDosageBecomesDefaultAndLaterDosagesDoNotReplaceIt() {
+		var repo = mock(PersonalMedicationRepository.class);
+		var personal = new PersonalMedication("user-1", "Мой препарат", "мой препарат");
+		personal.setId("personal-1");
+		when(repo.findByIdAndUserId("personal-1", "user-1")).thenReturn(Optional.of(personal));
+		var service = new PersonalMedicationService(repo);
+
+		service.rememberDosageIfAbsent("user-1", "personal-1", " 200 ");
+		service.rememberDosageIfAbsent("user-1", "personal-1", "400");
+
+		assertThat(personal.getDefaultDosage()).isEqualTo("200");
+		verify(repo, times(1)).save(personal);
+	}
+
+	@Test
+	void blankDosageDoesNotSetDefault() {
+		var repo = mock(PersonalMedicationRepository.class);
+		new PersonalMedicationService(repo).rememberDosageIfAbsent("user-1", "personal-1", " ");
+		verifyNoInteractions(repo);
+	}
+
+	@Test
 	void doesNotOpenAnotherUsersPersonalName() {
 		var repo = mock(PersonalMedicationRepository.class);
 		when(repo.findByIdAndUserId("personal-1", "user-2")).thenReturn(Optional.empty());

@@ -1,5 +1,5 @@
 const LAST_ACTIVITY_KEY = 'calm_last_activity'
-const IDLE_LIMIT_MS = 30 * 60 * 1000
+const IDLE_LIMIT_MS = 2 * 60 * 60 * 1000
 
 export const touchSession = () => localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()))
 export const clearSessionActivity = () => localStorage.removeItem(LAST_ACTIVITY_KEY)

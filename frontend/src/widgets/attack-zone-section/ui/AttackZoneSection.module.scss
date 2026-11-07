@@ -102,13 +102,18 @@
 }
 
 .attackPill {
-	min-height: 2.25rem;
-	padding: 0.35rem 0.65rem;
+	min-height: 2.5rem;
+	padding: 0.45rem 0.75rem;
 	border-radius: .75rem;
 	border: 0;
 	background: transparent;
 	color: $fc-secondary;
-	@include fluid-text(11, 10);
+	@include fluid-text(14, 13);
+	font-family: inherit;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.35;
+	text-align: left;
+	text-wrap: wrap;
 	cursor: pointer;
 	-webkit-appearance: none;
 	appearance: none;

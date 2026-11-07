@@ -3,6 +3,7 @@ import { formatAttackTime, PAIN_ZONE_LABELS, sortAttacksNewest, toZoneMap } from
 import { attackApi } from '@/shared/api'
 import { EditIcon } from '@/shared/ui/icons'
 import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
+import { isCentralError } from '@/shared/lib/isCentralError'
 import HeadFront from './HeadFront'
 import HeadBack  from './HeadBack'
 import { subscribe, ATTACKS_CHANGED } from '@/shared/lib/dataEvents'
@@ -21,8 +22,19 @@ const cycleZone = (zones, zone) => {
 	return { ...zones, [zone]: next }
 }
 
-const fmtAttack = a =>
-	`${a.startDate} ${formatAttackTime(a.startTime)}${a.ongoing ? ' — продолжается' : a.endTime ? ` — ${formatAttackTime(a.endTime)}` : ''} · ${a.intensity}/10`
+const MONTH_SHORT = ['янв.', 'февр.', 'мар.', 'апр.', 'мая', 'июн.', 'июл.', 'авг.', 'сент.', 'окт.', 'ноя.', 'дек.']
+const shortDate = value => {
+	const [, month, day] = String(value ?? '').split('-')
+	return MONTH_SHORT[Number(month) - 1] && Number(day) ? `${Number(day)} ${MONTH_SHORT[Number(month) - 1]}` : ''
+}
+const fmtAttack = attack => {
+	const startDate = attack.startDate ?? attack.date
+	const start = `${shortDate(startDate)} ${formatAttackTime(attack.startTime) || 'время не указано'}`.trim()
+	const endTime = formatAttackTime(attack.endTime)
+	const endDate = attack.endDate ?? startDate
+	const end = attack.ongoing ? 'продолжается' : endTime ? `${endDate !== startDate ? `${shortDate(endDate)} ` : ''}${endTime}` : ''
+	return `${start}${end ? ` - ${end}` : ''}, ${attack.intensity}`
+}
 
 const AttackZoneSection = ({ date, onInitialReady }) => {
 	const [attacks,    setAttacks]    = useState([])
@@ -75,7 +87,7 @@ const AttackZoneSection = ({ date, onInitialReady }) => {
 			await attackApi.update(selectedId, { ...attack, painZones: zones })
 			setEditing(false)
 		} catch (e) {
-			setError(e.message || 'Не удалось сохранить зоны боли.')
+			if (!isCentralError(e)) setError(e.message || 'Не удалось сохранить зоны боли.')
 		} finally { setSaving(false) }
 	}
 
@@ -130,7 +142,8 @@ const AttackZoneSection = ({ date, onInitialReady }) => {
 							{attacks.map(a => (
 								<button
 									key={a.id}
-					aria-pressed={selectedId === a.id}
+									aria-pressed={selectedId === a.id}
+									aria-label={`Выбрать приступ: ${fmtAttack(a)}. Интенсивность ${a.intensity} из 10`}
 									className={`${s.attackPill} ${selectedId === a.id ? s.attackPillActive : ''}`}
 									onClick={() => selectAttack(a.id)}
 									data-help="Выбрать приступ, для которого нужно посмотреть или изменить зоны боли."

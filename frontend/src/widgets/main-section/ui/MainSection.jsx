@@ -6,12 +6,12 @@ import { AttackZoneSection } from '@/widgets/attack-zone-section'
 import { ChartSection } from '@/widgets/chart-section'
 import { ForecastSection } from '@/widgets/forecast-section'
 import { DayBar, midnight, dateKey } from '@/widgets/day-bar'
-import { DailyOutcome } from '@/widgets/daily-outcome'
+import DailyQuestionnaire from '@/widgets/daily-questionnaire/DailyQuestionnaire'
 import { subscribe, DATE_SELECTED } from '@/shared/lib/dataEvents'
 
 import s from './MainSection.module.scss'
 
-const MainSection = ({ user, date, setDate, onOpenLocationModal, onInitialReady }) => {
+const MainSection = ({ user, date, setDate, onOpenLocationModal, onInitialReady, autoOpenQuestionnaire }) => {
 	useEffect(() => subscribe(DATE_SELECTED, e => {
 		const key = e.detail
 		if (typeof key !== 'string') return
@@ -28,7 +28,7 @@ const MainSection = ({ user, date, setDate, onOpenLocationModal, onInitialReady 
 			<h1 className={s.logo}>Calm</h1>
 
 			<DayBar date={date} setDate={setDate} city={user?.city} userId={user?.id} />
-			<DailyOutcome date={dateKey(date)} isToday={dateKey(date) === dateKey(midnight())} onInitialReady={onInitialReady} />
+			<DailyQuestionnaire key={user?.id} userId={user?.id} onInitialReady={onInitialReady} autoOpenAllowed={autoOpenQuestionnaire} />
 
 			<div className={s.grid}>
 				<div className={s.topRow}>

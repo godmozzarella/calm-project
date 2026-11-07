@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { attackApi } from '@/shared/api'
+import { isCentralError } from '@/shared/lib/isCentralError'
 
 const now = () => {
   const d = new Date()
@@ -15,7 +16,7 @@ const makeEmpty = date => {
     startTime,
     endDate: date,
     endTime: startTime,
-    ongoing: false,
+		ongoing: true,
     symptoms: [],
     triggers: [],
     note: '',
@@ -27,11 +28,23 @@ export const useAddAttack = ({ date, onSuccess }) => {
   const [form,    setForm]    = useState(() => makeEmpty(date))
   const [error,   setError]   = useState('')
   const [loading, setLoading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const pending = useRef(false)
   const [editingId, setEditingId] = useState(null)
   const [wasOngoing, setWasOngoing] = useState(false)
 
-  const openForm  = () => { setEditingId(null); setWasOngoing(false); setForm(makeEmpty(date)); setError(''); setOpen(true) }
+  const openForm = (initial = {}) => {
+    if (pending.current) return
+    const empty = makeEmpty(typeof initial.startDate === 'string' ? initial.startDate : date)
+    if (initial.requireStartTime) empty.startTime = ''
+    if (initial.ongoing === true) empty.ongoing = true
+    setDeleteError(''); setEditingId(null); setWasOngoing(false)
+    setForm(empty); setError(''); setOpen(true)
+  }
   const openEditForm = attack => {
+    if (pending.current) return
+    setDeleteError('')
     setEditingId(attack.id)
     setWasOngoing(attack.ongoing)
     setForm({
@@ -50,9 +63,19 @@ export const useAddAttack = ({ date, onSuccess }) => {
     setError('')
     setOpen(true)
   }
-  const closeForm = () => setOpen(false)
+  const closeForm = () => { if (!pending.current) setOpen(false) }
 
-  const setField = (field, value) => setForm(prev => ({ ...prev, [field]: value }))
+  const setField = (field, value) => setForm(prev => {
+    const next = { ...prev, [field]: value }
+    if (field === 'startDate' || field === 'endDate') {
+      const current = new Date()
+      const day = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`
+      const time = `${String(current.getHours()).padStart(2, '0')}:${String(current.getMinutes()).padStart(2, '0')}`
+      if (next.startDate === day && next.startTime > time) next.startTime = time
+      if (next.endDate === day && next.endTime > time) next.endTime = time
+    }
+    return next
+  })
 
   const toggleArrayField = (field, value) =>
     setForm(prev => {
@@ -64,6 +87,8 @@ export const useAddAttack = ({ date, onSuccess }) => {
     })
 
   const submit = async () => {
+    if (pending.current) return
+    setDeleteError('')
     if (!form.startTime) { setError('Укажите время начала'); return }
 
     const nowDate  = new Date()
@@ -88,6 +113,7 @@ export const useAddAttack = ({ date, onSuccess }) => {
       }
     }
 
+    pending.current = true
     setLoading(true)
     try {
       const payload = {
@@ -103,16 +129,34 @@ export const useAddAttack = ({ date, onSuccess }) => {
         painZones: form.painZones ?? {},
         note:      form.note.trim(),
       }
-      if (editingId) await attackApi.update(editingId, payload)
-      else await attackApi.add(payload)
+      const saved = editingId ? await attackApi.update(editingId, payload) : await attackApi.add(payload)
       setOpen(false)
-      onSuccess?.()
+      onSuccess?.(saved)
     } catch (err) {
-      setError(err.message ?? 'Ошибка сохранения')
+      if (!isCentralError(err)) setError(err.message ?? 'Ошибка сохранения')
     } finally {
+      pending.current = false
       setLoading(false)
     }
   }
 
-  return { open, form, error, loading, editingId, openForm, openEditForm, closeForm, setField, toggleArrayField, submit }
+  const remove = async () => {
+    if (!editingId || pending.current) return
+    pending.current = true
+    setDeleting(true)
+    setDeleteError('')
+    setError('')
+    try {
+      await attackApi.delete(editingId)
+      setOpen(false)
+      onSuccess?.()
+    } catch (err) {
+      if (!isCentralError(err)) setDeleteError(err.message || 'Не удалось удалить приступ. Попробуйте ещё раз.')
+    } finally {
+      pending.current = false
+      setDeleting(false)
+    }
+  }
+
+  return { open, form, error, deleteError, loading, deleting, editingId, openForm, openEditForm, closeForm, setField, toggleArrayField, submit, remove }
 }

@@ -51,7 +51,8 @@ public class RiskQualityService {
 				.flatMap(attack -> from.datesUntil(to.plusDays(1)).filter(attack::overlaps))
 				.collect(Collectors.toSet());
 		Set<LocalDate> noAttackDays = outcomeRepo.findByUserIdAndDateBetween(userId, from, to).stream()
-				.map(DailyOutcome::getDate)
+				.filter(m -> !DailyOutcome.NEW_START_DEFINITION.equals(m.getOutcomeDefinition()))
+                .map(DailyOutcome::getDate)
 				.filter(d -> !attackDays.contains(d))
 				.collect(Collectors.toSet());
 		return summarize(records, attackDays, noAttackDays, from, to, now);

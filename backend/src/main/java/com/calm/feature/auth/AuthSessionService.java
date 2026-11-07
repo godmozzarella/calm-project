@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @Service
 public class AuthSessionService {
-	private static final Duration IDLE_LIMIT = Duration.ofMinutes(30);
+	private static final Duration IDLE_LIMIT = Duration.ofHours(2);
 
 	private final AuthSessionRepository repository;
 	private final MongoTemplate mongoTemplate;

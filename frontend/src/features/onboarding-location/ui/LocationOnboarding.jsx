@@ -1,20 +1,21 @@
 import { useEffect, useState } from 'react'
 
-import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { CloseIcon, LocationOnIcon, SearchIcon } from '@/shared/ui/icons'
+import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
 import { useLocationOnboarding } from '../model/useLocationOnboarding'
 
 import s from './LocationOnboarding.module.scss'
 import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 
-const LocationOnboarding = ({ open, onClose, setUser }) => {
+const LocationOnboarding = ({ open, onClose, setUser, currentCity }) => {
 	const {
 		results, searching, saving, geoLocating, error,
 		search, useGeolocation: locateByBrowser, save,
 	} = useLocationOnboarding({ setUser })
 
 	const [draft, setDraft] = useState('')
+	useBodyScrollLock(open)
 
 	// debounce поиска
 	useEffect(() => {
@@ -48,45 +49,44 @@ const LocationOnboarding = ({ open, onClose, setUser }) => {
 	return (
 		<>
 			<div className={s.overlay} onClick={onClose} />
-			<div className={s.modal} role="dialog" aria-labelledby="loc-onboarding-title">
-				<button className={s.closeBtn} onClick={onClose} aria-label="Закрыть" data-help="Закрыть выбор города. Его можно указать позже в меню профиля.">
-					<CloseIcon fontSize="small" />
-				</button>
+			<section className={`${s.modal} ${s.pickerModal}`} role="dialog" aria-modal="true" aria-labelledby="loc-onboarding-title">
+				<header className={s.pickerHeader}>
+					<div>
+						<p className={s.eyebrow}>Местоположение</p>
+						<h2 id="loc-onboarding-title" className={s.title}>Город для прогноза</h2>
+					</div>
+					<button type="button" className={s.closeBtn} onClick={onClose} aria-label="Закрыть" data-help="Закрыть выбор города.">
+						<CloseIcon fontSize="small" />
+					</button>
+				</header>
 
-				<h2 id="loc-onboarding-title" className={s.title}>Прогноз головной боли</h2>
-				<p className={s.subtitle}>
-					Чтобы предупреждать о неблагоприятной погоде, нужно знать твой город.
-					При ручном выборе город закреплён. В автоматическом режиме при смене города мы попросим подтвердить обновление.
-				</p>
+				<div className={s.pickerContent}>
+					<p className={s.subtitle}>Выберите город для прогноза погоды и оценки риска приступа.</p>
+					{currentCity && <div className={s.currentCity}><span>Сейчас выбран</span><strong>{currentCity}</strong></div>}
+					<button
+						type="button"
+						onClick={handleGeo}
+						disabled={saving || geoLocating}
+						data-help="Разрешить браузеру определить город для погодного прогноза."
+						className={s.geoBtn}
+					>
+						{geoLocating ? <span className={s.spinner} /> : <LocationOnIcon fontSize="small" />}
+						<span>{geoLocating ? 'Определяем город…' : 'Определить автоматически'}</span>
+					</button>
 
-				<Button
-					colored
-					icon={geoLocating ? <span className={s.spinner} /> : <LocationOnIcon />}
-					onClick={handleGeo}
-					disabled={saving || geoLocating}
-					data-help="Разрешить браузеру определить город для погодного прогноза."
-					className={s.geoBtn}
-				>
-					{geoLocating ? 'Определяем местоположение...' : 'Определить автоматически'}
-				</Button>
+					<div className={s.dividerRow}><span>или найдите вручную</span></div>
 
-				<div className={s.dividerRow}>
-					<span className={s.dividerLine} />
-					<span className={s.dividerText}>или</span>
-					<span className={s.dividerLine} />
-				</div>
-
-				<div className={s.searchWrap}>
+					<div className={s.searchWrap}>
 					<Input
 						id="locationSearch"
 						label="Город"
 						data-help="Введите название города, для которого нужен прогноз погоды."
-						placeholder="Москва, Санкт-Петербург, Новосибирск..."
+						placeholder="Начните вводить название"
 						value={draft}
 						onChange={e => setDraft(e.target.value)}
 						rightElement={<SearchIcon fontSize="small" />}
 					/>
-				</div>
+					</div>
 
 				{searching && <p className={s.hint}>Поиск...</p>}
 				{!searching && draft.trim().length >= 2 && results.length === 0 && (
@@ -114,13 +114,15 @@ const LocationOnboarding = ({ open, onClose, setUser }) => {
 					</ul>
 				)}
 
-				<ErrorNotice message={error} title="Не удалось определить город" />
-				{saving && <p className={s.hint}>Сохраняем...</p>}
-
-				<button type="button" className={s.skipBtn} onClick={onClose} data-help="Продолжить без выбора города. Прогноз появится после настройки города.">
-					Пропустить — настрою позже
-				</button>
-			</div>
+					<ErrorNotice message={error} title="Не удалось определить город" />
+					{saving && <p className={s.hint}>Сохраняем город…</p>}
+				</div>
+				<footer className={s.pickerFooter}>
+					<button type="button" className={s.skipBtn} onClick={onClose} disabled={saving || geoLocating}>
+						{currentCity ? 'Оставить прежний город' : 'Укажу позже'}
+					</button>
+				</footer>
+			</section>
 		</>
 	)
 }

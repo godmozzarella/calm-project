@@ -78,9 +78,13 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	gap: .5rem;
 }
 
 .title {
+	flex: 1;
+	min-width: 0;
+	overflow-wrap: anywhere;
 	@include fluid-text(17, 15);
 	font-weight: $fw-semibold;
 	color: $fc-main;
@@ -105,6 +109,8 @@
 /* ── Scrollable body ── */
 .body {
 	overflow-y: auto;
+	overflow-x: hidden;
+	overscroll-behavior: contain;
 	flex: 1;
 	min-height: 0; /* без этого flex-ребёнок не сжимается, и .sheet превышает max-height */
 	padding: 0.25rem 1.25rem 0.5rem;
@@ -114,6 +120,8 @@
 	scrollbar-width: none;
 	&::-webkit-scrollbar { display: none; }
 }
+
+.bodySelect { overflow: hidden; }
 
 /* ── Section ── */
 .section {
@@ -210,52 +218,65 @@
 
 /* ── Time ── */
 .timeRow {
-	display: flex;
-	gap: 1rem;
 	width: 100%;
 }
 
 .timeField {
 	display: flex;
 	flex-direction: column;
+	align-items: stretch;
 	gap: 0.3rem;
-	flex: 1;
 	min-width: 0;
 	width: 100%;
-
-	span {
-		@include fluid-text(11, 10);
-		color: $fc-secondary;
-	}
 }
 
 .timeInput {
 	background: var(--surface-hover);
-	border: 1px solid $quiet-line;
+	border: 0;
 	border-radius: 0.625rem;
 	color: $fc-main;
 	padding: 0.5rem 0.75rem;
 	@include fluid-text(14, 12);
 	width: 100%;
+	max-width: 100%;
+	height: 2.75rem;
 	display: block;
 	min-width: 0;
 	box-sizing: border-box;
 	font-size: 16px;
+	font-family: inherit;
+	font-weight: $fw-semibold;
+	box-shadow: none;
 	cursor: pointer;
-	transition: border-color 0.15s ease;
+	transition: background-color 0.15s ease;
 	color-scheme: inherit;
 
 	&:focus {
 		outline: none;
-		border-color: var(--line-muted);
+		background: var(--selection-surface);
+		box-shadow: none;
 	}
-	&:focus-visible { box-shadow: 0 0 0 2px var(--line-muted); }
 }
 
-@media (max-width: 480px) {
-	.timeRow { flex-direction: column; gap: .75rem; width: 100%; }
-	.timeField { width: 100%; min-width: 0; }
-	.timeInput { width: 100%; max-width: 100%; }
+@supports (-webkit-touch-callout: none) {
+	@media (max-width: 640px) {
+		.timeRow, .timeField { width: 100%; min-width: 0; align-self: stretch; }
+		.timeInput {
+			-webkit-appearance: none;
+			appearance: none;
+			display: flex;
+			align-items: center;
+			width: 100%;
+			text-align: left;
+		}
+		.timeInput::-webkit-date-and-time-value {
+			min-width: 0;
+			width: 100%;
+			line-height: 1.25;
+			text-align: left;
+		}
+		.timeInput::-webkit-datetime-edit { padding: 0; }
+	}
 }
 
 
@@ -264,18 +285,18 @@
 	display: block;
 	box-sizing: border-box;
 	width: 100%;
-	min-height: 2.5rem;
+	height: 2.75rem;
 	padding: 0.55rem 2.25rem 0.55rem 0.75rem;
 	background-color: var(--surface-hover);
 	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23bebebe' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
 	background-repeat: no-repeat;
 	background-position: right 0.75rem center;
 	background-size: 0.875rem;
-	border: 1px solid $quiet-line;
-	border-radius: 0.625rem;
+	border: 1px solid var(--surface-hover);
+	border-radius: 0.75rem;
 	color: $fc-main;
 	font-family: inherit;
-	@include fluid-text(13, 12);
+	font-size: 16px;
 	line-height: 1.3;
 	cursor: pointer;
 	appearance: none;
@@ -293,7 +314,7 @@
 
 	&:focus {
 		outline: none;
-		border-color: color-mix(in srgb, var(--fc-contrast) 40%, transparent);
+		border-color: color-mix(in srgb, var(--fc-contrast) 30%, transparent);
 	}
 
 	option {
@@ -311,9 +332,10 @@
 	border-radius: 0.75rem;
 	color: $fc-main;
 	padding: 0.75rem;
-	@include fluid-text(13, 12);
+	font-size: 16px;
 	resize: none;
 	width: 100%;
+	box-sizing: border-box;
 	font-family: 'Roboto', Arial, sans-serif;
 	transition: border-color 0.15s ease;
 
@@ -327,9 +349,25 @@
 
 /* ── Footer ── */
 .footer {
-	padding: 0.875rem 1.25rem 1.25rem;
+	padding: 0.875rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom));
 	border-top: 1px solid var(--surface-hover);
 	flex-shrink: 0;
+}
+
+.deleteBtn {
+	width: 100%;
+	min-height: 2.75rem;
+	margin-top: 0.6rem;
+	padding: 0.65rem 1rem;
+	border: 0;
+	border-radius: 0.75rem;
+	background: $quiet-surface;
+	color: $error-color;
+	cursor: pointer;
+	@include fluid-text(14, 12);
+	&:hover:not(:disabled) { background: color-mix(in srgb, #{$error-color} 10%, var(--surface-strong)); }
+	&:disabled { opacity: 0.45; cursor: wait; }
+	&:focus-visible { outline: 2px solid $error-color; outline-offset: 2px; }
 }
 
 /* ── Step dots ── */
@@ -370,142 +408,136 @@
 	gap: 0.5rem;
 }
 
+.selectStep { flex: 1; min-height: 0; }
+
+.searchBox {
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+	flex: 0 0 auto;
+	height: 2.75rem;
+	box-sizing: border-box;
+	padding: 0 0.7rem;
+	border: 1px solid var(--surface-hover);
+	border-radius: 0.75rem;
+	background: var(--surface-hover);
+	color: $fc-secondary;
+	box-shadow: none;
+	transition: border-color 0.15s ease;
+
+	input {
+		flex: 1;
+		min-width: 0;
+		border: 0;
+		outline: 0;
+		box-shadow: none;
+		background: transparent;
+		color: $fc-main;
+		font: inherit;
+		font-size: 16px;
+		&::placeholder { color: $fc-secondary; }
+		&::-webkit-search-cancel-button { display: none; }
+	}
+	button {
+		display: grid;
+		place-items: center;
+		width: 1.75rem;
+		height: 1.75rem;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: $fc-secondary;
+		cursor: pointer;
+	}
+	&:focus-within { outline: none; border-color: color-mix(in srgb, var(--fc-contrast) 30%, transparent); box-shadow: none; }
+}
+
 .stepHint {
 	@include fluid-text(12, 11);
 	color: var(--fc-secondary);
 	margin: 0;
 }
 
-/* ── Category groups (step 1) ── */
-.categoryGroup {
-	display: flex;
-	flex-direction: column;
-	gap: 0.4rem;
+/* ── Scrollable catalog (step 1) ── */
+.catalogList {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding-right: 0.2rem;
+	scrollbar-width: thin;
+	scrollbar-color: $quiet-surface-raised transparent;
 }
+
+.categoryGroup { padding: 0.2rem 0 0.7rem; }
 
 .categoryHeader {
 	display: flex;
 	align-items: center;
-	gap: 0.35rem;
-}
-
-.categoryIcon {
-	color: var(--fc-secondary);
+	gap: 0.65rem;
+	margin: 0.4rem 0 0.55rem;
+	&::before, &::after { content: ''; height: 1px; background: $quiet-line; flex: 1; }
 }
 
 .categoryLabel {
-	@include fluid-text(11, 10);
-	font-weight: $fw-semibold;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: var(--fc-secondary);
-}
-
-/* ── Chips (step 1) ── */
-.chips {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.35rem;
-}
-
-.chip {
-	min-height: 2.5rem;
-	padding: 0.4rem 0.75rem;
-	border-radius: 0.75rem;
-	border: 0;
-	background: $quiet-surface;
-	color: $fc-secondary;
+	flex: 0 0 auto;
 	@include fluid-text(12, 11);
-	cursor: pointer;
-	-webkit-appearance: none;
-	appearance: none;
-	-webkit-tap-highlight-color: transparent;
-	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-
-	&:hover {
-		background: var(--selection-hover);
-		color: $fc-main;
-	}
-	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: 2px; }
+	font-weight: $fw-semibold;
+	color: $fc-secondary;
 }
 
-.chipActive {
-	background: var(--selected-control-bg);
-	color: var(--selected-control-fg);
-}
-
-.chipActive:hover {
-	background: var(--selected-control-bg);
-	color: var(--selected-control-fg);
-}
-
-.personalChip {
-	display: inline-flex;
+.catalogItems { display: flex; flex-direction: column; gap: 0.3rem; }
+.catalogRow { display: flex; align-items: stretch; gap: 0.3rem; }
+.catalogItem {
+	display: flex;
 	align-items: center;
+	justify-content: space-between;
+	gap: 0.6rem;
+	flex: 1;
 	min-width: 0;
-	gap: 0;
-	border-radius: 0.75rem;
-	-webkit-touch-callout: none;
-	user-select: none;
+	min-height: 2.75rem;
+	padding: 0.55rem 0.75rem;
+	border: 0;
+	border-radius: 0.65rem;
+	background: $quiet-surface;
+	color: $fc-main;
+	font: inherit;
+	@include fluid-text(14, 13);
+	text-align: left;
+	cursor: pointer;
+	span { overflow-wrap: anywhere; }
+	svg { flex: 0 0 auto; color: $fc-contrast; }
+	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: -2px; }
+	@media (hover: hover) and (pointer: fine) { &:hover { background: $quiet-surface-raised; } }
 }
-
-.personalDeleteSlot {
-	width: 0;
-	opacity: 0;
-	overflow: hidden;
-	transition: width 0.2s ease, opacity 0.2s ease, margin-left 0.2s ease;
-}
-
-.personalChipRevealed .personalDeleteSlot {
-	width: 2.5rem;
-	margin-left: 0.25rem;
-	opacity: 1;
-}
-
-@media (hover: hover) {
-	.personalChip:hover .personalDeleteSlot,
-	.personalChip:focus-within .personalDeleteSlot {
-		width: 2.5rem;
-		margin-left: 0.25rem;
-		opacity: 1;
-	}
-}
+.catalogItemActive { background: var(--selected-control-bg); }
+.searchEmpty { padding: 1rem 0.5rem; color: $fc-secondary; text-align: center; @include fluid-text(13, 12); }
 
 .personalDelete {
 	display: grid;
 	place-items: center;
-	width: 2.5rem;
-	height: 2.5rem;
+	flex: 0 0 2.75rem;
+	width: 2.75rem;
+	min-height: 2.75rem;
 	padding: 0;
 	border: 0;
-	border-radius: 0.75rem;
+	border-radius: 0.65rem;
 	background: $quiet-surface;
 	color: $fc-secondary;
-	font-size: 1.35rem;
-	line-height: 1;
 	cursor: pointer;
-	transition: background-color 0.15s ease, color 0.15s ease;
-
-	&:hover { background: var(--surface-hover); color: $fc-main; }
-	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: 2px; }
 	&:disabled { opacity: 0.5; cursor: wait; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.personalDeleteSlot { transition: none; }
-}
-
-@media (hover: none) {
-	.chip:hover { background: $quiet-surface; color: $fc-secondary; }
-	.chipActive:hover { background: var(--selected-control-bg); color: var(--selected-control-fg); }
+	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: -2px; }
+	@media (hover: hover) and (pointer: fine) { &:hover:not(:disabled) { background: $quiet-surface-raised; color: $error-color; } }
 }
 
 /* ── Selected summary (step 1) ── */
 .selectedSummary {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	gap: 0.35rem;
-	padding: 0.5rem 0.75rem;
+	flex: 0 0 auto;
+	overflow-x: auto;
+	padding: 0.35rem 0.5rem;
 	background: $quiet-surface;
 	border: 0;
 	border-radius: 0.875rem;
@@ -514,6 +546,7 @@
 .selectedChip {
 	display: inline-flex;
 	align-items: center;
+	flex: 0 0 auto;
 	gap: 0.35rem;
 	padding: 0.25rem 0.6rem;
 	border-radius: 2rem;
@@ -521,6 +554,7 @@
 	background: var(--selected-control-bg);
 	color: var(--selected-control-fg);
 	@include fluid-text(12, 11);
+	white-space: nowrap;
 	cursor: pointer;
 	transition: background-color 0.15s ease, border-color 0.15s ease;
 
@@ -549,9 +583,18 @@
 
 /* ── Custom medication input (step 1) ── */
 .customSection {
-	margin-top: 0.25rem;
-	padding-top: 0.5rem;
-	border-top: 1px solid var(--surface-hover);
+	flex: 0 0 auto;
+	padding: 0.7rem 0 0.2rem;
+	border-top: 1px solid $quiet-line;
+	background: var(--surface-strong);
+}
+
+.customLabel {
+	display: block;
+	margin-bottom: 0.4rem;
+	color: $fc-secondary;
+	@include fluid-text(12, 11);
+	font-weight: $fw-semibold;
 }
 
 .customRow {
@@ -563,26 +606,31 @@
 .customInput {
 	flex: 1;
 	background: var(--surface-hover);
-	border: 1px solid $quiet-line;
-	border-radius: 0.625rem;
+	border: 1px solid var(--surface-hover);
+	border-radius: 0.75rem;
 	color: $fc-main;
 	padding: 0.5rem 0.75rem;
-	@include fluid-text(13, 12);
+	font: inherit;
+	font-size: 16px;
 	min-width: 0;
+	height: 2.75rem;
+	box-sizing: border-box;
+	box-shadow: none;
 	transition: border-color 0.15s ease;
 
 	&::placeholder { color: color-mix(in srgb, var(--fc-secondary) 55%, transparent); }
 
 	&:focus {
 		outline: none;
-		border-color: color-mix(in srgb, var(--fc-contrast) 40%, transparent);
+		border-color: color-mix(in srgb, var(--fc-contrast) 30%, transparent);
 	}
 }
 
 .customAddBtn {
 	flex-shrink: 0;
+	height: 2.75rem;
 	padding: 0.5rem 0.9rem;
-	border-radius: 0.625rem;
+	border-radius: 0.75rem;
 	border: 0;
 	background: $quiet-surface-raised;
 	color: $fc-contrast;
@@ -640,12 +688,15 @@
 
 .dosageInput {
 	background: var(--surface-hover);
-	border: 1px solid $quiet-line;
-	border-radius: 0.625rem;
+	border: 1px solid var(--surface-hover);
+	border-radius: 0.75rem;
 	color: $fc-main;
 	padding: 0.45rem 0.65rem;
-	@include fluid-text(13, 11);
+	font-size: 16px;
 	width: 80px;
+	height: 2.75rem;
+	box-sizing: border-box;
+	box-shadow: none;
 	text-align: right;
 	transition: border-color 0.15s ease;
 
@@ -653,7 +704,7 @@
 
 	&:focus {
 		outline: none;
-		border-color: color-mix(in srgb, var(--fc-contrast) 40%, transparent);
+		border-color: color-mix(in srgb, var(--fc-contrast) 30%, transparent);
 	}
 }
 
@@ -671,7 +722,8 @@
 	align-items: center;
 }
 
-.backBtn {
+.backBtn,
+.forwardBtn {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -689,6 +741,8 @@
 		background: var(--surface-hover);
 		color: $fc-main;
 	}
+	&:disabled { opacity: 0.45; cursor: wait; }
+	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: 2px; }
 }
 
 .nextBtn {

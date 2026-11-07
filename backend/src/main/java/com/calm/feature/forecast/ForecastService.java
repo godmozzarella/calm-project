@@ -8,15 +8,20 @@ import com.calm.feature.forecast.provider.RawForecastDay;
 import com.calm.feature.forecast.provider.WeatherProvider;
 import com.calm.feature.forecast.provider.WeatherProviderRegistry;
 import com.calm.feature.forecast.snapshot.ForecastSnapshotService;
+import com.calm.feature.forecast.snapshot.ForecastSnapshot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -46,6 +51,7 @@ public class ForecastService {
 
 	private static final Logger log = LoggerFactory.getLogger(ForecastService.class);
 	private static final Duration CACHE_TTL = Duration.ofHours(1);
+	private static final Duration STALE_RETRY_TTL = Duration.ofMinutes(2);
 	private static final int MAX_CACHE_ENTRIES = 2_048;
 	private static final int DEFAULT_DAYS_AHEAD = 3;
 
@@ -65,7 +71,7 @@ public class ForecastService {
 		String key = cacheKey(lat, lon);
 		CachedResponse cached = cache.get(key);
 		if (cached != null && cached.isFresh()) {
-			return withFreshness(cached, false);
+			return withFreshness(cached, cached.response.stale());
 		}
 
 		try {
@@ -95,13 +101,51 @@ public class ForecastService {
 		} catch (RuntimeException e) {
 			// Внешний API недоступен — пробуем отдать устаревший кэш (TTL уже истёк, но данные есть).
 			// Это лучше пустого экрана: пользователь видит хоть что-то + баннер «данные могут быть устаревшими».
-			if (cached != null) {
+			if (cached != null && !withFreshness(cached, true).days().isEmpty()) {
 				log.warn("Прогноз погоды недоступен, возвращаем устаревший кэш от {}: {}",
-						cached.at, e.getMessage());
+						cached.response.cachedAt(), e.getMessage());
 				return withFreshness(cached, true);
 			}
-			throw e;
+			try {
+				ForecastResponse saved = savedForecast(lat, lon, Instant.now());
+				if (saved != null) {
+					cache.put(key, new CachedResponse(saved, Instant.now()));
+					log.warn("Прогноз погоды недоступен, показаны сохранённые данные: {}", e.getMessage());
+					return saved;
+				}
+			} catch (RuntimeException snapshotError) {
+				log.warn("Не удалось прочитать сохранённый прогноз: {}", snapshotError.getMessage());
+			}
+			throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+					"Сервис погоды временно недоступен. Попробуйте обновить прогноз позже.", e);
 		}
+	}
+
+	private ForecastResponse savedForecast(double lat, double lon, Instant now) {
+		LocalDate utcToday = LocalDate.ofInstant(now, ZoneOffset.UTC);
+		List<ForecastSnapshot> snapshots = snapshotService.findInRange(lat, lon,
+				utcToday.minusDays(1), utcToday.plusDays(DEFAULT_DAYS_AHEAD + 2));
+		List<ForecastSnapshot> current = snapshots.stream()
+				.filter(s -> s.getDate() != null && !s.getDate().isBefore(snapshotToday(s, now))
+						&& !s.getDate().isAfter(snapshotToday(s, now).plusDays(DEFAULT_DAYS_AHEAD)))
+				.sorted(Comparator.comparing(ForecastSnapshot::getDate)).toList();
+		if (current.isEmpty() || !current.get(0).getDate().equals(snapshotToday(current.get(0), now))) return null;
+		List<ForecastDayDto> days = current.stream().map(s -> new ForecastDayDto(
+				s.getDate(), s.getRisk() == null ? levelOf(s.getScore()) : s.getRisk(), s.getScore(), List.of(),
+				s.getPressureMmHg(), s.getPressureDelta24hMmHg(), s.getHumidity(), s.getHumidityDelta24h(),
+				s.getTempMin(), s.getTempMax(), s.getWindKmhMax(), s.getKpIndex(), s.getTimezone())).toList();
+		Instant oldest = current.stream().map(ForecastSnapshot::getCreatedAt).filter(java.util.Objects::nonNull)
+				.min(Comparator.naturalOrder()).orElse(null);
+		return new ForecastResponse("saved-weather", days, true, oldest);
+	}
+
+	private static LocalDate snapshotToday(ForecastSnapshot snapshot, Instant now) {
+		try { return LocalDate.ofInstant(now, ZoneId.of(snapshot.getTimezone())); }
+		catch (RuntimeException e) { return LocalDate.ofInstant(now, ZoneOffset.UTC); }
+	}
+
+	private static RiskLevel levelOf(int score) {
+		return score >= 55 ? RiskLevel.HIGH : score >= 30 ? RiskLevel.MEDIUM : RiskLevel.LOW;
 	}
 
 	private void trimCache(Instant now) {
@@ -126,7 +170,7 @@ public class ForecastService {
 				cached.response.provider(),
 				currentDays,
 				stale,
-				cached.at
+				cached.response.cachedAt()
 		);
 	}
 
@@ -246,7 +290,7 @@ public class ForecastService {
 
 	private record CachedResponse(ForecastResponse response, Instant at) {
 		boolean isFresh() {
-			return Duration.between(at, Instant.now()).compareTo(CACHE_TTL) < 0
+			return Duration.between(at, Instant.now()).compareTo(response.stale() ? STALE_RETRY_TTL : CACHE_TTL) < 0
 					&& startsOnLocalToday(response, Instant.now());
 		}
 	}

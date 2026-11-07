@@ -36,6 +36,24 @@
 	font-weight: $fw-semibold;
 }
 
+.headerActions { display: flex; align-items: center; gap: .5rem; }
+.cycleToggle {
+	min-width: 0;
+	overflow: hidden;
+	-webkit-tap-highlight-color: transparent;
+	padding: .5rem .65rem;
+	border: 0;
+	border-radius: .625rem;
+	background: #ad356b;
+	color: #fff;
+	font: inherit;
+	@include fluid-text(12, 10);
+	font-weight: $fw-semibold;
+	cursor: pointer;
+}
+:root[data-theme='light'] .cycleToggle { background: #e59abd; color: #26131e; }
+.cycleToggle:focus:not(:focus-visible) { outline: none; box-shadow: none; }
+
 .iconBtn {
 	display: flex;
 	align-items: center;
@@ -153,13 +171,14 @@
 /* ── Day grid ── */
 .grid {
 	display: grid;
-	grid-template-columns: repeat(7, 1fr);
+	grid-template-columns: repeat(7, minmax(0, 1fr));
 	gap: 0.2rem;
 	padding: 0 0.75rem;
 }
 
 .cell {
 	display: flex;
+	min-width: 0;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
@@ -227,6 +246,25 @@
 
 :root[data-theme='light'] .cellToday.cellSelected { background-color: var(--selected-control-bg); }
 
+.cellCycle:not(.cellSelected) { background-color: color-mix(in srgb, #db7ca7 12%, transparent); }
+.cycleHint {margin:.25rem .5rem .65rem;color:$fc-secondary;font-size:11px;line-height:1.4;}
+.cellCycle .cellNum,
+:root[data-theme='light'] .cellToday.cellCycle .cellNum,
+:root:not([data-theme='light']) .cellToday.cellCycle .cellNum { color: #db7ca7; }
+.cellCycleEdit.cellCycle { background: none; }
+.cellCycleEdit { gap: .15rem; }
+.cycleCheckbox {
+	display: grid;
+	place-items: center;
+	width: 17px;
+	height: 17px;
+	border: 1.5px solid #db7ca7;
+	border-radius: .3rem;
+	background: color-mix(in srgb, #db7ca7 8%, transparent);
+}
+.cycleCheckboxChecked { background: #db7ca7; }
+.cycleCheckbox svg { width: 13px; height: 13px; color: #fff; }
+
 .cellNum {
 	@include fluid-text(13, 11);
 	line-height: 1;
@@ -290,7 +328,10 @@
 	&:hover {
 		background-color: var(--surface-hover);
 	}
+	&:disabled { opacity: .55; cursor: default; }
 }
+
+.cycleError { margin: .5rem .625rem 0; color: $error-color; @include fluid-text(12, 11); }
 
 .actionIcon {
 	@include fluid-text(14, 12);
@@ -414,6 +455,13 @@
 }
 
 .footer .actionPanel { margin: 0; padding: .65rem .75rem; }
+.footerNav { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+
+@media (max-height: 650px) {
+	.footer { gap: .4rem; padding: .5rem .75rem max(.5rem, env(safe-area-inset-bottom)); }
+	.footer .actionPanel { padding: .4rem .5rem; }
+	.footer .actionPanelDate { margin-bottom: .3rem; }
+}
 
 .todayLink {
 	display: inline-flex;

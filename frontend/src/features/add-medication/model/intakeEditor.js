@@ -20,6 +20,18 @@ export const intakeMembers = (medication, medications) => {
 	})
 }
 
+export const groupMedicationIntakes = medications => {
+	const seen = new Set()
+	const groups = []
+	for (const medication of medications) {
+		if (seen.has(medication.id)) continue
+		const members = intakeMembers(medication, medications).filter(member => !seen.has(member.id))
+		members.forEach(member => seen.add(member.id))
+		groups.push({ id: medication.intakeId ?? medication.id, medications: members })
+	}
+	return groups
+}
+
 export const planIntakeUpdate = (existing, selected) => {
 	const unused = new Map(existing.map(m => [m.id, m]))
 	const reserved = new Set(selected.map(item => item.sourceId).filter(id => unused.has(id)))

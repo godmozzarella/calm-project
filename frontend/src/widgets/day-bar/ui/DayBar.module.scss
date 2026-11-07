@@ -67,7 +67,7 @@
 	margin-top: 0.1rem;
 }
 
-/* ── Center: weekday + label ── */
+/* ── Center: weekday and location ── */
 .center {
 	display: flex;
 	flex-direction: column;
@@ -75,31 +75,16 @@
 	flex-shrink: 0;
 }
 
+.centerNoCity {
+	align-self: stretch;
+	justify-content: center;
+}
+
 .weekday {
 	@include fluid-text(20, 15);
 	font-weight: $fw-semibold;
 	color: $fc-main;
 	line-height: 1.2;
-}
-
-.label {
-	@include fluid-text(11, 9);
-	font-weight: $fw-semibold;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	border-radius: 2rem;
-	padding: 0.15rem 0.55rem;
-	width: fit-content;
-}
-
-.labelToday {
-	color: $fc-main;
-	background: var(--selected-control-bg);
-}
-
-.labelPast {
-	color: $fc-secondary;
-	background: $quiet-surface;
 }
 
 .returnBtn {
@@ -153,20 +138,14 @@
 	margin-left: auto;
 	padding: 0;
 	border: 0;
-	border-radius: .7rem;
-	background: var(--selected-control-bg);
+	background: none;
 	color: $fc-secondary;
-	font-size: .75rem;
 	white-space: nowrap;
 
 	&:has(.streakButton:focus-visible) { outline: 2px solid $fc-secondary; outline-offset: 2px; }
 
-	.streakIcon { color: $fc-main; font-size: 1.125rem; }
-	strong { color: $fc-main; font-weight: $fw-semibold; }
-}
-
-@media (hover: hover) and (pointer: fine) {
-	.streak:hover { background: var(--selected-control-bg); }
+	.streakIcon { color: $fc-main;  }
+	strong { color: $fc-main; font-weight: $fw-semibold;line-height:1; }
 }
 
 .streakButton {
@@ -174,100 +153,28 @@
 	display: inline-flex;
 	align-items: center;
 	gap: .3rem;
-	padding: .4rem .6rem;
+	@include fluid-text(42, 28);
+	padding: 0;
 	border: 0;
-	border-radius: inherit;
 	background: transparent;
 	color: inherit;
 	font: inherit;
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
 
+	.streakIcon, strong { font-size: inherit; }
+
 	&:focus { outline: none; }
 	&:focus-visible { outline: none; }
 }
 
-.streakOverlay {
-	position: fixed;
-	inset: 0;
-	z-index: 3000;
-	display: grid;
-	place-items: center;
-	padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
-		max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
-	background: rgba(0, 0, 0, .68);
-	backdrop-filter: blur(2px);
-	-webkit-backdrop-filter: blur(2px);
-	touch-action: none;
+.streakEarned .streakIcon {color:$fc-contrast;}
+.streakFlashed .streakIcon {animation:streakGlow 1.25s ease-out;}
+@keyframes streakGlow {
+  0%,100% {filter:drop-shadow(0 0 0 transparent);}
+  35% {filter:drop-shadow(0 0 .6rem color-mix(in srgb,var(--fc-contrast) 85%,transparent));}
 }
-
-.streakInfo {
-	width: min(21rem, 100%);
-	max-height: calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-	overflow-y: auto;
-	overscroll-behavior: contain;
-	touch-action: auto;
-	padding: 1rem;
-	border: 0;
-	border-radius: .9rem;
-	background: $block-color;
-	color: $fc-main;
-	white-space: normal;
-	box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .18);
-	font-size: .875rem;
-	line-height: 1.45;
-
-	> strong { display: block; margin-bottom: .45rem; font-size: 1rem; }
-	> p { margin: .35rem 0; color: $fc-secondary; }
-}
-
-.streakInfoClose {
-	@include contrast-button;
-	margin-top: .5rem;
-}
-
-.streakIncreased {
-	strong { animation: streakCount .55s ease-out; }
-	.streakIcon { animation: streakIcon .65s ease-out, streakBlueGlint 1.2s ease-in-out; }
-}
-
-.streakGain {
-	position: absolute;
-	left: 50%;
-	bottom: calc(100% + .15rem);
-	color: $fc-main;
-	font-size: .75rem;
-	font-weight: $fw-semibold;
-	pointer-events: none;
-	animation: streakGain 1.6s ease-out forwards;
-}
-
-@keyframes streakCount {
-	0% { opacity: .4; transform: translateY(.35rem); }
-	70% { opacity: 1; transform: translateY(-.08rem); }
-	100% { transform: translateY(0); }
-}
-
-@keyframes streakIcon {
-	0%, 100% { transform: scale(1); }
-	45% { transform: scale(1.2); }
-}
-
-@keyframes streakBlueGlint {
-	0%, 100% { color: var(--fc-main); filter: drop-shadow(0 0 0 transparent); }
-	35% { color: $fc-contrast; filter: drop-shadow(0 0 .4rem color-mix(in srgb, $fc-contrast 85%, transparent)); }
-}
-
-@keyframes streakGain {
-	0% { opacity: 0; transform: translate(-50%, .3rem); }
-	20% { opacity: 1; }
-	75% { opacity: 1; }
-	100% { opacity: 0; transform: translate(-50%, -.35rem); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.streakIncreased strong, .streakIncreased .streakIcon, .streakGain { animation: none; }
-}
+@media(prefers-reduced-motion:reduce) {.streakFlashed .streakIcon{animation:none;}}
 
 @media (max-width: 768px) {
 	.dayBar {
@@ -300,7 +207,6 @@
 	}
 	.center { min-width: 0; }
 	.weekday { font-size: .875rem; }
-	.streakButton { padding: .3rem .4rem; }
 
 	.dayNumber {
 		flex-direction: row;
@@ -311,6 +217,7 @@
 	.number {
 		@include fluid-text(28, 22);
 	}
+	.streakButton { @include fluid-text(28, 22); }
 }
 
 .dayPill {

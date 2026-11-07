@@ -62,6 +62,7 @@ public class User {
 
     public String getLocationMode() { return "AUTO".equals(locationMode) ? "AUTO" : "MANUAL"; }
     public void setLocationMode(String value) { locationMode = value; }
+    public boolean hasLocationTimezone() { return locationTimezone != null && !locationTimezone.isBlank(); }
     public String getLocationTimezone() { return locationTimezone == null ? "UTC" : locationTimezone; }
     public void setLocationTimezone(String value) { locationTimezone = value; }
     public long getLocationVersion() { return locationVersion; }

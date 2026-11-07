@@ -27,22 +27,30 @@
 }
 
 .addBtn {
-	display: flex;
-	align-items: center;
-	gap: 0.35rem;
+	display: grid;
+	place-items: center;
+	flex: 0 0 2.25rem;
+	width: 2.25rem;
+	height: 2.25rem;
 	background: $quiet-surface;
 	border: 0;
-	border-radius: 0.75rem;
-	color: $fc-contrast;
-	padding: 0.3rem 0.75rem 0.3rem 0.5rem;
-	@include fluid-text(12, 11);
-	font-weight: $fw-semibold;
+	border-radius: 0.625rem;
+	color: $fc-secondary;
+	padding: 0;
+	overflow: hidden;
 	cursor: pointer;
-	transition: background-color 0.18s ease, border-color 0.18s ease;
+	transition: background-color 0.18s ease, color 0.18s ease;
 
-	&:hover {
-		background-color: $quiet-surface-raised;
+	@media (hover: hover) and (pointer: fine) {
+		&:hover {
+			background-color: $quiet-surface-raised;
+			color: $fc-contrast;
+		}
 	}
+	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: 2px; }
+	&:focus:not(:focus-visible) { outline: none; box-shadow: none; }
+	@media (hover: none) { &:focus-visible { outline: none; } }
+	&:disabled { opacity: .45; cursor: default; }
 }
 
 .cardBody {
@@ -94,7 +102,20 @@
 	list-style: none;
 }
 
+.attackRow {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	align-items: stretch;
+	gap: 0.5rem;
+
+	&.withComplete { grid-template-columns: minmax(0, 1fr) 3rem; }
+}
+
 .attackCard {
+	min-width: 0;
+	cursor: pointer;
+	&:focus-visible { outline: 2px solid $fc-contrast; outline-offset: -2px; }
+	&[aria-disabled="true"] { cursor: wait; }
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
@@ -114,26 +135,41 @@
 .attackMeta {
 	display: flex;
 	flex-direction: column;
-	gap: 0.25rem;
+	gap: 0.2rem;
 	min-width: 0;
 	flex: 1;
 }
 
+.attackDate {
+	@include fluid-text(12, 11);
+	color: $fc-secondary;
+	font-weight: $fw-medium;
+}
+
 .attackTime {
-	@include fluid-text(14, 12);
+	@include fluid-text(18, 16);
 	font-weight: $fw-semibold;
 	color: $fc-main;
 	font-variant-numeric: tabular-nums;
-	letter-spacing: 0.01em;
 	white-space: normal;
 	word-break: keep-all;
-	line-height: 1.3;
+	line-height: 1.25;
+}
+
+.attackDetails {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.5rem;
 }
 
 .attackType {
-	@include fluid-text(12, 10);
-	color: $fc-secondary;
+	@include fluid-text(13, 12);
+	color: $fc-main;
 	font-weight: $fw-medium;
+	padding: 0.35rem 0.65rem;
+	border-radius: 0.55rem;
+	background: $quiet-surface-raised;
 }
 
 .attackRight {
@@ -144,50 +180,48 @@
 }
 
 .intensityBadge {
-	@include fluid-text(12, 10);
+	@include fluid-text(18, 16);
 	font-weight: $fw-semibold;
-	padding: 0.2rem 0.5rem;
-	border-radius: 2rem;
-	background: $quiet-surface;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.25;
 }
 
-.editBtn,
-.deleteBtn {
+.completeBtn {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 1.75rem;
-	height: 1.75rem;
-	background: none;
-	border: none;
-	border-radius: 50%;
-	color: var(--fc-subtle);
+	align-self: stretch;
+	width: 3rem;
+	min-height: 3rem;
+	padding: 0;
+	border: 0;
+	border-radius: 1rem;
+	background: $quiet-surface;
+	color: $fc-secondary;
+	overflow: hidden;
 	cursor: pointer;
-	transition: color 0.15s ease, background-color 0.15s ease;
-	&.editBtn:hover {
-		color: $fc-contrast;
-		background-color: color-mix(in srgb, var(--fc-contrast) 8%, transparent);
-		border-radius: 0.75rem;
-	}
+	transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
 
-	&.deleteBtn:hover {
-		color: $error-color;
-		background-color: rgba(239, 100, 100, 0.1);
-		border-radius: 0.75rem;
+	@media (hover: hover) and (pointer: fine) {
+		&:hover:not(:disabled) { background: $quiet-surface-raised; color: $fc-contrast; }
 	}
+	&:disabled { opacity: 0.45; cursor: wait; }
+	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: -3px; }
+	&:focus:not(:focus-visible) { outline: none; box-shadow: none; }
+	@media (hover: none) { &:focus-visible { outline: none; } }
 }
 
 /* ── Symptom chips ── */
 .chips {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.35rem;
+	gap: 0.4rem;
 }
 
 .chip {
-	@include fluid-text(10, 9);
-	padding: 0.15rem 0.5rem;
-	border-radius: 2rem;
+	@include fluid-text(12, 11);
+	padding: 0.35rem 0.65rem;
+	border-radius: 0.55rem;
 	background: $quiet-surface-raised;
 	border: 0;
 	color: $fc-secondary;
@@ -195,8 +229,12 @@
 
 /* ── Note ── */
 .note {
-	@include fluid-text(12, 11);
+	@include fluid-text(13, 12);
 	color: $fc-secondary;
 	line-height: 1.5;
-	padding-top: 0.125rem;
+	width: 100%;
+	padding: 0.55rem 0.7rem;
+	border-radius: 0.6rem;
+	background: $quiet-surface-raised;
+	overflow-wrap: anywhere;
 }

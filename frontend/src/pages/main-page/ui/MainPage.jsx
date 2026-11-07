@@ -13,6 +13,10 @@ import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
 import PageLoading from '@/shared/ui/PageLoading/PageLoading'
 import { LocationOnboarding } from '@/features/onboarding-location'
 import AutoLocationCheck from '@/features/onboarding-location/ui/AutoLocationCheck'
+import DiaryProfileOnboarding from '@/features/onboarding-location/ui/DiaryProfileOnboarding'
+import welcomeStyles from '@/features/onboarding-location/ui/DiaryProfileOnboarding.module.scss'
+import { questionnaireApi } from '@/shared/api/questionnaireApi'
+import { emit, subscribe, OPEN_DAILY_QUESTIONNAIRE, SURVEY_CLOSED, SURVEY_COMPLETED } from '@/shared/lib/dataEvents'
 import ConsentPrompt from '@/features/shared-model-consent/ui/ConsentPrompt'
 
 import s from './MainPage.module.scss'
@@ -28,7 +32,16 @@ const MainPage = () => {
 	const [user, setUser] = useState(() => getCurrentUser())
 	const [sessionVerified, setSessionVerified] = useState(false)
 	const [showLocationOnboarding, setShowLocationOnboarding] = useState(false)
-	const [onboardingDismissed, setOnboardingDismissed] = useState(false)
+	const [onboardingDismissed, setOnboardingDismissed] = useState(() => {
+		const id = getCurrentUser()?.id
+		try { return Boolean(id && localStorage.getItem(`calm:location-later:${id}`) === '1') }
+		catch { return false }
+	})
+	const [profileOnboarding, setProfileOnboarding] = useState('loading')
+	const [profileCheck, setProfileCheck] = useState(0)
+	const [suppressAutoSurvey, setSuppressAutoSurvey] = useState(false)
+	const [deferConsent, setDeferConsent] = useState(false)
+	const [openSurveyFromOnboarding, setOpenSurveyFromOnboarding] = useState(false)
 	const [consentPrompt, setConsentPrompt] = useState(null)
 	const [consentSaving, setConsentSaving] = useState(false)
 	const [consentError, setConsentError] = useState('')
@@ -145,11 +158,50 @@ const MainPage = () => {
 	}
 
 	useEffect(() => {
+		const stopDeferring = () => setDeferConsent(false)
+		const unsubscribeClosed = subscribe(SURVEY_CLOSED, stopDeferring)
+		const unsubscribeCompleted = subscribe(SURVEY_COMPLETED, stopDeferring)
+		return () => { unsubscribeClosed(); unsubscribeCompleted() }
+	}, [])
+	useEffect(() => {
+		if (!openSurveyFromOnboarding || profileOnboarding !== 'done' || !diaryVisible) return
+		emit(OPEN_DAILY_QUESTIONNAIRE)
+		setOpenSurveyFromOnboarding(false)
+	}, [openSurveyFromOnboarding, profileOnboarding, diaryVisible])
+
+	useEffect(() => {
+		if (!sessionVerified || !user?.id) return undefined
+		let active = true
+		questionnaireApi.getProfile().then(profile => {
+			if (!active) return
+			setProfileOnboarding(profile ? 'done' : 'open')
+		}).catch(() => { if (active) setProfileOnboarding('error') })
+		return () => { active = false }
+	}, [sessionVerified, user?.id, profileCheck])
+
+	useEffect(() => {
 		if (!user || onboardingDismissed) return
+		if (profileOnboarding !== 'done') return
 		if (user.latitude == null || user.longitude == null) {
 			setShowLocationOnboarding(true)
 		}
-	}, [user, onboardingDismissed])
+	}, [user, onboardingDismissed, profileOnboarding])
+
+	const completeOnboarding = async choice => {
+		if (user.latitude == null || user.longitude == null) {
+			try { localStorage.setItem(`calm:location-later:${user.id}`, '1') } catch { /* Continue with this session. */ }
+		}
+		if (choice === 'skip') {
+			setSuppressAutoSurvey(true)
+			try {
+				const status = await questionnaireApi.status()
+				localStorage.setItem(`calm:survey-auto-opened:${user.id}`, status.date)
+			} catch { /* The current page still respects the skip choice. */ }
+		} else { setDeferConsent(true); setOpenSurveyFromOnboarding(true) }
+		setOnboardingDismissed(true)
+		setShowLocationOnboarding(false)
+		setProfileOnboarding('done')
+	}
 
 	if (!hasToken) {
 		return <Navigate to="/" replace />
@@ -197,14 +249,25 @@ const MainPage = () => {
 				date={diaryDate}
 				setDate={setDiaryDate}
 				onInitialReady={markReady}
+				autoOpenQuestionnaire={sessionVerified && diaryVisible && !suppressAutoSurvey && !deferConsent && profileOnboarding === 'done' && !showLocationOnboarding && !consentPrompt}
 				onOpenLocationModal={() => {
 					setOnboardingDismissed(false)
 					setShowLocationOnboarding(true)
 				}}
 			/>
 
+			{profileOnboarding === 'open' && <DiaryProfileOnboarding user={user} setUser={setUser} onComplete={completeOnboarding} />}
+			{profileOnboarding === 'error' && <div className={welcomeStyles.backdrop}>
+				<section className={welcomeStyles.panel} role="alert" aria-labelledby="welcome-error-title">
+					<div className={welcomeStyles.nextStep}>
+						<h2 id="welcome-error-title">Не удалось загрузить настройку дневника</h2>
+						<p>Проверьте соединение и повторите попытку.</p>
+						<button type="button" className={welcomeStyles.primary} onClick={() => { setProfileOnboarding('loading'); setProfileCheck(value => value + 1) }}>Повторить</button>
+					</div>
+				</section>
+			</div>}
 			<LocationOnboarding
-				open={showLocationOnboarding}
+				open={showLocationOnboarding && profileOnboarding === 'done'}
 				onClose={() => {
 					setShowLocationOnboarding(false)
 					setOnboardingDismissed(true)
@@ -212,7 +275,7 @@ const MainPage = () => {
 				setUser={setUser}
 			/>
 			<ConsentPrompt
-				status={consentPrompt}
+				status={profileOnboarding === 'done' && !showLocationOnboarding && !deferConsent ? consentPrompt : null}
 				saving={consentSaving}
 				error={consentError}
 				onDecide={decideParticipation}

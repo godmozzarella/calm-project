@@ -8,21 +8,30 @@ import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
+import java.time.*;
 import java.util.List;
 
 @Service
 public class AttackService {
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.context.ApplicationEventPublisher events;
+
 
 	private final AttackRepository repo;
 	private final DailyOutcomeRepository outcomeRepo;
     private final com.calm.feature.location.EventLocationService locations;
+	private final Clock clock;
 
 	@Autowired
 	public AttackService(AttackRepository repo, DailyOutcomeRepository outcomeRepo, com.calm.feature.location.EventLocationService locations) {
+		this(repo,outcomeRepo,locations,Clock.systemUTC());
+	}
+
+	AttackService(AttackRepository repo, DailyOutcomeRepository outcomeRepo, com.calm.feature.location.EventLocationService locations, Clock clock) {
 		this.repo = repo;
         this.locations = locations;
 		this.outcomeRepo = outcomeRepo;
+		this.clock = clock;
 	}
 
     public AttackService(AttackRepository repo, DailyOutcomeRepository outcomes) { this(repo, outcomes, null); }
@@ -52,6 +61,7 @@ public class AttackService {
 		applyRequest(a, req);
 		Attack saved = repo.save(a);
 		clearConflictingNegative(saved);
+        changed(userId);
 		return saved;
 	}
 
@@ -60,15 +70,27 @@ public class AttackService {
 		applyRequest(a, req);
 		Attack saved = repo.save(a);
 		clearConflictingNegative(saved);
+        changed(userId);
 		return saved;
 	}
 
 	public void delete(String userId, String id) {
 		Attack a = getOwned(userId, id);
 		repo.delete(a);
+        changed(userId);
 	}
 
 	private void applyRequest(Attack a, AttackRequest req) {
+		if (req.timezone()!=null) {
+			ZoneId zone;
+			try { zone=ZoneId.of(req.timezone()); }
+			catch (DateTimeException invalid) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Проверьте часовой пояс"); }
+			var now=LocalDateTime.ofInstant(clock.instant(),zone);
+			if (req.startDate().atTime(req.startTime()).isAfter(now))
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Начало не может быть в будущем");
+			if (!req.ongoing() && req.endDate()!=null && req.endTime()!=null && req.endDate().atTime(req.endTime()).isAfter(now))
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Конец не может быть в будущем");
+		}
 		if (!req.ongoing()) {
 			if (req.endDate() == null && req.endTime() != null) {
 				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Укажите дату окончания приступа");
@@ -97,14 +119,12 @@ public class AttackService {
 	}
 
 	private void clearConflictingNegative(Attack attack) {
-		if (outcomeRepo != null && attack.getStartDate() != null) {
-			LocalDate through = attack.getEndDate() != null ? attack.getEndDate()
-					: attack.isOngoing() ? LocalDate.now() : attack.getStartDate();
-			if (through.isBefore(attack.getStartDate())) return;
-			outcomeRepo.findByUserIdAndDateBetween(attack.getUserId(), attack.getStartDate(), through)
-					.stream().map(com.calm.feature.risk.DailyOutcome::getDate)
-					.filter(attack::overlaps)
-					.forEach(day -> outcomeRepo.deleteByUserIdAndDate(attack.getUserId(), day));
-		}
-	}
+        if (outcomeRepo != null && attack.getStartDate() != null) {
+            outcomeRepo.deleteByUserIdAndDate(attack.getUserId(), attack.getStartDate());
+        }
+    }
+
+    private void changed(String userId) {
+        if (events != null) events.publishEvent(new com.calm.feature.risk.DiaryChangedEvent(userId));
+    }
 }

@@ -114,20 +114,21 @@ test('exports detailed outcomes and frozen history under new consent without ide
 	const { source, destination, context, target } = setup()
 	await runInNewContext(script, context)
 	assert.equal(destination.training_examples.rows.length, 2)
-	const row = destination.training_examples.rows[0]
+	const row = destination.training_examples.rows.find(row => row.targetDate === target)
+	const attack = destination.training_examples.rows.flatMap(row => row.diaryOutcome.attacks)[0]
 	assert.equal(row.targetDate, target)
 	assert.equal(row.outcome, 1)
 	assert.equal(row.attackCount, 1)
 	assert.equal(row.forecastTimezone, 'UTC')
 	assert.equal(row.locationGrid, '55.8,37.6')
-	assert.equal(row.diaryOutcome.attacks[0].painType, 'PULSATING')
-	assert.equal(row.diaryOutcome.attacks[0].startTime, '10:15')
-	assert.equal(row.diaryOutcome.attacks[0].endTime, '11:45')
-	assert.equal(row.diaryOutcome.attacks[0].medicationTaken, true)
+	assert.equal(attack.painType, 'PULSATING')
+	assert.equal(attack.startTime, '10:15')
+	assert.equal(attack.endTime, '11:45')
+	assert.equal(attack.medicationTaken, true)
 	assert.equal(row.diaryOutcome.medications[0].effectiveness, 3)
 	assert.equal(row.diaryOutcome.medications[0].dosage, '400 mg')
 	assert.equal(row.diaryOutcome.medications[0].intakeKey.length, 64)
-	assert.equal(row.diaryOutcome.medications[0].linkedAttackKey, row.diaryOutcome.attacks[0].attackKey)
+	assert.equal(row.diaryOutcome.medications[0].linkedAttackKey, attack.attackKey)
 	assert.equal(row.historyDetails.symptomsLast30Days[0].code, 'nausea')
 	assert.equal(row.historyDetails.medicationNamesLast30Days[0].code, 'test medicine')
 	assert.equal(row.binaryPrediction, null)
@@ -138,9 +139,9 @@ test('exports detailed outcomes and frozen history under new consent without ide
 	assert.equal(row.features.pressureDelta24hMmHg, -1.5)
 	assert.equal('pressureHpa' in row.features, false)
 	assert.equal(row.featureSchemaVersion, 3)
-	assert.equal(destination.export_metadata.rows[0].detailSchemaVersion, 1)
+	assert.equal(destination.export_metadata.rows[0].detailSchemaVersion, 2)
 	assert.equal('userId' in row, false)
-	assert.equal('note' in row.diaryOutcome.attacks[0], false)
+	assert.equal('note' in attack, false)
 	assert.equal('note' in row.diaryOutcome.medications[0], false)
 	assert.equal('locationKey' in row, false)
 	assert.equal(source.attacks.rows[0].note, 'private note')
@@ -202,6 +203,7 @@ test('keeps old attacks, symptoms, zones and medicines in the same dataset with 
     assert.equal(fixture.destination.training_examples.rows.length, 2)
     assert.equal(fixture.destination.diary_events.rows.length, 0)
     const row = fixture.destination.training_examples.rows.find(row => row.targetDate === fixture.target)
+    const attack = fixture.destination.training_examples.rows.flatMap(row => row.diaryOutcome.attacks)[0]
     assert.equal(row.outcome, 1)
     assert.equal(row.features.weatherScore, null)
     assert.equal(row.features.overuseRisk, null)
@@ -209,10 +211,10 @@ test('keeps old attacks, symptoms, zones and medicines in the same dataset with 
     assert.equal(row.forecastTimezone, null)
     assert.equal(row.historyDetails, null)
     assert.equal(row.trainingEligible, false)
-    assert.equal(row.diaryOutcome.attacks[0].symptoms[0], 'nausea')
-    assert.equal(row.diaryOutcome.attacks[0].painZones[0].zone, 'forehead')
-    assert.equal(row.diaryOutcome.attacks[0].linkedMedications[0].effectiveness, 3)
-    assert.equal(row.diaryOutcome.medications[0].linkedAttackKey, row.diaryOutcome.attacks[0].attackKey)
+    assert.equal(attack.symptoms[0], 'nausea')
+    assert.equal(attack.painZones[0].zone, 'forehead')
+    assert.equal(attack.linkedMedications[0].effectiveness, 3)
+    assert.equal(row.diaryOutcome.medications[0].linkedAttackKey, attack.attackKey)
     const text = JSON.stringify(fixture.destination.training_examples.rows)
     for (const secret of ['private note', 'private medicine note', 'userId', 'attack-1', 'private-intake-id']) assert.equal(text.includes(secret), false)
     fixture.source.risk_model_participation.rows[0].participating = false
@@ -251,8 +253,10 @@ test('includes ongoing/current attacks and medicine-only days without inventing 
     fixture.source.medications.rows.push({ _id: 'unlinked', userId: 'u1', date: date(key(10)), effectiveness: null })
     await runInNewContext(script, fixture.context)
     const rows = fixture.destination.training_examples.rows
-    assert.equal(rows.find(row => row.targetDate === key(0)).outcome, 1)
-    assert.equal(rows.find(row => row.targetDate === key(0)).dayCompleted, false)
+    assert.equal(rows.some(row => row.targetDate === key(0)), false)
+    const attack = rows.flatMap(row => row.diaryOutcome.attacks)[0]
+    assert.equal(attack.ongoing, true)
+    assert.equal(attack.endDate, null)
     const medicineOnly = rows.find(row => row.targetDate === key(10))
     assert.equal(medicineOnly.outcome, null)
     assert.equal(medicineOnly.diaryOutcome.medications[0].effectiveness, null)
@@ -303,8 +307,9 @@ test('frozen event city survives a profile move and cached archive fills only ab
     } })
     await runInNewContext(script, fixture.context)
     const row = fixture.destination.training_examples.rows.find(row => row.targetDate === fixture.target)
-    assert.equal(row.diaryOutcome.attacks[0].location.locationGrid, '50.0,30.0')
-    assert.equal(row.diaryOutcome.attacks[0].historicalWeather.features.pressureMmHg, 750)
+    const attack = fixture.destination.training_examples.rows.flatMap(row => row.diaryOutcome.attacks)[0]
+    assert.equal(attack.location.locationGrid, '50.0,30.0')
+    assert.equal(row.historicalWeather, null) // two places on the medication day
     assert.equal(row.profileLocation.locationGrid, '55.8,37.6')
     assert.equal(row.weatherLocationsMixed, true) // medicine has a different assumed profile location
     assert.equal(row.features.pressureMmHg, null)
@@ -332,4 +337,76 @@ test('production export failures log safe stack frames without the exception mes
     assert.match(output, /Training export failed during 'prepare training rows': Error/)
     assert.match(output, /Training export stack frames:/)
     assert.equal(output.includes('synthetic private-value'), false)
+})
+
+
+test('a decades-long ongoing attack is stored once, with daily references only for recorded inputs', async () => {
+    const fixture = setup()
+    const sourceAttack = fixture.source.attacks.rows[0]
+    sourceAttack.startDate = date('2000-11-01')
+    sourceAttack.endDate = null
+    sourceAttack.endTime = null
+    sourceAttack.ongoing = true
+    fixture.source.risk_daily_outcomes.rows.splice(0)
+    fixture.source.medications.rows.splice(0)
+    await runInNewContext(script, fixture.context)
+    const rows = fixture.destination.training_examples.rows
+    assert.equal(rows.length, 2) // start plus the one actual snapshot, not 26 years of invented rows
+    const details = rows.flatMap(row => row.diaryOutcome.attacks)
+    assert.equal(details.length, 1)
+    assert.equal(details[0].startDate, '2000-11-01')
+    assert.equal(details[0].endDate, null)
+    const observedDay = rows.find(row => row.targetDate === fixture.target)
+    assert.equal(observedDay.outcome, 1)
+    assert.equal(observedDay.attackCount, 1)
+    assert.equal(observedDay.trainingEligible, true)
+    assert.equal(observedDay.diaryOutcome.attacks.length, 0)
+    assert.equal(observedDay.diaryOutcome.attackKeys[0], details[0].attackKey)
+    fixture.source.risk_training_input_snapshots.rows.splice(0)
+    await runInNewContext(script, fixture.context)
+    assert.equal(fixture.destination.training_examples.rows.length, 1)
+})
+
+test('completed intervals keep their true end date and separate attacks are never merged', async () => {
+    const fixture = setup()
+    fixture.source.risk_training_input_snapshots.rows.splice(0)
+    fixture.source.risk_daily_outcomes.rows.splice(0)
+    fixture.source.medications.rows.splice(0)
+    const first = fixture.source.attacks.rows[0]
+    first.startDate = date('2000-11-01')
+    first.endDate = date('2020-11-01')
+    fixture.source.attacks.rows.push({ ...first, _id: 'separate-attack' })
+    await runInNewContext(script, fixture.context)
+    const rows = fixture.destination.training_examples.rows
+    assert.equal(rows.length, 1)
+    const attacks = rows[0].diaryOutcome.attacks
+    assert.equal(attacks.length, 2)
+    assert.notEqual(attacks[0].attackKey, attacks[1].attackKey)
+    assert.equal(attacks[0].startDate, '2000-11-01')
+    assert.equal(attacks[0].endDate, '2020-11-01')
+    first.endDate = date('2021-01-01')
+    await runInNewContext(script, fixture.context)
+    assert.equal(fixture.destination.training_examples.rows[0].diaryOutcome.attacks[0].endDate, '2021-01-01')
+})
+
+
+test('new-onset marks are never silently reinterpreted as pain-free labels in legacy v3', async () => {
+    const fixture = setup()
+    fixture.source.attacks.rows.splice(0)
+    fixture.source.risk_daily_outcomes.rows[0].outcomeDefinition = 'new-attack-onset-local-day-v1'
+    await runInNewContext(script, fixture.context)
+    const row = fixture.destination.training_examples.rows.find(r => r.targetDate === fixture.target)
+    assert.equal(row.outcome, null) // the medicine entry is retained, pain presence remains unknown
+    assert.equal(row.trainingEligible, false)
+})
+
+test('ISO local-time text takes precedence over BSON Dates and malformed time stays null', async () => {
+    const fixture = setup()
+    fixture.source.attacks.rows[0].startTime = new Date('2026-11-03T07:15:00Z')
+    fixture.source.attacks.rows[0].startTimeText = '10:15'
+    fixture.source.attacks.rows[0].endTime = 'Sun N'
+    await runInNewContext(script, fixture.context)
+    const attack = fixture.destination.training_examples.rows.flatMap(r => r.diaryOutcome.attacks)[0]
+    assert.equal(attack.startTime, '10:15')
+    assert.equal(attack.endTime, null)
 })

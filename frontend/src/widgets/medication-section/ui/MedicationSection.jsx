@@ -1,25 +1,32 @@
 import { useState, useCallback, useEffect } from 'react'
+import AddIcon from '@mui/icons-material/Add'
 
-import { AddIcon, DeleteIcon, EditIcon } from '@/shared/ui/icons'
-import { AddMedicationForm, useAddMedication } from '@/features/add-medication'
+import { AddMedicationForm, formatAttackOption, groupMedicationIntakes, useAddMedication } from '@/features/add-medication'
 import { EFFECTIVENESS_LABELS, OVERUSE_THRESHOLD } from '@/entities/medication'
-import { formatAttackTime, getAttackTypeLabel, sortAttacksNewest } from '@/entities/attack'
+import { formatAttackTime, sortAttacksNewest } from '@/entities/attack'
 import { attackApi, medicationApi } from '@/shared/api'
 import { subscribe, ATTACKS_CHANGED, MEDICATIONS_CHANGED } from '@/shared/lib/dataEvents'
 
 import s from './MedicationSection.module.scss'
+
+const MONTH_SHORT = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
+const shortDate = iso => {
+	const [, month, day] = String(iso ?? '').split('-').map(Number)
+	return day && month >= 1 && month <= 12 ? `${day} ${MONTH_SHORT[month - 1]}` : ''
+}
 
 
 const MedicationSection = ({ date, onInitialReady }) => {
 	const [medications, setMedications] = useState([])
 	const [attacks,     setAttacks]     = useState([])
 	const [overuseDays, setOveruseDays] = useState(0)
+	const [ratingOpenId, setRatingOpenId] = useState(null)
 
 	const reload = useCallback(() => {
 		const [year, month] = date.split('-').map(Number)
 		return Promise.allSettled([
 			medicationApi.getByDate(date).then(setMedications),
-			attackApi.getByDate(date).then(list => setAttacks(sortAttacksNewest(list))),
+			attackApi.getAll().then(list => setAttacks(sortAttacksNewest(list))),
 			medicationApi.getOveruseDays(year, month).then(setOveruseDays),
 		])
 	}, [date])
@@ -37,13 +44,12 @@ const MedicationSection = ({ date, onInitialReady }) => {
 	}, [reload])
 
 	const {
-		open, step, selected, meta, error, loading, editingIntake,
+		open, step, selected, meta, error, deleteError, loading, deleting, editingIntake,
 		openForm, openEditForm, closeForm,
 		toggleItem, isSelected, clearSelection, setItemDosage,
-		setMetaField, nextStep, prevStep, submit,
-	} = useAddMedication({ date, onSuccess: reload })
+		setMetaField, nextStep, prevStep, submit, remove,
+	} = useAddMedication({ date, attacks, onSuccess: reload })
 
-	const handleDelete = id => medicationApi.delete(id)
 	const handleCardClick = event => {
 		if (!event.target.closest('button, a, input, select, textarea')) openForm()
 	}
@@ -51,7 +57,10 @@ const MedicationSection = ({ date, onInitialReady }) => {
 	const handleEffectiveness = (id, value) => {
 		const med = medications.find(m => m.id === id)
 		if (!med) return
-		medicationApi.update(id, { ...med, effectiveness: med.effectiveness === value ? null : value })
+		const effectiveness = med.effectiveness === value ? null : value
+		setRatingOpenId(null)
+		setMedications(previous => previous.map(item => item.id === id ? { ...item, effectiveness } : item))
+		medicationApi.update(id, { ...med, effectiveness }).catch(reload)
 	}
 
 	const linkedAttack = attackId => attacks.find(a => a.id === attackId)
@@ -61,9 +70,8 @@ const MedicationSection = ({ date, onInitialReady }) => {
 			<div className={s.card} onClick={handleCardClick} data-help="Препараты: здесь можно записать приём лекарства и позже оценить, помогло ли оно.">
 				<div className={s.cardHeader}>
 					<h2 className={s.title}>Препараты</h2>
-					<button className={s.addBtn} onClick={openForm} aria-label="Добавить препарат" data-help="Записать препарат, который вы приняли в выбранный день, его дозировку и время приёма.">
+					<button type="button" className={s.addBtn} onClick={openForm} aria-label="Добавить препарат" data-help="Записать препарат, который вы приняли в выбранный день, его дозировку и время приёма.">
 						<AddIcon fontSize="small" />
-						<span>Добавить</span>
 					</button>
 				</div>
 
@@ -82,64 +90,57 @@ const MedicationSection = ({ date, onInitialReady }) => {
 						</div>
 					) : (
 						<ul className={s.list}>
-							{medications.map(med => {
-								const attack = med.attackId ? linkedAttack(med.attackId) : null
+							{groupMedicationIntakes(medications).map(intake => {
+								const first = intake.medications[0]
+								const attack = first.attackId ? linkedAttack(first.attackId) : null
 								return (
-									<li key={med.id} className={s.medCard}>
+									<li key={intake.id} className={s.medCard}>
+										<button type="button" className={s.medCardOpen}
+											onClick={() => openEditForm(first, intake.medications)}
+											aria-label={`Редактировать приём: ${intake.medications.map(item => item.name).join(', ')}, ${shortDate(first.date)} ${formatAttackTime(first.time)}`}
+											data-help="Открыть редактирование этого приёма препаратов." />
 										<div className={s.medTop}>
 											<div className={s.medMeta}>
-												<span className={s.medName}>{med.name}</span>
-												{med.dosage && (
-													<span className={s.medDosage}>{med.dosage}</span>
-												)}
-											</div>
-											<div className={s.medRight}>
-												<span className={s.medTime}>{formatAttackTime(med.time)}</span>
-												<button
-													className={s.editBtn}
-													onClick={() => openEditForm(med, medications)}
-													aria-label="Редактировать приём препаратов"
-													title="Изменить все препараты этого приёма"
-												data-help="Изменить препараты и время этого приёма."
-												>
-													<EditIcon style={{ fontSize: '1rem' }} />
-												</button>
-												<button
-													className={s.deleteBtn}
-													onClick={() => handleDelete(med.id)}
-													aria-label="Удалить"
-												data-help="Удалить эту запись о приёме препарата."
-												>
-													<DeleteIcon style={{ fontSize: '1rem' }} />
-												</button>
+												<span className={s.medDate}>{shortDate(first.date)}</span>
+												<span className={s.medTime}>{formatAttackTime(first.time)}</span>
 											</div>
 										</div>
 
+										<div className={s.medDetails}>
+											<div className={s.medicationList}>
+												{intake.medications.map(med => (
+													<div key={med.id} className={s.medicationItem}>
+														<div className={s.medicationRow}>
+															<span className={s.medName}>{med.name}{med.dosage ? ` - ${med.dosage}` : ''}</span>
+															<button type="button" className={s.ratingTrigger}
+																data-effectiveness={med.effectiveness ?? undefined}
+																aria-expanded={ratingOpenId === med.id}
+																aria-label={`${med.name}: ${med.effectiveness ? EFFECTIVENESS_LABELS[med.effectiveness] : 'Оценить'}`}
+																onClick={() => setRatingOpenId(current => current === med.id ? null : med.id)}>
+																{med.effectiveness ? EFFECTIVENESS_LABELS[med.effectiveness] : 'Оценить'}
+															</button>
+														</div>
+														{ratingOpenId === med.id && <div className={s.ratingChoices}>
+															{[1, 2, 3].map(value => (
+																<button key={value} type="button" className={`${s.effectBtn} ${med.effectiveness === value ? s.effectBtnActive : ''}`}
+																	data-effectiveness={value}
+																	aria-pressed={med.effectiveness === value}
+																	onClick={() => handleEffectiveness(med.id, value)}
+																	data-help={`Оценить действие препарата «${med.name}»: ${EFFECTIVENESS_LABELS[value]}. Повторный выбор снимет оценку.`}>
+																	{EFFECTIVENESS_LABELS[value]}
+																</button>
+															))}
+														</div>}
+													</div>
+												))}
+											</div>
 										{attack && (
 											<div className={s.attackLink}>
-												Приступ {attack.startDate} {formatAttackTime(attack.startTime)}
-												{attack.endTime ? ` — ${formatAttackTime(attack.endTime)}` : attack.ongoing ? ' — продолжается' : ''}
-												{' · '}{getAttackTypeLabel(attack.type)}
-												{' · '}{attack.intensity}/10
+												{formatAttackOption(attack)}
 											</div>
 										)}
-
-										<div className={s.effectivenessRow}>
-											{[1, 2, 3].map(v => (
-												<button
-													key={v}
-													className={`${s.effectBtn} ${med.effectiveness === v ? s.effectBtnActive : ''}`}
-											data-effectiveness={v}
-													aria-pressed={med.effectiveness === v}
-													onClick={() => handleEffectiveness(med.id, med.effectiveness === v ? null : v)}
-													data-help={`Оценить действие препарата: «${EFFECTIVENESS_LABELS[v]}». Повторное нажатие снимет оценку.`}
-												>
-													{EFFECTIVENESS_LABELS[v]}
-												</button>
-											))}
+											{first.note && <p className={s.note}>{first.note}</p>}
 										</div>
-
-										{med.note && <p className={s.note}>{med.note}</p>}
 									</li>
 								)
 							})}
@@ -154,7 +155,9 @@ const MedicationSection = ({ date, onInitialReady }) => {
 				selected={selected}
 				meta={meta}
 				error={error}
+				deleteError={deleteError}
 				loading={loading}
+				deleting={deleting}
 				editing={!!editingIntake}
 				attacks={attacks}
 				onClose={closeForm}
@@ -166,6 +169,7 @@ const MedicationSection = ({ date, onInitialReady }) => {
 				onNext={nextStep}
 				onBack={prevStep}
 				onSubmit={submit}
+				onDelete={remove}
 			/>
 		</>
 	)

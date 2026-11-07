@@ -75,6 +75,9 @@
 }
 
 .title {
+	flex: 1;
+	min-width: 0;
+	overflow-wrap: anywhere;
 	@include fluid-text(17, 15);
 	font-weight: $fw-semibold;
 	color: $fc-main;
@@ -99,6 +102,8 @@
 /* ── Scrollable body ── */
 .body {
 	overflow-y: auto;
+	overflow-x: hidden;
+	overscroll-behavior: contain;
 	flex: 1;
 	min-height: 0; /* без этого flex-ребёнок не сжимается, и .sheet превышает max-height */
 	padding: 0.25rem 1.25rem 0.5rem;
@@ -225,7 +230,7 @@
 }
 
 .chip {
-	min-height: 2.5rem;
+	min-height: 2.75rem;
 	padding: 0.45rem 0.875rem;
 	border-radius: 0.75rem;
 	border: 0;
@@ -260,8 +265,9 @@
 /* ── Time ── */
 .timeRow {
 	display: flex;
-	gap: 1rem;
+	gap: 0.5rem;
 	width: 100%;
+	align-items: flex-start;
 }
 
 .timeField {
@@ -272,10 +278,57 @@
 	min-width: 0;
 	width: 100%;
 
-	span {
+	> span {
 		@include fluid-text(11, 10);
 		color: $fc-secondary;
 	}
+}
+
+.timeWheels {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.15rem;
+	width: 100%;
+	max-width: 116px;
+	margin-inline: auto;
+	padding: 0.3rem 0;
+
+	> div { flex: 1 1 0; min-width: 0; }
+	:global([data-wheel]) { width: 100%; height: 116px; }
+	:global([data-wheel]:focus-visible) { outline: none; }
+	:global([data-wheel] > div:first-child) {
+		top: calc(50% - 18px);
+		left: 3px;
+		right: 3px;
+		height: 36px;
+		border: 0;
+		border-radius: 0.5rem;
+		background: $quiet-surface-raised;
+	}
+	:global([data-wheel]:focus-visible > div:first-child) {
+		outline: 2px solid var(--fc-contrast);
+		outline-offset: 2px;
+	}
+	:global([data-wheel] span) { font-family: inherit; font-size: 16px; font-weight: $fw-semibold; }
+	:global([data-wheel] input) {
+		top: calc(50% - 18px);
+		left: 4px;
+		width: calc(100% - 8px);
+		height: 36px;
+		background: $quiet-surface-raised;
+		font-family: inherit;
+		font-size: 16px;
+		font-weight: $fw-semibold;
+	}
+}
+
+.timeSeparator {
+	align-self: center;
+	flex: 0 0 auto;
+	margin-bottom: 1.4rem;
+	color: $fc-secondary;
+	font-size: 1rem;
 }
 
 .timeInput {
@@ -286,10 +339,13 @@
 	padding: 0.5rem 0.75rem;
 	@include fluid-text(14, 12);
 	width: 100%;
+	height: 2.75rem;
 	display: block;
 	min-width: 0;
 	box-sizing: border-box;
 	font-size: 16px;
+	font-family: inherit;
+	font-weight: $fw-semibold;
 	cursor: pointer;
 	transition: background-color 0.15s ease;
 
@@ -353,8 +409,8 @@
 }
 
 @media (max-width: 480px) {
-	.timeRow { flex-direction: column; gap: .75rem; width: 100%; }
-	.timeField { width: 100%; min-width: 0; align-items: stretch; }
+	.timeRow { gap: .5rem; }
+	.timeField { min-width: 0; align-items: stretch; }
 	.timeInput {
 		width: 100% !important;
 		max-width: 100%;
@@ -364,18 +420,27 @@
 	.ongoingToggle { width: 100%; min-height: 2.75rem; }
 }
 
+@media (max-width: 390px) {
+	.timeRow { flex-direction: column; }
+}
+
 @supports (-webkit-touch-callout: none) {
 	@media (max-width: 480px) {
 		.timeInput {
 			-webkit-appearance: none;
 			appearance: none;
-			text-align: center;
+			display: flex;
+			align-items: center;
+			text-align: left;
 		}
 
 		.timeInput::-webkit-date-and-time-value {
-			min-width: 100%;
-			text-align: center;
+			min-width: 0;
+			width: 100%;
+			line-height: 1.25;
+			text-align: left;
 		}
+		.timeInput::-webkit-datetime-edit { padding: 0; }
 	}
 }
 
@@ -403,7 +468,10 @@
 
 /* ── Footer ── */
 .footer {
-	padding: 0.875rem 1.25rem 1.25rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 0.875rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom));
 	border-top: 1px solid var(--surface-hover);
 	flex-shrink: 0;
 }
@@ -422,3 +490,28 @@
 	.chip:hover { background: $quiet-surface; color: $fc-secondary; }
 	.chipActive:hover { background: var(--selected-control-bg); color: var(--selected-control-fg); }
 }
+
+.deleteBtn {
+	width: 100%;
+	min-height: 2.75rem;
+	padding: 0.65rem 1rem;
+	border: 0;
+	border-radius: 0.75rem;
+	background: $quiet-surface;
+	color: $error-color;
+	cursor: pointer;
+	@include fluid-text(14, 12);
+	&:hover:not(:disabled) { background: color-mix(in srgb, #{$error-color} 10%, var(--surface-strong)); }
+	&:disabled { opacity: 0.45; cursor: wait; }
+	&:focus-visible { outline: 2px solid $error-color; outline-offset: 2px; }
+}
+
+.anotherBtn {
+  min-height:2.75rem;padding:.5rem .8rem;border:0;border-radius:.75rem;
+  background:$quiet-surface;color:$fc-secondary;cursor:pointer;
+  @include fluid-text(14,12);
+  &:hover:not(:disabled) {background:$quiet-surface-raised;color:$fc-main;}
+  &:disabled {opacity:.45;cursor:wait;}
+  &:focus-visible {outline:2px solid $fc-contrast;outline-offset:2px;}
+}
+@media(prefers-reduced-motion:reduce) {.sheet{animation:none}}

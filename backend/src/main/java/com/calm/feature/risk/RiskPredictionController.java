@@ -54,7 +54,7 @@ public class RiskPredictionController {
 		return dailyOutcomeService.get(principal.getUserId(), date);
 	}
 
-	@PostMapping("/outcome/no-attack")
+	@PostMapping({"/outcome/no-new-attack", "/outcome/no-attack"})
 	public DailyOutcomeResponse confirmNoAttack(@AuthenticationPrincipal AuthenticatedUser principal,
 			@RequestBody ConfirmNoAttackRequest request) {
 		return dailyOutcomeService.confirmNoAttack(principal.getUserId(), request.date(), request.timezone());

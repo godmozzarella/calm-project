@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { BackIcon, CalmSparkIcon, ChevronLeftIcon, ChevronRightIcon, LocationOnIcon } from '@/shared/ui/icons'
-import { statsApi } from '@/shared/api'
-import { subscribe, ATTACKS_CHANGED, OUTCOMES_CHANGED } from '@/shared/lib/dataEvents'
+import { questionnaireApi } from '@/shared/api/questionnaireApi'
+import { emit, subscribe, SURVEY_COMPLETED, OPEN_DAILY_QUESTIONNAIRE } from '@/shared/lib/dataEvents'
 import { midnight } from '../lib/date'
-import { streakIncrease, streakSnapshotKey } from '../lib/streakAnimation'
 
 import s from './DayBar.module.scss'
 
@@ -25,9 +23,6 @@ const MONTHS_SHORT = [
 	'июл', 'авг', 'сен', 'окт', 'ноя', 'дек',
 ]
 
-const diffDays = (a, b) =>
-	Math.round((b.getTime() - a.getTime()) / 86_400_000)
-
 const dayWord = count => {
 	const lastTwo = count % 100
 	if (lastTwo >= 11 && lastTwo <= 14) return 'дней'
@@ -46,16 +41,6 @@ const getWeekDays = date => {
 	})
 }
 
-const relativeLabel = date => {
-	const today = midnight()
-	const diff = diffDays(date, today)
-	if (diff === 0) return 'Сегодня'
-	if (diff === 1) return 'Вчера'
-	if (diff === 2) return 'Позавчера'
-	if (diff > 2) return `${diff} ${dayWord(diff)} назад`
-	return null
-}
-
 const isSameDay = (a, b) =>
 	a.getDate() === b.getDate() &&
 	a.getMonth() === b.getMonth() &&
@@ -63,71 +48,25 @@ const isSameDay = (a, b) =>
 
 const DayBar = ({ date, setDate, city, userId }) => {
 	const [currentStreak, setCurrentStreak] = useState(0)
-	const [streakGain, setStreakGain] = useState(0)
-	const [streakInfoOpen, setStreakInfoOpen] = useState(false)
-	const animationTimer = useRef(null)
-	const streakButtonRef = useRef(null)
-	const streakCloseRef = useRef(null)
+	const [earnedToday, setEarnedToday] = useState(false)
+	const [flashKey, setFlashKey] = useState(0)
 	const streakRequest = useRef(0)
-	const streakPreviewApplied = useRef(false)
-	const loadStreak = useCallback(() => {
+	const loadStreak = useCallback(event => {
+		if(!userId) return
 		const request = ++streakRequest.current
-		statsApi.getSummary('month').then(data => {
+		const response = Number.isInteger(event?.detail?.currentStreak) ? Promise.resolve(event.detail) : questionnaireApi.status()
+		response.then(data => {
 			if (request !== streakRequest.current) return
-			const count = data.kpis?.currentStreak ?? 0
-			let previewIncrease = false
-			if (!streakPreviewApplied.current) {
-				try {
-					previewIncrease = sessionStorage.getItem('calm_streak_preview') === '1'
-					if (previewIncrease) sessionStorage.removeItem('calm_streak_preview')
-				} catch { /* Preview is optional when browser storage is unavailable. */ }
-				streakPreviewApplied.current = true
-			}
-			setCurrentStreak(count + (previewIncrease ? 1 : 0))
-			if (!userId) return
-			const key = streakSnapshotKey(userId)
-			let previous = null
-			try {
-				previous = JSON.parse(localStorage.getItem(key) || 'null')
-			} catch { /* Ignore an unavailable or invalid previous snapshot. */ }
-			try { localStorage.setItem(key, JSON.stringify({ count })) } catch { /* Storage may be disabled. */ }
-			const increase = previewIncrease ? 1 : streakIncrease(previous, count)
-			window.clearTimeout(animationTimer.current)
-			setStreakGain(increase)
-			if (increase > 0) animationTimer.current = window.setTimeout(() => setStreakGain(0), 1600)
+			const count = data.currentStreak ?? 0
+			setCurrentStreak(count)
+			setEarnedToday(event?.detail?.completedToday === true || Boolean(data.today))
+			if(event?.type === SURVEY_COMPLETED) setFlashKey(key=>key+1)
 		}).catch(() => {})
 	}, [userId])
 	useEffect(() => { loadStreak() }, [loadStreak])
-	useEffect(() => subscribe(ATTACKS_CHANGED, loadStreak), [loadStreak])
-	useEffect(() => subscribe(OUTCOMES_CHANGED, loadStreak), [loadStreak])
-	useEffect(() => () => window.clearTimeout(animationTimer.current), [])
-	useEffect(() => {
-		if (!streakInfoOpen) return undefined
-		const appRoot = document.getElementById('root')
-		const wasInert = appRoot?.inert
-		const previousOverflow = document.body.style.overflow
-		const returnFocus = streakButtonRef.current
-		if (appRoot) appRoot.inert = true
-		document.body.style.overflow = 'hidden'
-		streakCloseRef.current?.focus()
-		const closeOnEscape = event => {
-			if (event.key === 'Escape') setStreakInfoOpen(false)
-			if (event.key === 'Tab') {
-				event.preventDefault()
-				streakCloseRef.current?.focus()
-			}
-		}
-		window.addEventListener('keydown', closeOnEscape)
-		return () => {
-			window.removeEventListener('keydown', closeOnEscape)
-			if (appRoot) appRoot.inert = wasInert
-			document.body.style.overflow = previousOverflow
-			returnFocus?.focus()
-		}
-	}, [streakInfoOpen])
+	useEffect(() => subscribe(SURVEY_COMPLETED, loadStreak), [loadStreak])
 	const today = midnight()
 	const isToday = date.getTime() === today.getTime()
-	const label = relativeLabel(date)
 	const weekDays = getWeekDays(date)
 
 	const shift = days => {
@@ -149,13 +88,8 @@ const DayBar = ({ date, setDate, city, userId }) => {
 				<span className={s.month}>{MONTHS_SHORT[date.getMonth()]}</span>
 			</div>
 
-			<div className={s.center}>
+			<div className={`${s.center} ${!city ? s.centerNoCity : ''}`}>
 				<span className={s.weekday}>{WEEKDAYS_FULL[date.getDay()]}</span>
-				{label && (
-					<span className={`${s.label} ${isToday ? s.labelToday : s.labelPast}`}>
-						{label}
-					</span>
-				)}
 				{city && (
 					<span className={s.city} title={city}>
 						<LocationOnIcon style={{ fontSize: '0.95rem' }} />
@@ -169,32 +103,20 @@ const DayBar = ({ date, setDate, city, userId }) => {
 				)}
 			</div>
 
-			<div className={`${s.streak} ${streakGain ? s.streakIncreased : ''}`}>
+			<div className={`${s.streak} ${earnedToday ? s.streakEarned : ''} ${flashKey ? s.streakFlashed : ''}`}>
 				<button
-					ref={streakButtonRef}
+					data-streak-target="true"
+					data-streak-lit={earnedToday}
 					className={s.streakButton}
 					type="button"
-					data-help={`Серия без приступов: ${currentStreak} ${dayWord(currentStreak)} подряд. Нажмите, чтобы узнать, как она считается.`}
-					aria-label={`Серия без приступов: ${currentStreak} дней. Открыть памятку`}
-					aria-expanded={streakInfoOpen}
-					aria-controls="streak-info"
-					onClick={() => setStreakInfoOpen(open => !open)}
+					data-help={`Серия чекина: ${currentStreak} ${dayWord(currentStreak)} подряд. Открыть карточки.`}
+					aria-label={`Серия чекина: ${currentStreak} ${dayWord(currentStreak)}. Открыть карточки`}
+					onClick={() => emit(OPEN_DAILY_QUESTIONNAIRE)}
 				>
-					<CalmSparkIcon className={s.streakIcon} aria-hidden="true" />
-				<strong key={currentStreak}>{currentStreak}</strong>
-				{streakGain > 0 && <span className={s.streakGain} aria-hidden="true">+{streakGain}</span>}
+					<CalmSparkIcon key={`streak-icon-${flashKey}`} className={s.streakIcon} aria-hidden="true" />
+				<strong>{currentStreak}</strong>
 				</button>
 			</div>
-			{streakInfoOpen && createPortal(
-				<div className={s.streakOverlay}>
-					<div className={s.streakInfo} id="streak-info" role="dialog" aria-modal="true" aria-labelledby="streak-info-title">
-						<strong id="streak-info-title">Что такое серия дней без приступа?</strong>
-						<p>Это количество дней подряд без приступа, которые вы отметили в дневнике.</p>
-						<p>Если приступ был или вы не отметили день, серия прерывается. Сегодняшнюю отметку можно изменить, если приступ начнётся позже.</p>
-						<button ref={streakCloseRef} className={s.streakInfoClose} type="button" onClick={() => setStreakInfoOpen(false)} data-help="">Понятно</button>
-					</div>
-				</div>, document.body,
-			)}
 
 			<div className={s.weekStrip}>
 				{weekDays.map(d => {

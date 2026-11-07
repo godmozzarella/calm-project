@@ -73,6 +73,16 @@
     if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10)
     return null
   }
+  // New writes carry ISO local-time text; legacy BSON Date requires an explicit storage zone.
+  const timeKey = (text, legacy) => {
+    const value = text ?? legacy
+    if (typeof value === 'string' && /^\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(value)) return value.slice(0, 5)
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+      return new Intl.DateTimeFormat('en-GB', { timeZone: process.env.CALM_TIME_STORAGE_ZONE || 'UTC',
+        hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(value)
+    }
+    return null
+  }
   const localDateKey = (instant, timezone) => {
     const parts = new Intl.DateTimeFormat('en-CA', {
       timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit',
@@ -180,6 +190,8 @@
   if (userIds.length > 0) {
     phase = 'read labeled days and forecasts'
     for (const outcome of source.risk_daily_outcomes.find({ userId: { $in: userIds } }).toArray()) {
+      // A no-new-start mark does not establish absence of pain for the legacy presence target.
+      if (outcome.outcomeDefinition === 'new-attack-onset-local-day-v1') continue
       const key = dateKey(outcome.date)
       if (key) {
         noAttackDays.add(`${outcome.userId}\u001f${key}`)
@@ -232,7 +244,7 @@
     }
   }
 
-  // Candidate days come from the entire diary, not only from forecast snapshots.
+  // Keep diary entry dates and actual snapshot dates, never enumerate attack intervals.
   const candidateKeys = new Set()
   const addDay = (userId, day) => {
     const key = `${userId}\u001f${day ?? 'UNKNOWN_DATE'}`
@@ -244,16 +256,12 @@
     })
   }
   const utcToday = now.toISOString().slice(0, 10)
+  for (const input of latestByUserDay.values()) {
+    if (input.day && input.day <= utcToday) candidateKeys.add(`${input.userId}\u001f${input.day}`)
+  }
   for (const [userId, attacks] of attacksByUser.entries()) {
     for (const attack of attacks) {
       addDay(userId, attack.start)
-      if (!attack.start) continue
-      const end = attack.end && attack.end < utcToday ? attack.end : utcToday
-      const cursor = new Date(`${attack.start}T00:00:00Z`)
-      while (!Number.isNaN(cursor.getTime()) && cursor.toISOString().slice(0, 10) <= end) {
-        addDay(userId, cursor.toISOString().slice(0, 10))
-        cursor.setUTCDate(cursor.getUTCDate() + 1)
-      }
     }
   }
   for (const key of noAttackDays) {
@@ -291,6 +299,7 @@
   }
 
   const examples = []
+  const attackLocationsByRow = new Map()
   phase = 'prepare training rows'
   const includedParticipants = new Set()
   for (const { prediction, day, userId, timezone, locationGrid: grid, historyDetails, snapshotTiming, completePreDay, issuedAt } of latestByUserDay.values()) {
@@ -308,7 +317,7 @@
     const today = timezone ? localDateKey(now, timezone) : utcToday
     const dayCompleted = day == null ? null : day < today ? true : false
     const medicationDetails = medication => ({
-      date: medication.day, time: medication.time == null ? null : String(medication.time).slice(0, 5),
+      date: medication.day, time: timeKey(medication.timeText, medication.time),
       location: resolveLocation(userId, medication),
       name: trainingMedicationName(medication), dosage: medication.dosage ?? null,
       category: medication.category ?? null, recordedAt: medication.createdAt ?? null,
@@ -318,14 +327,15 @@
       purpose: medication.purpose ?? null, effectiveness: medication.effectiveness ?? null,
       linkedAttackKey: medication.attackId == null ? null : attackKey(userId, medication.attackId),
     })
-    const attacks = dayAttacks.map(attack => ({
+    // Canonical details appear once; other observed days carry only references.
+    const attacks = dayAttacks.filter(attack => attack.start === day).map(attack => ({
       attackKey: attackKey(userId, attack._id),
       intensity: attack.intensity ?? null,
       painType: attack.type ?? null,
       startDate: attack.start,
-      startTime: attack.startTime == null ? null : String(attack.startTime).slice(0, 5),
+      startTime: timeKey(attack.startTimeText, attack.startTime),
       endDate: dateKey(attack.endDate),
-      endTime: attack.endTime == null ? null : String(attack.endTime).slice(0, 5),
+      endTime: timeKey(attack.endTimeText, attack.endTime),
       ongoing: typeof attack.ongoing === 'boolean' ? attack.ongoing : null,
       symptoms: Array.isArray(attack.symptoms) ? attack.symptoms : null,
       triggers: Array.isArray(attack.triggers) ? attack.triggers : null,
@@ -337,7 +347,7 @@
         medication.attackId != null && String(medication.attackId) === String(attack._id)),
     }))
     const medications = dayMedications.map(medicationDetails)
-    examples.push({
+    const row = {
       _id: null,
       generation: null,
       participantKey: participantKey(userId),
@@ -351,7 +361,7 @@
       forecastTimezone: timezone,
       profileLocation: resolveLocation(userId, { day }),
       locationGrid: grid,
-      diaryOutcome: { attacks, medications },
+      diaryOutcome: { attacks, medications, attackKeys: dayAttacks.map(attack => attackKey(userId, attack._id)) },
       historyDetails: safeHistoryDetails(historyDetails, userId),
       binaryPrediction: null,
       predictionMatched: null,
@@ -380,7 +390,9 @@
         meanAttackIntensityLast30Days: features.meanAttackIntensityLast30Days ?? null,
         daysSinceLastAttackStart: features.daysSinceLastAttackStart ?? null,
       },
-    })
+    }
+    examples.push(row)
+    attackLocationsByRow.set(row, dayAttacks.map(attack => resolveLocation(userId, attack)))
     includedParticipants.add(participantKey(userId))
   }
 
@@ -396,7 +408,7 @@
   }
   const requests = new Map()
   for (const row of examples) {
-    const events = [...row.diaryOutcome.attacks, ...row.diaryOutcome.medications]
+    const events = [...attackLocationsByRow.get(row).map(location => ({ location })), ...row.diaryOutcome.medications]
     if (!events.length) events.push({ location: row.profileLocation })
     for (const event of events) {
       const grid = event.location && event.location.locationGrid
@@ -425,7 +437,8 @@
   }
   for (const row of examples) {
     const allEvents = [...row.diaryOutcome.attacks, ...row.diaryOutcome.medications]
-    const grids = new Set(allEvents.map(event => event.location && event.location.locationGrid).filter(Boolean))
+    const grids = new Set([...attackLocationsByRow.get(row), ...allEvents.map(event => event.location)]
+      .map(location => location && location.locationGrid).filter(Boolean))
     if (!grids.size && row.profileLocation) grids.add(row.profileLocation.locationGrid)
     row.weatherLocationsMixed = grids.size > 1
     for (const event of allEvents) {
@@ -478,9 +491,9 @@
     featureSchemaVersion,
     scoringVersion,
     outcomeDefinition: 'attack-present-anytime-v1',
-    detailSchemaVersion: 1,
+    detailSchemaVersion: 2,
     exampleCount: examples.length,
-    coverageVersion: 'all-diary-days-v1',
+    coverageVersion: 'diary-entry-and-snapshot-days-v2',
     historicalWeatherRequests: weatherRequests, historicalWeatherFailures: weatherFailures,
     historicalWeatherPendingGroups: Math.max(0, requests.size - weatherRequests),
     trainingEligibleCount: examples.filter(row => row.trainingEligible).length,

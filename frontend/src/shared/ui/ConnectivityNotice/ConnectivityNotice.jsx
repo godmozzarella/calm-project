@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import CloseIcon from '@mui/icons-material/Close'
 import ErrorNotice from '../ErrorNotice/ErrorNotice'
 import s from './ConnectivityNotice.module.scss'
@@ -20,13 +21,13 @@ const ConnectivityNotice = () => {
 		}
 	}, [])
 	if (!issue) return null
-	return <div className={s.banner}>
+	return createPortal(<div className={s.banner}>
 		<ErrorNotice
 			title={navigator.onLine ? 'Сервер недоступен' : 'Нет подключения к интернету'}
 			message={navigator.onLine ? 'Данные могут не обновляться. Проверьте соединение и повторите действие.' : 'Данные могут не обновляться. Подключитесь к сети и повторите действие.'}
 		/>
 		<button type="button" className={s.close} onClick={() => setIssue(false)} aria-label="Закрыть сообщение"><CloseIcon fontSize="small" /></button>
-	</div>
+	</div>, document.body)
 }
 
 export default ConnectivityNotice

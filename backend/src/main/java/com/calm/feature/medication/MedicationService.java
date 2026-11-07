@@ -56,19 +56,24 @@ public class MedicationService {
 				if (!existing.getUserId().equals(userId) || !Objects.equals(existing.getIntakeId(), req.intakeId())) {
 					throw new ConflictException("Идентификатор препарата уже используется");
 				}
+				rememberPersonalDosage(userId, existing);
 				return existing;
 			}
 			m.setId(req.clientId());
 		}
 		m.setUserId(userId);
 		applyRequest(userId, m, req);
-		return repo.save(m);
+		Medication saved = repo.save(m);
+		rememberPersonalDosage(userId, saved);
+		return saved;
 	}
 
 	public Medication update(String userId, String id, MedicationRequest req) {
 		Medication m = getOwned(userId, id);
 		applyRequest(userId, m, req);
-		return repo.save(m);
+		Medication saved = repo.save(m);
+		rememberPersonalDosage(userId, saved);
+		return saved;
 	}
 
 	public void delete(String userId, String id) {
@@ -94,14 +99,41 @@ public class MedicationService {
 				medication.setPersonalMedicationId(personal.getId());
 				medication.setName(Medication.PERSONAL_LABEL);
 				repo.save(medication);
+				rememberPersonalDosage(userId, medication);
 			}
 		}
-		return personalService.listActive(userId);
+		List<PersonalMedication> personalMedications = personalService.listActive(userId);
+		Set<String> missingDefaults = new HashSet<>();
+		for (PersonalMedication personal : personalMedications) {
+			if (personal.getDefaultDosage() == null || personal.getDefaultDosage().isBlank()) {
+				missingDefaults.add(personal.getId());
+			}
+		}
+		if (missingDefaults.isEmpty()) return personalMedications;
+
+		List<Medication> history = repo.findPersonalHistoryForDefaults(userId, missingDefaults);
+		boolean filled = false;
+		for (Medication intake : history) {
+			if (missingDefaults.isEmpty()) break;
+			if (missingDefaults.contains(intake.getPersonalMedicationId()) && intake.getDosage() != null
+					&& !intake.getDosage().isBlank()) {
+				personalService.rememberDosageIfAbsent(userId, intake.getPersonalMedicationId(), intake.getDosage());
+				missingDefaults.remove(intake.getPersonalMedicationId());
+				filled = true;
+			}
+		}
+		return filled ? personalService.listActive(userId) : personalMedications;
 	}
 
 	public String displayName(String userId, Medication medication) {
 		return medication.getPersonalMedicationId() == null ? medication.getName()
 				: personalService.getOwned(userId, medication.getPersonalMedicationId()).getName();
+	}
+
+	private void rememberPersonalDosage(String userId, Medication medication) {
+		if (medication.getPersonalMedicationId() != null) {
+			personalService.rememberDosageIfAbsent(userId, medication.getPersonalMedicationId(), medication.getDosage());
+		}
 	}
 
 	private void applyRequest(String userId, Medication m, MedicationRequest req) {

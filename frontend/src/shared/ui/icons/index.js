@@ -1,3 +1,7 @@
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
+import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded'
+import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded'
 import InstallDesktopIcon from '@mui/icons-material/InstallDesktop'
 import InstallMobileIcon from '@mui/icons-material/InstallMobile'
 import PersonIcon from '@mui/icons-material/PersonOutlineOutlined'
@@ -10,6 +14,7 @@ import GitHubIcon from '@mui/icons-material/GitHub'
 import LanguageIcon from '@mui/icons-material/Language'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
+import StopCircleIcon from '@mui/icons-material/StopCircleOutlined'
 import CircleIcon from '@mui/icons-material/PanoramaFishEye'
 import SecurityIcon from '@mui/icons-material/Security'
 import ConnectIcon from '@mui/icons-material/ConnectWithoutContact'
@@ -48,6 +53,10 @@ import EmailIcon from '@mui/icons-material/EmailOutlined'
 import EditLocationIcon from '@mui/icons-material/EditLocationOutlined'
 
 export {
+	ArrowBackRoundedIcon,
+	ArrowForwardRoundedIcon,
+	ArrowDownwardRoundedIcon,
+	ReplayRoundedIcon,
 	InstallDesktopIcon,
 	InstallMobileIcon,
 	PersonIcon,
@@ -60,6 +69,7 @@ export {
 	LanguageIcon,
 	DeleteIcon,
 	EditIcon,
+	StopCircleIcon,
 	CircleIcon,
 	SecurityIcon,
 	ConnectIcon,

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Version 3 publishes only the MongoDB dataset. The version 2 CSV exporter has a different schema.
+# Publish the legacy presence dataset and the separate v4 onset dataset.
 set -eu
 
 : "${CALM_TRAINING_SOURCE_URI:?Set read-only source URI}"
@@ -34,6 +34,8 @@ rm -f /tmp/calm-risk-last-success
 
 while :; do
   timeout "$run_timeout" mongosh --quiet "$CALM_TRAINING_SOURCE_URI" --file /scripts/export-shared-risk-training.js
+  timeout "$run_timeout" mongosh --quiet "$CALM_TRAINING_SOURCE_URI" --file /scripts/export-shared-risk-onset-v4.js
+  timeout "$run_timeout" mongosh --quiet "$CALM_TRAINING_SOURCE_URI" --file /scripts/export-shared-risk-survey-v5.js
   date +%s > /tmp/calm-risk-last-success
   sleep "$interval"
 done

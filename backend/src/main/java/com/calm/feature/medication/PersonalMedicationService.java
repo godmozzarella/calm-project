@@ -38,6 +38,14 @@ public class PersonalMedicationService {
 				.orElseThrow(() -> new NotFoundException("Свой препарат не найден"));
 	}
 
+	public void rememberDosageIfAbsent(String userId, String id, String rawDosage) {
+		if (rawDosage == null || rawDosage.isBlank()) return;
+		PersonalMedication medication = getOwned(userId, id);
+		if (medication.getDefaultDosage() != null && !medication.getDefaultDosage().isBlank()) return;
+		medication.setDefaultDosage(rawDosage.trim());
+		repo.save(medication);
+	}
+
 	public PersonalMedication remember(String userId, String rawName) {
 		String name = rawName == null ? "" : rawName.trim().replaceAll("\\s+", " ");
 		if (name.isEmpty()) {

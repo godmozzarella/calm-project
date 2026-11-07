@@ -35,6 +35,46 @@ class FirstReleaseFlowTest {
 	@Autowired MedicationRepository medications;
 	@MockitoBean EmailService email;
 
+    @Autowired com.calm.feature.risk.SharedModelParticipationRepository pilot;
+    @Autowired com.calm.feature.risk.OnsetInputRepository onsetInputs;
+    @Autowired com.calm.feature.risk.OnsetLabelRepository onsetLabels;
+
+    @Test
+    void ongoingAttackAllowsMarkAndLateNewStartRevisesLabelWithoutChangingInputs() throws Exception {
+        JsonNode account = register("onset-" + UUID.randomUUID() + "@example.test");
+        String userId = account.at("/user/id").asText();
+        String auth = "Bearer " + account.get("token").asText();
+        var consent = new com.calm.feature.risk.SharedModelParticipation(userId);
+        consent.grant(com.calm.feature.risk.SharedModelConsentPolicy.VERSION,
+            com.calm.feature.risk.SharedModelConsentPolicy.DIGEST, java.time.Instant.now());
+        pilot.save(consent);
+        LocalDate day = LocalDate.now(ZoneOffset.UTC).minusDays(1);
+        var cutoff = day.atStartOfDay(ZoneOffset.UTC).toInstant();
+        String snapshotId = com.calm.feature.risk.OnsetInputSnapshot.key(userId, day);
+        onsetInputs.insert(new com.calm.feature.risk.OnsetInputSnapshot(snapshotId, userId, day, "UTC", cutoff,
+            cutoff.plusSeconds(86400), cutoff.minusSeconds(30), 4,
+            com.calm.feature.risk.OnsetInputSnapshot.PROTOCOL, com.calm.feature.risk.DailyOutcome.NEW_START_DEFINITION,
+            com.calm.feature.risk.SharedModelConsentPolicy.VERSION, com.calm.feature.risk.SharedModelConsentPolicy.DIGEST,
+            java.util.Map.of("episodeStartsLast7Days", 0), java.util.Map.of(), true, java.util.List.of()));
+        mvc.perform(post("/attacks").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"startDate\":\"" + day.minusDays(2) + "\",\"startTime\":\"10:00\",\"ongoing\":true,\"intensity\":5,\"type\":\"PULSATING\"}"))
+            .andExpect(status().isCreated());
+        mvc.perform(post("/risk/outcome/no-new-attack").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"date\":\"" + day + "\",\"timezone\":\"UTC\"}"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("NO_ATTACK_STARTED"))
+            .andExpect(jsonPath("$.headachePresent").value(true)).andExpect(jsonPath("$.dayCompleted").value(true));
+        assertThat(onsetLabels.findById(snapshotId).orElseThrow().outcome()).isZero();
+        String newAttack = mvc.perform(post("/attacks").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"startDate\":\"" + day + "\",\"startTime\":\"13:00\",\"ongoing\":false,\"intensity\":5,\"type\":\"PULSATING\"}"))
+            .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        assertThat(onsetLabels.findById(snapshotId).orElseThrow().outcome()).isEqualTo(1);
+        assertThat(onsetInputs.findById(snapshotId).orElseThrow().features().get("episodeStartsLast7Days")).isEqualTo(0);
+        mvc.perform(delete("/attacks/" + json.readTree(newAttack).get("id").asText()).header("Authorization", auth))
+            .andExpect(status().isNoContent());
+        assertThat(onsetLabels.findById(snapshotId).orElseThrow().outcome()).isNull();
+        assertThat(onsetLabels.findById(snapshotId).orElseThrow().revisions().size()).isGreaterThanOrEqualTo(3);
+    }
+
 	@Test
 	void todayCanBeMarkedQuietAndLaterAttackReplacesTheMark() throws Exception {
 		JsonNode account = register("outcome-" + UUID.randomUUID() + "@example.test");
@@ -45,9 +85,9 @@ class FirstReleaseFlowTest {
 		mvc.perform(post("/risk/outcome/no-attack").header("Authorization", auth)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"date\":\"" + date + "\",\"timezone\":\"UTC\"}"))
-				.andExpect(status().isOk()).andExpect(jsonPath("$.status").value("NO_ATTACK"));
+				.andExpect(status().isOk()).andExpect(jsonPath("$.status").value("NO_ATTACK_STARTED"));
 		mvc.perform(get("/risk/outcome").header("Authorization", auth).param("date", date))
-				.andExpect(status().isOk()).andExpect(jsonPath("$.status").value("NO_ATTACK"));
+				.andExpect(status().isOk()).andExpect(jsonPath("$.status").value("NO_ATTACK_STARTED"));
 
 		String attack = mvc.perform(post("/attacks").header("Authorization", auth)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -57,7 +97,7 @@ class FirstReleaseFlowTest {
 						+ "\"symptoms\":[],\"triggers\":[],\"painZones\":{}}"))
 				.andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
 		mvc.perform(get("/risk/outcome").header("Authorization", auth).param("date", date))
-				.andExpect(status().isOk()).andExpect(jsonPath("$.status").value("ATTACK_PRESENT"));
+				.andExpect(status().isOk()).andExpect(jsonPath("$.status").value("ATTACK_STARTED"));
 		mvc.perform(delete("/attacks/" + json.readTree(attack).get("id").asText())
 					.header("Authorization", auth)).andExpect(status().isNoContent());
 		mvc.perform(get("/risk/outcome").header("Authorization", auth).param("date", date))
@@ -133,6 +173,13 @@ class FirstReleaseFlowTest {
 				.header("Authorization", "Bearer " + firstToken))
 				.andExpect(status().isNoContent());
 		mvc.perform(get("/medications/personal").header("Authorization", "Bearer " + firstToken))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+		mvc.perform(post("/medications/personal").header("Authorization", "Bearer " + firstToken)
+				.contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Новый свой препарат\"}"))
+				.andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Новый свой препарат"));
+		mvc.perform(get("/medications/personal").header("Authorization", "Bearer " + firstToken))
+				.andExpect(status().isOk()).andExpect(jsonPath("$[0].name").value("Новый свой препарат"));
+		mvc.perform(get("/medications/personal").header("Authorization", "Bearer " + secondToken))
 				.andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
 		mvc.perform(get("/medications/" + customId).header("Authorization", "Bearer " + firstToken))
 				.andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Мой препарат"));

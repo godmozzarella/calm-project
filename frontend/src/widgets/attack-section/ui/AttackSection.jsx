@@ -1,6 +1,9 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import AddIcon from '@mui/icons-material/Add'
 
-import { AddIcon, DeleteIcon, EditIcon } from '@/shared/ui/icons'
+import { StopCircleIcon } from '@/shared/ui/icons'
+import { notifyError } from '@/shared/lib/notifyError'
+import { isCentralError } from '@/shared/lib/isCentralError'
 import { AddAttackForm, useAddAttack } from '@/features/add-attack'
 import { formatAttackTime, getAttackTypeLabel, intensityColor, sortAttacksNewest } from '@/entities/attack'
 import { attackApi } from '@/shared/api'
@@ -36,8 +39,20 @@ const formatRange = attack => {
 	return `${shortDate(startDate)} ${startTime} — ${shortDate(endDate)} ${endTime}`
 }
 
+const formatTimeRange = attack => {
+	const startTime = formatAttackTime(attack.startTime) || 'Время не указано'
+	const endTime = formatAttackTime(attack.endTime)
+	if (attack.ongoing) return `${startTime} — продолжается`
+	if (!endTime) return startTime
+	const startDate = attack.startDate ?? attack.date
+	const endDate = attack.endDate ?? startDate
+	return startDate === endDate ? `${startTime} — ${endTime}` : `${startTime} — ${shortDate(endDate)} ${endTime}`
+}
+
 const AttackSection = ({ date, onInitialReady }) => {
 	const [attacks, setAttacks] = useState([])
+	const [finishing, setFinishing] = useState({})
+	const pending = useRef(new Set())
 	const { getLabel } = useDictionaries()
 
 	const reload = useCallback(
@@ -53,13 +68,29 @@ const AttackSection = ({ date, onInitialReady }) => {
 
 	useEffect(() => subscribe(ATTACKS_CHANGED, reload), [reload])
 
-	const { open, form, error, loading, editingId, openForm, openEditForm, closeForm, setField, toggleArrayField, submit } =
+	const { open, form, error, deleteError, loading, deleting, editingId, openForm, openEditForm, closeForm, setField, toggleArrayField, submit, remove } =
 		useAddAttack({ date, onSuccess: reload })
-	useEffect(() => subscribe(OPEN_ATTACK_FORM, openForm), [openForm])
+	const current = new Date()
+	const todayKey = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`
+	const futureDay = date > todayKey
+	const openNew = () => { if (!futureDay) openForm() }
+	useEffect(() => subscribe(OPEN_ATTACK_FORM, () => { if (!futureDay) openForm() }), [futureDay, openForm])
 
-	const handleDelete = id => attackApi.delete(id)
+	const handleComplete = async id => {
+		if (pending.current.has(id)) return
+		pending.current.add(id)
+		setFinishing(previous => ({ ...previous, [id]: true }))
+		try {
+			await attackApi.complete(id)
+		} catch (err) {
+			if (!isCentralError(err)) notifyError(err.message || 'Не удалось сохранить время окончания.', 'Не удалось завершить приступ')
+		} finally {
+			pending.current.delete(id)
+			setFinishing(previous => ({ ...previous, [id]: false }))
+		}
+	}
 	const handleCardClick = event => {
-		if (!event.target.closest('button, a, input, select, textarea')) openForm()
+		if (!futureDay && !event.target.closest('button, a, input, select, textarea, [role=button], li')) openForm()
 	}
 
 	return (
@@ -67,9 +98,8 @@ const AttackSection = ({ date, onInitialReady }) => {
 			<div className={s.card} onClick={handleCardClick} data-help="Приступы: здесь можно записать новый приступ, а также посмотреть и изменить уже добавленные.">
 				<div className={s.cardHeader}>
 					<h2 className={s.title}>Приступы</h2>
-					<button className={s.addBtn} onClick={openForm} aria-label="Добавить приступ" data-help="Добавить приступ за выбранный день: укажите время, силу боли, симптомы и другие подробности.">
+					<button type="button" className={s.addBtn} onClick={openNew} disabled={futureDay} aria-label="Добавить приступ" data-help="Добавить приступ за выбранный день: укажите время, силу боли, симптомы и другие подробности.">
 						<AddIcon fontSize="small" />
-						<span>Добавить</span>
 					</button>
 				</div>
 
@@ -82,55 +112,72 @@ const AttackSection = ({ date, onInitialReady }) => {
 					) : (
 						<ul className={s.list}>
 							{attacks.map(attack => (
-								<li key={attack.id} className={s.attackCard}>
-									<div className={s.attackTop}>
-										<div className={s.attackMeta}>
-											<span className={s.attackTime}>
-												{formatRange(attack)}
-											</span>
-											<span className={s.attackType}>
-												{getAttackTypeLabel(attack.type)}
-											</span>
+								<li key={attack.id} className={`${s.attackRow} ${attack.ongoing ? s.withComplete : ''}`}>
+									<div
+										className={s.attackCard}
+										role="button"
+										tabIndex={finishing[attack.id] ? -1 : 0}
+										aria-label={`Редактировать приступ: ${formatRange(attack)}`}
+										aria-disabled={!!finishing[attack.id]}
+										data-help="Открыть подробности и редактирование этого приступа."
+										onClick={event => {
+											event.stopPropagation()
+											if (!pending.current.has(attack.id)) openEditForm(attack)
+										}}
+										onKeyDown={event => {
+											if (event.key !== 'Enter' && event.key !== ' ') return
+											event.preventDefault()
+											event.stopPropagation()
+											if (!pending.current.has(attack.id)) openEditForm(attack)
+										}}
+									>
+										<div className={s.attackTop}>
+											<div className={s.attackMeta}>
+												<span className={s.attackDate}>{shortDate(attack.startDate ?? attack.date)}</span>
+												<span className={s.attackTime}>
+													{formatTimeRange(attack)}
+												</span>
+											</div>
+											<div className={s.attackRight}>
+												<span
+													className={s.intensityBadge}
+													style={{ color: intensityColor(attack.intensity) }}
+													aria-label={`Уровень боли: ${attack.intensity} из 10`}
+												>
+													{attack.intensity}
+												</span>
+											</div>
 										</div>
-										<div className={s.attackRight}>
-											<span
-												className={s.intensityBadge}
-												style={{ color: intensityColor(attack.intensity) }}
-											>
-												{attack.intensity}/10
-											</span>
-											<button
-												className={s.editBtn}
-												onClick={() => openEditForm(attack)}
-												aria-label="Редактировать приступ"
-								data-help="Изменить время и подробности этого приступа."
-											>
-												<EditIcon style={{ fontSize: '1rem' }} />
-											</button>
-											<button
-												className={s.deleteBtn}
-												onClick={() => handleDelete(attack.id)}
-												aria-label="Удалить"
-								data-help="Удалить эту запись о приступе."
-											>
-												<DeleteIcon style={{ fontSize: '1rem' }} />
-											</button>
+
+										<div className={s.attackDetails}>
+											<span className={s.attackType}>{getAttackTypeLabel(attack.type)}</span>
+										{attack.symptoms.length > 0 && (
+											<div className={s.chips}>
+												{attack.symptoms.map(sym => (
+													<span key={sym} className={s.chip}>
+														{getLabel('SYMPTOM', sym)}
+													</span>
+												))}
+											</div>
+										)}
+
+										{attack.note && (
+											<p className={s.note}>{attack.note}</p>
+										)}
 										</div>
 									</div>
-
-									{attack.symptoms.length > 0 && (
-										<div className={s.chips}>
-											{attack.symptoms.map(sym => (
-												<span key={sym} className={s.chip}>
-													{getLabel('SYMPTOM', sym)}
-												</span>
-											))}
-										</div>
-									)}
-
-									{attack.note && (
-										<p className={s.note}>{attack.note}</p>
-									)}
+									{attack.ongoing && <button
+										type="button"
+										className={s.completeBtn}
+										onClick={() => handleComplete(attack.id)}
+										disabled={!!finishing[attack.id]}
+										aria-label={finishing[attack.id] ? 'Сохраняем окончание приступа' : 'Завершить приступ сейчас'}
+										aria-busy={!!finishing[attack.id]}
+										title="Завершить приступ сейчас"
+										data-help="Завершить продолжающийся приступ: дата и время окончания заполнятся текущими."
+									>
+										<StopCircleIcon style={{ fontSize: '2rem' }} />
+									</button>}
 								</li>
 							))}
 						</ul>
@@ -142,12 +189,15 @@ const AttackSection = ({ date, onInitialReady }) => {
 				open={open}
 				form={form}
 				error={error}
+				deleteError={deleteError}
+				deleting={deleting}
 				loading={loading}
 				editing={!!editingId}
 				onClose={closeForm}
 				setField={setField}
 				toggleArrayField={toggleArrayField}
 				onSubmit={submit}
+				onDelete={remove}
 			/>
 		</>
 	)

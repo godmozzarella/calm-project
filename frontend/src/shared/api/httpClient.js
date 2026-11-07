@@ -99,7 +99,9 @@ const send = (path, options) => {
     .catch(error => {
       if (error instanceof TypeError) {
         reportNetworkError()
-        throw new Error(networkMessage())
+        const networkError = new Error(networkMessage())
+        networkError.networkFailure = true
+        throw networkError
       }
       throw error
     })
@@ -124,7 +126,11 @@ const handle = async (res, path, retryFn, requestSession) => {
     if (refreshed && retryFn) {
       return retryFn()
     }
-    if (refreshed === null) throw new Error(networkMessage())
+    if (refreshed === null) {
+      const networkError = new Error(networkMessage())
+      networkError.networkFailure = true
+      throw networkError
+    }
     clearSession()
     throw new Error(body.message ?? 'Unauthorized')
   }
@@ -140,6 +146,11 @@ const handle = async (res, path, retryFn, requestSession) => {
   if (!res.ok) {
     const error = new Error(body.message ?? body.error ?? `HTTP ${res.status}`)
     error.status = res.status
+    if (res.status >= 500) {
+      window.dispatchEvent(new CustomEvent('calm:show-error', {
+        detail: { title: 'Ошибка сервера', message: error.message },
+      }))
+    }
     throw error
   }
   return body

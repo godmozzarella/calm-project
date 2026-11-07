@@ -2,10 +2,11 @@
 
 .banner {
 	position: fixed;
-	right: max(1rem, env(safe-area-inset-right));
+	left: 50%;
 	bottom: max(1rem, env(safe-area-inset-bottom));
+	transform: translateX(-50%);
 	z-index: 2000;
-	width: min(23rem, calc(100vw - 2rem));
+	width: min(25rem, calc(100vw - 2rem));
 	box-shadow: 0 1rem 3rem rgba(0, 0, 0, .35);
 	border-radius: .75rem;
 }
