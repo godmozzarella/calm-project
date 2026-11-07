@@ -1,5 +1,5 @@
 #!/bin/sh
-# Publish the legacy presence dataset and the separate v4 onset dataset.
+# Publish the legacy presence dataset and separate v4 onset and v5 survey datasets.
 set -eu
 
 : "${CALM_TRAINING_SOURCE_URI:?Set read-only source URI}"

@@ -5,7 +5,7 @@
   const targetName = test ? 'calm_risk_pipeline_test_training' : 'calm_risk_training'
   const uri = process.env.CALM_TRAINING_MONGO_URI
   const secret = process.env.CALM_TRAINING_HMAC_KEY
-  if (db.getName() !== sourceName || !uri?.split('?')[0].endsWith(`/${targetName}`) ||
+  if (db.getName() !== sourceName || typeof uri !== 'string' || !uri.split('?')[0].endsWith(`/${targetName}`) ||
       !secret || Buffer.byteLength(secret, 'utf8') < 32 || process.env.CALM_TRAINING_REBUILD_CONFIRM !== 'YES') {
     throw new Error('Invalid onset export configuration')
   }

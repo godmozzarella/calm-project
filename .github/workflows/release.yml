@@ -32,6 +32,8 @@ jobs:
         working-directory: backend
       - name: Exporter tests
         run: node --test backend/scripts/*.test.mjs
+      - name: Exporter mongosh smoke
+        run: docker run --rm --network none -v "$PWD/backend/scripts:/scripts:ro" mongo:7 sh /scripts/smoke-exporters-in-mongosh.sh
 
   frontend:
     runs-on: ubuntu-latest

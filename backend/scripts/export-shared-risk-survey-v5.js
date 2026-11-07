@@ -4,7 +4,7 @@
   const source = test ? 'calm_risk_pipeline_test_source' : 'calm'
   const destination = test ? 'calm_risk_pipeline_test_training' : 'calm_risk_training'
   const uri = process.env.CALM_TRAINING_MONGO_URI, secret = process.env.CALM_TRAINING_HMAC_KEY
-  if (db.getName() !== source || !uri?.split('?')[0].endsWith(`/${destination}`) || !secret ||
+  if (db.getName() !== source || typeof uri !== 'string' || !uri.split('?')[0].endsWith(`/${destination}`) || !secret ||
       Buffer.byteLength(secret, 'utf8') < 32 || process.env.CALM_TRAINING_REBUILD_CONFIRM !== 'YES') throw new Error('Invalid survey export configuration')
   const policy = db.risk_model_consent_policy.findOne({ _id: 'current' })
   if (!policy || policy.version !== process.env.CALM_RISK_CONSENT_VERSION || policy.digest !== process.env.CALM_RISK_CONSENT_DIGEST) throw new Error('Consent policy mismatch')
