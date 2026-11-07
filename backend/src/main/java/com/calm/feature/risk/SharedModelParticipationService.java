@@ -9,6 +9,9 @@ import java.time.Instant;
 
 @Service
 public class SharedModelParticipationService {
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.context.ApplicationEventPublisher events;
+
 	public static final String CONSENT_VERSION = SharedModelConsentPolicy.VERSION;
 
 	private final SharedModelParticipationRepository repository;
@@ -40,14 +43,18 @@ public class SharedModelParticipationService {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, "Условия участия изменились. Обновите страницу и ознакомьтесь с ними снова");
 		}
 		participation.grant(CONSENT_VERSION, SharedModelConsentPolicy.DIGEST, Instant.now());
-		return SharedModelParticipationResponse.from(repository.save(participation), enrollmentOpen, CONSENT_VERSION);
+		var saved = repository.save(participation);
+        if (events != null) events.publishEvent(new DiaryChangedEvent(userId));
+        return SharedModelParticipationResponse.from(saved, enrollmentOpen, CONSENT_VERSION);
 	}
 
 	public SharedModelParticipationResponse withdraw(String userId) {
 		SharedModelParticipation participation = repository.findByUserId(userId).orElse(null);
 		if (participation == null) return SharedModelParticipationResponse.from(null, enrollmentOpen, CONSENT_VERSION);
 		participation.withdraw(Instant.now());
-		return SharedModelParticipationResponse.from(repository.save(participation), enrollmentOpen, CONSENT_VERSION);
+		var saved = repository.save(participation);
+        if (events != null) events.publishEvent(new DiaryChangedEvent(userId));
+        return SharedModelParticipationResponse.from(saved, enrollmentOpen, CONSENT_VERSION);
 	}
 
 	public SharedModelParticipationResponse decline(String userId, String offeredConsentVersion,
@@ -64,13 +71,17 @@ public class SharedModelParticipationService {
 					"Условия участия изменились. Обновите страницу и ознакомьтесь с ними снова");
 		}
 		participation.decline(CONSENT_VERSION, SharedModelConsentPolicy.DIGEST, Instant.now());
-		return SharedModelParticipationResponse.from(repository.save(participation), enrollmentOpen, CONSENT_VERSION);
+		var saved = repository.save(participation);
+        if (events != null) events.publishEvent(new DiaryChangedEvent(userId));
+        return SharedModelParticipationResponse.from(saved, enrollmentOpen, CONSENT_VERSION);
 	}
 
 	public SharedModelParticipationResponse setAdminBlocked(String userId, String adminUserId, boolean blocked) {
 		SharedModelParticipation participation = repository.findByUserId(userId)
 				.orElseGet(() -> new SharedModelParticipation(userId));
 		participation.setAdminBlocked(blocked, adminUserId, Instant.now());
-		return SharedModelParticipationResponse.from(repository.save(participation), enrollmentOpen, CONSENT_VERSION);
+		var saved = repository.save(participation);
+        if (events != null) events.publishEvent(new DiaryChangedEvent(userId));
+        return SharedModelParticipationResponse.from(saved, enrollmentOpen, CONSENT_VERSION);
 	}
 }

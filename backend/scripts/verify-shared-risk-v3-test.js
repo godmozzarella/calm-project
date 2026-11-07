@@ -7,7 +7,7 @@
   if (sample['2020-01-02'].features.pressureMmHg !== 750.1) throw new Error('Weather helper failed in mongosh')
   const training = new Mongo(process.env.CALM_TRAINING_MONGO_URI).getDB('calm_risk_pipeline_test_training')
   const metadata = training.export_metadata.findOne({ _id: 'active' })
-  if (!metadata || metadata.featureSchemaVersion !== 3 || metadata.detailSchemaVersion !== 1 ||
+  if (!metadata || metadata.featureSchemaVersion !== 3 || metadata.detailSchemaVersion !== 2 ||
       metadata.consentVersion !== 'shared-model-pilot-v2') throw new Error('Wrong version-3 metadata')
   const rows = training.training_examples.find({ generation: metadata.generation }).toArray()
   const events = training.diary_events.find({ generation: metadata.generation }).toArray()
@@ -27,9 +27,10 @@
       historical.diaryOutcome.medications[0].effectiveness !== null || historical.trainingEligible !== false) {
     throw new Error('Backdated attack without snapshot is missing or lost details')
   }
-  const endDay = rows.find(row => row.targetDate !== '2020-01-01' && row.diaryOutcome.attacks.length && row.diaryOutcome.medications.length)
+  if (rows.flatMap(row => row.diaryOutcome.attacks).length !== 2) throw new Error('Attack details duplicated')
+  const endDay = rows.find(row => row.targetDate !== '2020-01-01' && row.diaryOutcome.attackKeys.length && row.diaryOutcome.medications.length)
   if (!endDay || endDay.attackCount !== 1 ||
-      endDay.diaryOutcome.medications[0].linkedAttackKey !== endDay.diaryOutcome.attacks[0].attackKey ||
+      endDay.diaryOutcome.medications[0].linkedAttackKey !== endDay.diaryOutcome.attackKeys[0] ||
       endDay.diaryOutcome.medications[0].effectiveness !== 3 ||
       endDay.locationGrid !== '55.8,37.6' ||
       endDay.historyDetails.symptomsLast30Days[0].code !== 'nausea' ||

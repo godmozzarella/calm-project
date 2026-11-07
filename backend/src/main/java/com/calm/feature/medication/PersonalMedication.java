@@ -14,6 +14,8 @@ public class PersonalMedication {
 	private String userId;
 	private String name;
 	private String normalizedName;
+	/** Дозировка для подстановки при следующем выборе своего препарата. */
+	private String defaultDosage;
 	/** Скрыт из выбора, но остаётся для названий в старых записях дневника. */
 	private boolean archived;
 	private Instant createdAt;
@@ -32,6 +34,8 @@ public class PersonalMedication {
 	public String getUserId() { return userId; }
 	public String getName() { return name; }
 	public String getNormalizedName() { return normalizedName; }
+	public String getDefaultDosage() { return defaultDosage; }
+	public void setDefaultDosage(String defaultDosage) { this.defaultDosage = defaultDosage; }
 	public boolean isArchived() { return archived; }
 	public void setArchived(boolean archived) { this.archived = archived; }
 	public Instant getCreatedAt() { return createdAt; }

@@ -43,6 +43,7 @@ public class Medication {
 
 	private LocalDate date;
 	private LocalTime time;
+    private String timeText;
 
 	/** Привязка к конкретному приступу (опционально). */
 	@Indexed(sparse = true)
@@ -61,6 +62,9 @@ public class Medication {
 
 	@CreatedDate
 	private Instant createdAt;
+	@org.springframework.data.annotation.LastModifiedDate
+	private Instant updatedAt;
+	public Instant getUpdatedAt() { return updatedAt; }
 
 	public String getId() { return id; }
 	public void setId(String id) { this.id = id; }
@@ -81,7 +85,7 @@ public class Medication {
 	public LocalDate getDate() { return date; }
 	public void setDate(LocalDate date) { this.date = date; }
 	public LocalTime getTime() { return time; }
-	public void setTime(LocalTime time) { this.time = time; }
+	public void setTime(LocalTime time) { this.time = time; this.timeText = time == null ? null : time.toString(); }
 	public String getAttackId() { return attackId; }
 	public void setAttackId(String attackId) { this.attackId = attackId; }
 	public Integer getEffectiveness() { return effectiveness; }

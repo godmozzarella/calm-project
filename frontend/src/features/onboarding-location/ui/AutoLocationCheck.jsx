@@ -5,6 +5,7 @@ import { Button } from '@/shared/ui/Button'
 import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 import { shouldSuggestLocation } from '../model/locationPolicy'
 import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
+import { isCentralError } from '@/shared/lib/isCentralError'
 import s from './LocationOnboarding.module.scss'
 
 const CHECK_INTERVAL = 6 * 60 * 60 * 1000
@@ -74,7 +75,7 @@ export default function AutoLocationCheck({ user, setUser }) {
             setCurrentUser(updated)
             setUser(updated)
             setCandidate(null)
-        } catch (e) { setError(e.message || 'Не удалось сохранить город') }
+        } catch (e) { if (!isCentralError(e)) setError(e.message || 'Не удалось сохранить город') }
         finally { setSaving(false) }
     }
     if (!candidate || user?.locationMode !== 'AUTO' || candidate.version !== (user.locationVersion ?? 0)) return null

@@ -10,7 +10,7 @@
 	color: $fc-main;
 }
 
-footer {
+.footerRoot footer {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -227,7 +227,7 @@ hr {
 }
 
 @media (max-width: 90rem) {
-	footer { width: min(90%, 87.5rem); }
+	.footerRoot footer { width: min(90%, 87.5rem); }
 }
 
 @media (max-width: 64rem) {
@@ -238,7 +238,7 @@ hr {
 }
 
 @media (max-width: 48rem) {
-	footer { width: 90%; }
+	.footerRoot footer { width: 90%; }
 
 	.item1 {
 		grid-template-columns: 1fr;
@@ -259,5 +259,5 @@ hr {
 }
 
 @media (max-width: 27rem) {
-	footer { width: 92%; }
+	.footerRoot footer { width: 92%; }
 }

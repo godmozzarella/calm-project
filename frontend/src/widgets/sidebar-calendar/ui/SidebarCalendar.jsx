@@ -2,7 +2,10 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 
 import { BackIcon, CloseIcon, ArrowForwardIcon } from '@/shared/ui/icons'
 import { attackApi, medicationApi } from '@/shared/api'
-import { subscribe, emit, ATTACKS_CHANGED, MEDICATIONS_CHANGED, DATE_SELECTED } from '@/shared/lib/dataEvents'
+import { questionnaireApi } from '@/shared/api/questionnaireApi'
+import { isCentralError } from '@/shared/lib/isCentralError'
+import CheckIcon from '@mui/icons-material/Check'
+import { subscribe, emit, ATTACKS_CHANGED, MEDICATIONS_CHANGED, PROFILE_CHANGED, DATE_SELECTED } from '@/shared/lib/dataEvents'
 import s from './SidebarCalendar.module.scss'
 
 const MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
@@ -14,6 +17,7 @@ const MARK_TYPES = {
 	headache: { label: 'Приступ', color: '#ef4444' },
 	medication: { label: 'Лекарство', color: 'var(--fc-contrast)' },
 	note: { label: 'Заметка', color: '#eab308' },
+	cycle: { label: 'Менструация', color: '#db7ca7' },
 }
 
 const midnight = (d = new Date()) => {
@@ -63,6 +67,13 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar, currentDate }) => {
 	const currentDateKey = dateKey(currentDate)
 	const [selected, setSelected] = useState(null)
 	const [marks, setMarks] = useState({})
+	const [cycleMarks, setCycleMarks] = useState([])
+	const [cycleProfile, setCycleProfile] = useState(null)
+	const [cycleEdit, setCycleEdit] = useState(false)
+	const [cycleBusy, setCycleBusy] = useState(false)
+	const [cycleError, setCycleError] = useState('')
+	const cycleDays = useMemo(() => new Set(cycleMarks.filter(mark => mark.kind === 'DAY').map(mark => mark.date)), [cycleMarks])
+	const closedCycleDays = useMemo(() => new Set(cycleMarks.filter(mark => mark.kind === 'CLOSED').map(mark => mark.date)), [cycleMarks])
 	const [historyExpanded, setHistoryExpanded] = useState(false)
 	const monthListRef = useRef(null)
 	const months = useMemo(() => {
@@ -83,10 +94,18 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar, currentDate }) => {
 			.then(([attacks, medications]) => setMarks(marksFromEntries(attacks, medications)))
 			.catch(() => {})
 	}, [])
+	const loadCycle = useCallback(() => {
+		setCycleError('')
+		Promise.all([questionnaireApi.getProfile(), questionnaireApi.cycleMarks()])
+			.then(([profile, markers]) => { setCycleProfile(profile); setCycleMarks(markers); setCycleError('') })
+			.catch(error => { setCycleProfile(null); if (!isCentralError(error)) setCycleError('Не удалось загрузить отметки цикла') })
+	}, [])
 	useEffect(() => { if (openCalendar) loadMarks() }, [openCalendar, loadMarks])
+	useEffect(() => { if (openCalendar) loadCycle() }, [openCalendar, loadCycle])
 	useEffect(() => {
 		if (!openCalendar) {
 			setHistoryExpanded(false)
+			setCycleEdit(false)
 			return
 		}
 		setSelected(null)
@@ -100,10 +119,33 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar, currentDate }) => {
 	}, [openCalendar, currentDateKey])
 	useEffect(() => subscribe(ATTACKS_CHANGED, loadMarks), [loadMarks])
 	useEffect(() => subscribe(MEDICATIONS_CHANGED, loadMarks), [loadMarks])
+	useEffect(() => subscribe(PROFILE_CHANGED, loadCycle), [loadCycle])
+	const toggleCycleDay = async date => {
+		if (cycleBusy) return
+		setCycleBusy(true); setCycleError('')
+		try {
+			const exists = cycleDays.has(date)
+			if (exists) await questionnaireApi.deleteCycleMark(date, 'DAY')
+			else await questionnaireApi.putCycleMark(date, 'DAY')
+			setCycleMarks(await questionnaireApi.cycleMarks())
+		} catch (error) { if (!isCentralError(error)) setCycleError(error.message || 'Не удалось сохранить отметку') }
+		finally { setCycleBusy(false) }
+	}
+	const toggleCycleEnd = async date => {
+		if (cycleBusy) return
+		setCycleBusy(true); setCycleError('')
+		try {
+			if (closedCycleDays.has(date)) await questionnaireApi.deleteCycleMark(date, 'CLOSED')
+			else await questionnaireApi.putCycleMark(date, 'CLOSED')
+			setCycleMarks(await questionnaireApi.cycleMarks())
+		} catch (error) { if (!isCentralError(error)) setCycleError(error.message || 'Не удалось сохранить конец менструации') }
+		finally { setCycleBusy(false) }
+	}
 
 	const closeCalendar = () => {
 		setOpenCalendar(false)
 		setHistoryExpanded(false)
+		setCycleEdit(false)
 	}
 	const goToDate = key => {
 		if (key > todayKey) return
@@ -122,7 +164,9 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar, currentDate }) => {
 		<aside className={`${s.sidebar} ${openCalendar ? s.active : ''}`}>
 			<div className={s.header}>
 				<span className={s.title}>Календарь</span>
-				<button className={s.iconBtn} onClick={closeCalendar} aria-label="Закрыть" data-help="Закрыть календарь и вернуться к дневнику."><CloseIcon fontSize="small" /></button>
+				<div className={s.headerActions}>
+					<button className={s.iconBtn} onClick={closeCalendar} aria-label="Закрыть" data-help="Закрыть календарь и вернуться к дневнику."><CloseIcon fontSize="small" /></button>
+				</div>
 			</div>
 			<div className={s.monthList} ref={monthListRef}>
 				<button
@@ -148,29 +192,43 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar, currentDate }) => {
 							if (!dayDate) return <span key={`empty-${monthId}-${index}`} className={s.cellPlaceholder} aria-hidden="true" />
 							const key = dateKey(dayDate)
 							const dayMarks = [...(marks[key] ?? [])]
+							const isCycleDay = cycleProfile?.sex === 'FEMALE' && cycleDays.has(key)
+							if (isCycleDay) dayMarks.push('cycle')
 							const isFuture = key > todayKey
 							return <button key={key + current}
-								className={[s.cell, !current && s.cellOther, key === todayKey && s.cellToday, (selected === key || (!selected && current && key === currentDateKey)) && s.cellSelected, isFuture && s.cellFuture].filter(Boolean).join(' ')}
-								onClick={() => setSelected(selected === key ? null : key)}
-								data-help={`Выбрать ${dayDate.getDate()} ${MONTHS[dayDate.getMonth()]} и открыть записи дневника за этот день.`}
+								data-date={key}
+								className={[s.cell, !current && s.cellOther, key === todayKey && s.cellToday, !cycleEdit && (selected === key || (!selected && current && key === currentDateKey)) && s.cellSelected, isCycleDay && s.cellCycle, cycleEdit && s.cellCycleEdit, isFuture && !cycleEdit && s.cellFuture].filter(Boolean).join(' ')}
+								onClick={() => cycleEdit ? toggleCycleDay(key) : setSelected(selected === key ? null : key)}
+								data-help={cycleEdit ? `${isCycleDay ? 'Убрать' : 'Отметить'} менструацию за ${dayDate.getDate()} ${MONTHS[dayDate.getMonth()]}.` : closedCycleDays.has(key) ? `Последний день менструации — ${dayDate.getDate()} ${MONTHS[dayDate.getMonth()]}. Нажмите, чтобы изменить.` : `Выбрать ${dayDate.getDate()} ${MONTHS[dayDate.getMonth()]} и открыть записи дневника за этот день.`}
+								aria-label={cycleEdit ? `${dayDate.getDate()} ${MONTHS[dayDate.getMonth()]}: ${isCycleDay ? 'отмечен' : 'не отмечен'} день менструации` : undefined}
+								aria-pressed={cycleEdit ? isCycleDay : undefined}
 								aria-current={current && key === currentDateKey ? 'date' : undefined}
-								disabled={!current || isFuture} tabIndex={current && !isFuture ? 0 : -1}>
+								disabled={!current || (!cycleEdit && isFuture) || (cycleEdit && cycleBusy)} tabIndex={current && (cycleEdit || !isFuture) ? 0 : -1}>
 								<span className={s.cellNum}>{dayDate.getDate()}</span>
-								{dayMarks.length > 0 && <span className={s.dotRow}>{dayMarks.map(type => <span key={type} className={s.dot} style={{ background: MARK_TYPES[type]?.color }} />)}</span>}
+								{cycleEdit ? <span className={`${s.cycleCheckbox} ${isCycleDay ? s.cycleCheckboxChecked : ''}`} aria-hidden="true">{isCycleDay && <CheckIcon/>}</span> : dayMarks.length > 0 && <span className={s.dotRow}>{dayMarks.map(type => <span key={type} className={s.dot} style={{ background: MARK_TYPES[type]?.color }} />)}</span>}
 							</button>
 						})}
 					</div>
 				</section>)}
 			</div>
 			<div className={s.footer}>
-				{selected && <div className={s.actionPanel}>
+				{cycleEdit && <p className={s.cycleHint}>Отметьте дни. Чтобы указать последний, нажмите «Готово» и выберите его в календаре.</p>}
+				{selected && !cycleEdit && <div className={s.actionPanel}>
 				<span className={s.actionPanelDate}>{selected.split('-').reverse().slice(0, 2).join('.')}</span>
 				<div className={s.actionList}><button className={s.actionBtn} onClick={() => goToDate(selected)} data-help="Открыть дневник за выбранную в календаре дату.">
 					<span className={s.actionIcon}><ArrowForwardIcon fontSize="small" /></span><span className={s.actionLabel}>Перейти к дате</span>
-				</button></div>
+				</button>
+					{cycleProfile?.sex === 'FEMALE' && cycleDays.has(selected) && <button className={s.actionBtn} type="button" disabled={cycleBusy} onClick={() => toggleCycleEnd(selected)}>
+						<span className={s.actionIcon}><CheckIcon fontSize="small" /></span><span className={s.actionLabel}>{closedCycleDays.has(selected) ? 'Убрать последний день менструации' : 'Это последний день менструации'}</span>
+					</button>}
+				</div>
 				</div>}
-				<button className={s.todayLink} onClick={goToday}><BackIcon style={{ fontSize: '1rem' }} /> К текущему месяцу</button>
-				<div className={s.legend}>{Object.entries(MARK_TYPES).map(([type, { label, color }]) => <div key={type} className={s.legendItem}>
+				{cycleError && <p className={s.cycleError} role="alert">{cycleError}</p>}
+				<div className={s.footerNav}>
+					<button className={s.todayLink} onClick={goToday}><BackIcon style={{ fontSize: '1rem' }} /> К текущему месяцу</button>
+					{cycleProfile?.sex === 'FEMALE' && <button type="button" className={`${s.cycleToggle} ${cycleEdit ? s.cycleToggleActive : ''}`} aria-pressed={cycleEdit} onClick={() => {setCycleEdit(value => !value);setSelected(null);setCycleError('')}}>{cycleEdit ? 'Готово' : 'Менструация'}</button>}
+				</div>
+				<div className={s.legend}>{Object.entries(MARK_TYPES).filter(([type]) => type !== 'cycle' || cycleProfile?.sex === 'FEMALE').map(([type, { label, color }]) => <div key={type} className={s.legendItem}>
 					<span className={s.dot} style={{ background: color }} /><span>{label}</span>
 				</div>)}</div>
 			</div>

@@ -56,6 +56,17 @@ class StatsServiceStreakTest {
 		assertThat(kpis.longestStreak()).isEqualTo(2);
 	}
 
+    @Test void oldOngoingAttackDoesNotBreakConfirmedNoNewStartSeries() {
+        LocalDate today = LocalDate.now();
+        var service = service(List.of(
+            DailyOutcome.noNewAttack("u", today.minusDays(1), Instant.now(), "UTC"),
+            DailyOutcome.noNewAttack("u", today, Instant.now(), "UTC")), false);
+        var repository = (AttackRepository) org.springframework.test.util.ReflectionTestUtils.getField(service, "attackRepo");
+        var old = new Attack(); old.setStartDate(today.minusDays(3)); old.setOngoing(true);
+        when(repository.findInRange(eq("u"), any(), any())).thenReturn(List.of(old));
+        assertThat(service.compute("u", "month").kpis().currentStreak()).isEqualTo(2);
+    }
+
 	private StatsService service(List<DailyOutcome> confirmations, boolean attackToday) {
 		var attacks = mock(AttackRepository.class);
 		var medications = mock(MedicationRepository.class);

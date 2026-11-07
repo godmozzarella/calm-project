@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import CloseIcon from '@mui/icons-material/Close'
 import ErrorNotice from '../ErrorNotice/ErrorNotice'
 import s from './GlobalErrorNotice.module.scss'
@@ -16,10 +17,10 @@ const GlobalErrorNotice = () => {
 		return () => { window.removeEventListener('calm:show-error', onError); window.clearTimeout(timer.current) }
 	}, [])
 	if (!error) return null
-	return <div className={s.toast}>
+	return createPortal(<div className={s.toast}>
 		<ErrorNotice title={error.title} message={error.message} />
 		<button type="button" className={s.close} onClick={() => setError(null)} aria-label="Закрыть сообщение"><CloseIcon fontSize="small" /></button>
-	</div>
+	</div>, document.body)
 }
 
 export default GlobalErrorNotice

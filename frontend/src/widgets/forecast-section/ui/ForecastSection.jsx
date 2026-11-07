@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { forecastApi, medicationApi, riskApi } from '@/shared/api'
 import { emit, OPEN_ATTACK_FORM, subscribe, ATTACKS_CHANGED, MEDICATIONS_CHANGED } from '@/shared/lib/dataEvents'
 import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
+import { isCentralError } from '@/shared/lib/isCentralError'
 import { formatPressure } from '@/shared/lib/pressure'
 import { advice, conclusion, dayLabel, helpfulMedication, LEVEL_LABELS, longDate, riskFactors, shortDate, weatherTiles } from './forecastViewModel'
 import s from './ForecastSection.module.scss'
@@ -11,6 +12,8 @@ const ForecastSection = ({ user, onOpenLocationModal, onInitialReady }) => {
 	const [data, setData] = useState(null)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState(null)
+	const [failed, setFailed] = useState(false)
+	const [retryKey, setRetryKey] = useState(0)
 	const [selectedDay, setSelectedDay] = useState(0)
 	const [risks, setRisks] = useState({})
 	const [riskErrors, setRiskErrors] = useState({})
@@ -23,6 +26,7 @@ const ForecastSection = ({ user, onOpenLocationModal, onInitialReady }) => {
 		let cancelled = false
 		setLoading(true)
 		setError(null)
+		setFailed(false)
 		setData(null)
 		setRisks({})
 		setRiskErrors({})
@@ -35,12 +39,13 @@ const ForecastSection = ({ user, onOpenLocationModal, onInitialReady }) => {
 			})
 			.catch(e => {
 				if (cancelled) return
-				setError(e.message || 'Не удалось получить прогноз')
+				setError(isCentralError(e) ? null : e.message || 'Не удалось получить прогноз')
+				setFailed(true)
 				onInitialReady?.('forecast')
 			})
 			.finally(() => { if (!cancelled) setLoading(false) })
 		return () => { cancelled = true }
-	}, [hasLocation, user?.latitude, user?.longitude, onInitialReady])
+	}, [hasLocation, user?.latitude, user?.longitude, onInitialReady, retryKey])
 
 	useEffect(() => {
 		if (!hasLocation || !data?.days?.length) return
@@ -49,7 +54,7 @@ const ForecastSection = ({ user, onOpenLocationModal, onInitialReady }) => {
 		const requests = data.days.slice(0, 7).map(day =>
 			riskApi.getByDate(day.date)
 				.then(result => { if (!cancelled) setRisks(previous => ({ ...previous, [day.date]: result })) })
-				.catch(e => { if (!cancelled) setRiskErrors(previous => ({ ...previous, [day.date]: e.message || 'Не удалось рассчитать риск' })) })
+				.catch(e => { if (!cancelled) setRiskErrors(previous => ({ ...previous, [day.date]: isCentralError(e) ? true : e.message || 'Не удалось рассчитать риск' })) })
 		)
 		Promise.allSettled(requests).then(() => { if (!cancelled) onInitialReady?.('forecast') })
 		return () => { cancelled = true }
@@ -105,7 +110,8 @@ const ForecastSection = ({ user, onOpenLocationModal, onInitialReady }) => {
 			{!hasLocation && <div className={s.card}><p>Укажите город, чтобы видеть прогноз.</p>{onOpenLocationModal && <button type="button" className={s.action} onClick={onOpenLocationModal} data-help="Выбрать город, для которого приложение покажет погоду и оценку риска.">Указать город</button>}</div>}
 			{hasLocation && loading && !data && <div className={s.card} role="status">Загружаем прогноз…</div>}
 			{hasLocation && <ErrorNotice message={error} title="Не удалось загрузить прогноз" />}
-			{hasLocation && !loading && !error && !days.length && <div className={s.card} role="status">Прогноз временно недоступен. Попробуйте обновить позже.</div>}
+			{hasLocation && failed && <button type="button" className={s.action} onClick={() => setRetryKey(value => value + 1)}>Повторить загрузку</button>}
+			{hasLocation && !loading && !failed && !days.length && <div className={s.card} role="status">Прогноз временно недоступен. Попробуйте обновить позже.</div>}
 
 			{active && <>
 				{data.stale && <p className={s.stale}>Сервис погоды временно недоступен. Показаны последние сохранённые данные{data.cachedAt ? ` от ${new Date(data.cachedAt).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : ''}.</p>}
@@ -128,7 +134,7 @@ const ForecastSection = ({ user, onOpenLocationModal, onInitialReady }) => {
 						<h2 className={s.sectionLabel}>Итог дня</h2>
 						<p className={s.dateEyebrow}>{longDate(active.date, selectedDay === 0)}</p>
 						{score == null ? riskErrors[active.date]
-							? <ErrorNotice message={riskErrors[active.date]} title="Не удалось рассчитать оценку" />
+							? typeof riskErrors[active.date] === 'string' ? <ErrorNotice message={riskErrors[active.date]} title="Не удалось рассчитать оценку" /> : <p className={s.pending}>Оценка временно недоступна.</p>
 							: <p className={s.pending}>{risk?.message || 'Рассчитываем оценку…'}</p> : <>
 							<div className={s.scoreLine}><strong>{score}</strong><span>из 100</span><b>{LEVEL_LABELS[level]} риск</b></div>
 							<div className={s.scale} role="img" aria-label={`Оценка ${score} из 100, ${LEVEL_LABELS[level].toLowerCase()} риск`}>

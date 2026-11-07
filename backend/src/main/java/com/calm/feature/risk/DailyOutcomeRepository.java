@@ -9,6 +9,7 @@ import java.util.Optional;
 
 public interface DailyOutcomeRepository extends MongoRepository<DailyOutcome, String> {
 	Optional<DailyOutcome> findByUserIdAndDate(String userId, LocalDate date);
+	List<DailyOutcome> findByUserId(String userId);
 	/** Both boundary dates belong to the requested interval. */
 	@Query("{ 'userId': ?0, 'date': { $gte: ?1, $lte: ?2 } }")
 	List<DailyOutcome> findByUserIdAndDateBetween(String userId, LocalDate from, LocalDate to);

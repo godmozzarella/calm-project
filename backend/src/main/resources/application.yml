@@ -71,7 +71,7 @@ calm:
     # Разрешённые origin'ы (через запятую). На проде сюда подставится домен фронта.
     # Поддерживаются wildcards (через setAllowedOriginPatterns в CorsConfig).
     # 192.168.*:* / 10.*:* / 172.*:* покрывают локальные подсети — можно заходить с телефона/ноута по LAN-IP.
-    allowed-origins: ${CALM_CORS_ORIGINS:http://localhost:5173,http://localhost:4173,http://localhost,http://192.168.*:*,http://10.*:*,http://172.*:*}
+    allowed-origins: ${CALM_CORS_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173,http://localhost,http://192.168.*:*,http://10.*:*,http://172.*:*}
   mail:
     # Транспорт писем: smtp (Spring JavaMailSender) или resend (HTTP API resend.com).
     # SMTP часто режется домашними провайдерами — для прода рекомендуется resend.

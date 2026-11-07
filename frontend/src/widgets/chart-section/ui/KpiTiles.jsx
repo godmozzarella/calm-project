@@ -43,8 +43,8 @@ const KpiTiles = ({ kpis }) => {
 				<span className={s.sub}>{avgIntensity > 0 ? 'из 10' : 'нет данных'}</span>
 			</div>
 
-			<div className={s.tile} data-help="Самая длинная последовательность дней без приступа за выбранный период.">
-				<span className={s.label}>Макс. серия без приступов</span>
+			<div className={s.tile} data-help="Самая длинная последовательность отмеченных дней без новых начал приступов за выбранный период.">
+				<span className={s.label}>Макс. серия без новых приступов</span>
 				<span className={s.value}>{longestStreak}</span>
 				<span className={s.sub}>{pluralDays(longestStreak)} за период</span>
 			</div>

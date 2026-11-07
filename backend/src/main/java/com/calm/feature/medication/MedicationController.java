@@ -3,6 +3,7 @@ package com.calm.feature.medication;
 import com.calm.feature.medication.dto.MedicationDto;
 import com.calm.feature.medication.dto.MedicationRequest;
 import com.calm.feature.medication.dto.PersonalMedicationDto;
+import com.calm.feature.medication.dto.PersonalMedicationNameRequest;
 import com.calm.security.AuthenticatedUser;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -31,6 +32,12 @@ public class MedicationController {
 	@GetMapping("/personal")
 	public List<PersonalMedicationDto> personal(@AuthenticationPrincipal AuthenticatedUser principal) {
 		return service.listPersonal(principal.getUserId()).stream().map(PersonalMedicationDto::from).toList();
+	}
+
+	@PostMapping("/personal")
+	public PersonalMedicationDto addPersonal(@AuthenticationPrincipal AuthenticatedUser principal,
+			@Valid @RequestBody PersonalMedicationNameRequest request) {
+		return PersonalMedicationDto.from(personalService.remember(principal.getUserId(), request.name()));
 	}
 
 	@DeleteMapping("/personal/{id}")

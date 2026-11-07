@@ -1,0 +1,227 @@
+@use 'app/styles/globals.scss' as *;
+
+.launcherSection {width:calc(100% - 3rem);max-width:1200px;margin:0 auto;}
+.launcher {
+  position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35rem;
+  width:100%;min-height:176px;padding:1.25rem 2rem;overflow:hidden;text-align:center;
+  border:0;border-radius:1.25rem;
+  background:linear-gradient(125deg,#172b3a,#242738 72%,#1b3444);
+  color:#fff;font-family:inherit;cursor:pointer;
+  &::before {content:'';position:absolute;inset:-25%;z-index:0;pointer-events:none;
+    background:radial-gradient(ellipse at 25% 35%,#65b8ec55,transparent 42%),radial-gradient(ellipse at 80% 70%,#b5b4e448,transparent 46%);
+    animation:skyPulse 7s ease-in-out infinite alternate;}
+  > :not(.launchSky) {position:relative;z-index:1;}
+  strong {@include fluid-text(32,16);font-weight:$fw-semibold;line-height:1.25;}
+  &:focus-visible {outline:2px solid $fc-contrast;outline-offset:3px;}
+}
+.launchPrompt {display:flex;flex-direction:column;align-items:center;gap:.9rem;
+  svg {font-size:2.65rem;}
+  strong {font-weight:$fw-semibold;}}
+.launchEditIcon {position:absolute !important;top:1rem;right:1rem;display:grid;place-items:center;width:2.25rem;height:2.25rem;color:#fff;
+  svg {font-size:1.25rem;}}
+.launchDescription {color:#d7e2eb;line-height:1.45;@include fluid-text(13,11);}
+.launchSky {position:absolute;inset:0;z-index:0;pointer-events:none;
+  svg {position:absolute;color:#a8dfff;opacity:.42;filter:drop-shadow(0 0 9px #65b8ec88);}
+  svg:nth-child(1) {top:19%;left:10%;width:17px;height:17px;}
+  svg:nth-child(2) {top:68%;left:22%;width:10px;height:10px;}
+  svg:nth-child(3) {top:28%;right:17%;width:21px;height:21px;}
+  svg:nth-child(4) {bottom:13%;right:8%;width:12px;height:12px;}
+  svg:nth-child(5) {top:10%;left:40%;width:8px;height:8px;}
+  svg:nth-child(6) {bottom:20%;right:36%;width:9px;height:9px;}
+}
+:global(:root[data-theme='light']) .launcher {
+  background:linear-gradient(125deg,#eaf5fb,#f4f3fb 72%,#e8f3f8);
+  color:$fc-main;
+  &::before {background:radial-gradient(ellipse at 25% 35%,#9ad8f34d,transparent 44%),radial-gradient(ellipse at 80% 70%,#c5bfe74d,transparent 48%);}
+}
+:global(:root[data-theme='light']) .launchDescription {color:$fc-secondary;}
+:global(:root[data-theme='light']) .launchEditIcon {color:$fc-main;}
+:global(:root[data-theme='light']) .launchSky svg {color:#5d91b5;opacity:.42;filter:drop-shadow(0 0 9px #8bbdda80);}
+@keyframes skyPulse {from {opacity:.45;transform:scale(.85);} to {opacity:1;transform:scale(1.16);}}
+.primary {@include contrast-button;@include fluid-text(14,12);}
+.subtle {
+  display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
+  min-height:2.65rem;padding:.5rem .8rem;border:0;border-radius:.75rem;
+  background:$quiet-surface;color:$fc-secondary;cursor:pointer;font-family:inherit;
+  @include fluid-text(13,11);font-weight:$fw-medium;
+  svg {font-size:1.1rem;}
+  &:hover:not(:disabled) {background:$quiet-surface-raised;color:$fc-main;}
+  &:disabled {opacity:.45;cursor:default;}
+  &:focus-visible {outline:2px solid $fc-contrast;outline-offset:2px;}
+}
+
+.modalRoot {position:fixed;inset:0;z-index:1050;color:$fc-main;font-family:'Roboto',Arial,sans-serif;}
+.overlay {
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;overflow:auto;isolation:isolate;
+  padding:clamp(1rem,3vh,2rem) max(1rem,env(safe-area-inset-right)) max(1rem,env(safe-area-inset-bottom));
+  background:
+    radial-gradient(ellipse 33rem 28rem at 12% 14%,color-mix(in srgb,$fc-contrast 20%,transparent),transparent 74%),
+    radial-gradient(ellipse 28rem 36rem at 91% 24%,color-mix(in srgb,#a9a4e4 15%,transparent),transparent 76%),
+    radial-gradient(ellipse 38rem 30rem at 55% 92%,color-mix(in srgb,#d3adc6 13%,transparent),transparent 76%),
+    radial-gradient(ellipse 20rem 24rem at 8% 83%,color-mix(in srgb,#8dcfc5 11%,transparent),transparent 78%),
+    $main-color;
+  overscroll-behavior:contain;
+  > :not(.sky) {position:relative;z-index:1;}
+  button:focus-visible,input:focus-visible,select:focus-visible {outline:2px solid $fc-contrast;outline-offset:3px;}
+}
+.sky {position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;
+  svg {position:absolute;color:$fc-contrast;opacity:.23;filter:drop-shadow(0 0 10px color-mix(in srgb,$fc-contrast 45%,transparent));animation:skyTwinkle 8s ease-in-out infinite alternate;}
+  svg:nth-child(1) {top:12%;left:14%;width:15px;height:15px;}
+  svg:nth-child(2) {top:24%;right:8%;width:20px;height:20px;animation-delay:-3s;}
+  svg:nth-child(3) {top:39%;left:3%;width:12px;height:12px;animation-delay:-5s;}
+  svg:nth-child(4) {top:55%;right:4%;width:16px;height:16px;animation-delay:-2s;}
+  svg:nth-child(5) {top:75%;left:10%;width:18px;height:18px;animation-delay:-6s;}
+  svg:nth-child(6) {top:86%;right:13%;width:13px;height:13px;animation-delay:-1s;}
+  svg:nth-child(7) {top:9%;right:25%;width:11px;height:11px;animation-delay:-4s;}
+  svg:nth-child(8) {top:69%;right:30%;width:10px;height:10px;animation-delay:-7s;}
+}
+@keyframes skyTwinkle {from {opacity:.12;transform:scale(.88);} to {opacity:.3;transform:scale(1.06);}}
+.header {
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-shrink:0;
+  width:100%;max-width:850px;color:$fc-secondary;@include fluid-text(14,12);
+  >span {display:flex;align-items:center;}
+  button {display:grid;place-items:center;width:42px;height:42px;padding:0;border:0;border-radius:.75rem;background:$quiet-surface;color:$fc-secondary;cursor:pointer;
+    &:hover {background:$quiet-surface-raised;color:$fc-main;}}
+}
+.headerDot {font-size:1rem !important;color:$fc-contrast;margin:0 .5rem;}
+.progress {height:3px;flex-shrink:0;width:min(100%,450px);margin:1.4rem 0 1rem;border-radius:2px;overflow:hidden;background:$quiet-surface-raised;
+  span {display:block;height:100%;background:$fc-contrast;transition:width .25s;}}
+.step {display:flex;align-items:center;justify-content:space-between;width:min(100%,450px);color:$fc-secondary;@include fluid-text(12,11);
+  button {display:inline-flex;align-items:center;gap:.25rem;padding:.5rem 0;border:0;border-radius:.5rem;background:none;color:inherit;font:inherit;cursor:pointer;
+    svg {font-size:1.1rem;}&:disabled {opacity:.3;cursor:default;}}}
+.stage {
+  --card-height:clamp(330px,58dvh,460px);
+  position:relative;display:flex;align-items:center;width:min(100%,450px);
+  min-height:calc(var(--card-height) + 46px);flex:1 0 auto;padding:22px 0 24px;
+}
+.deck {position:relative;width:100%;height:var(--card-height);isolation:isolate;}
+.card,.deckMiddle,.deckBack {
+  --card-tint:#79CAFA;
+  &[data-card='sleep'],&[data-card='quality'] {--card-tint:#B5B4E4;}
+  &[data-card='stress'] {--card-tint:#D6B39B;}
+  &[data-card='medication'] {--card-tint:#A5CCC0;}
+  &[data-card='alcohol'] {--card-tint:#C8B2D5;}
+  &[data-card='cycle'], &[data-card='cycleEnd'] {--card-tint:#D3ADC6;}
+  background:radial-gradient(ellipse at 110% -10%,color-mix(in srgb,var(--card-tint) 14%,transparent),transparent 63%),
+    radial-gradient(ellipse at -15% 100%,color-mix(in srgb,var(--card-tint) 5%,transparent),transparent 56%),var(--block-color);
+}
+.deckBack,.deckMiddle {
+  position:absolute;inset:0;display:grid;grid-template-rows:24px 74px 28px minmax(0,1fr);padding:24px;
+  overflow:hidden;border:0;
+  border-radius:1.25rem;pointer-events:none;transform-origin:50% 50%;
+  box-shadow:0 16px 45px #00000013;
+  h2 {position:relative;align-self:center;margin:0;line-height:1.2;font-weight:$fw-semibold;@include fluid-text(26,21);text-wrap:balance;}
+}
+.deckBack {z-index:0;opacity:.95;background:color-mix(in srgb,var(--card-tint) 11%,var(--block-color));transform:translateY(50px) scale(.88);}
+.deckMiddle {z-index:1;transform:translateY(28px) scale(.94);}
+.card {
+  position:relative;z-index:2;width:100%;height:var(--card-height);min-height:var(--card-height);max-height:var(--card-height);
+  display:grid;grid-template-rows:24px 74px 28px minmax(0,1fr);padding:24px;
+  border:0;border-radius:1.25rem;overflow:hidden;touch-action:none;user-select:none;
+  box-shadow:0 20px 55px #00000014;transition:transform .25s;
+  h2 {position:relative;align-self:center;margin:0;line-height:1.2;font-weight:$fw-semibold;@include fluid-text(26,21);text-wrap:balance;}
+  input {user-select:auto;touch-action:pan-x;}
+}
+.cardSaved {visibility:hidden;pointer-events:none;}
+.cardTop {position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;}
+.eyebrow {color:$fc-secondary;font-weight:$fw-semibold;letter-spacing:.07em;text-transform:uppercase;@include fluid-text(11,10);}
+.cardSpark {font-size:1.35rem !important;color:var(--card-tint);}
+.cardWatermark {position:absolute;right:-42px;bottom:8px;width:270px !important;height:270px !important;color:var(--card-tint);opacity:.035;transform:rotate(10deg);pointer-events:none;}
+.cardHint {position:relative;margin:0;line-height:1.4;color:$fc-secondary;@include fluid-text(13,11);}
+.cardContent {position:relative;min-height:0;display:flex;align-items:center;justify-content:center;}
+.calmScene {position:relative;display:grid;place-items:center;width:165px;height:150px;pointer-events:none;
+  svg {width:85px;height:85px;color:var(--card-tint);opacity:.32;filter:drop-shadow(0 0 22px color-mix(in srgb,var(--card-tint) 15%,transparent));}
+  &::before,&::after {content:'';position:absolute;width:138px;height:88px;border:1px solid color-mix(in srgb,var(--card-tint) 10%,transparent);border-radius:1rem;transform:rotate(-12deg);}
+  &::after {transform:rotate(12deg);width:112px;height:128px;}
+  span,i {position:absolute;width:6px;height:6px;left:15px;top:40px;background:var(--card-tint);opacity:.4;border-radius:2px;}
+  i {left:auto;right:15px;top:95px;width:4px;height:4px;}
+}
+.gestureCues {position:absolute;left:18px;right:18px;bottom:12px;z-index:3;display:flex;justify-content:space-between;pointer-events:none;
+  span {display:grid;place-items:center;width:38px;height:38px;color:$fc-main;opacity:0;transition:opacity .45s ease;}
+  .gestureCueVisible {opacity:1;}
+  svg {font-size:2rem;filter:drop-shadow(0 0 10px #0005);}}
+.unknownCue {position:absolute;left:50%;bottom:12px;z-index:3;display:grid;place-items:center;width:38px;height:38px;transform:translateX(-50%);color:$fc-main;pointer-events:none;opacity:0;transition:opacity .45s ease;
+  svg {font-size:2rem;filter:drop-shadow(0 0 10px #0005);}}
+.unknownCueVisible {opacity:1;}
+.answerActions {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;width:min(100%,450px);flex-shrink:0;
+  button {display:flex;align-items:center;justify-content:center;gap:.4rem;min-height:2.65rem;padding:.5rem .6rem;border:0;border-radius:.75rem;background:$quiet-surface;color:$fc-main;cursor:pointer;@include fluid-text(13,11);
+    svg{font-size:1.25rem;color:$fc-contrast;}&:hover:not(:disabled){background:$quiet-surface-raised;}&:disabled{opacity:.4;cursor:default;}}}
+.answerLeft {grid-column:1;grid-row:1;}
+.answerUnknown {grid-column:2;grid-row:1;}
+.answerRight {grid-column:3;grid-row:1;}
+.step svg path {stroke:currentColor;stroke-width:.45px;stroke-linejoin:round;}
+.privacy {flex-shrink:0;max-width:400px;margin:.8rem auto 0;line-height:1.5;text-align:center;color:$fc-secondary;@include fluid-text(12,10);}
+.toast {position:absolute;left:50%;bottom:calc(100% + 6px);z-index:4;transform:translateX(-50%);width:max-content;max-width:min(100%,27rem);padding:.7rem .9rem;border:1px solid color-mix(in srgb,$fc-contrast 28%,$quiet-line);border-radius:.75rem;box-shadow:0 12px 36px #0003;background:var(--surface-strong);color:$fc-main;text-align:center;pointer-events:none;line-height:1.35;@include fluid-text(14,12);}
+.error {max-width:450px;line-height:1.5;text-align:center;color:$error-color;@include fluid-text(14,12);}
+.saving {text-align:center;color:$fc-secondary;@include fluid-text(13,11);}
+
+
+.timeInputs {display:flex;align-items:center;justify-content:center;gap:.75rem;width:100%;}
+.timeSeparator {align-self:center;margin-bottom:24px;font-size:1.8rem;color:$fc-secondary;}
+.wheelColumn {display:flex;flex-direction:column;align-items:center;gap:7px;}
+.wheel {position:relative;width:112px;height:176px;overflow:hidden;touch-action:none;cursor:ns-resize;border-radius:.625rem;user-select:none;
+  &:focus-visible{outline:2px solid $fc-contrast;outline-offset:2px;}}
+.wheelSelection {position:absolute;left:0;right:0;top:calc(50% - 24px);height:48px;background:color-mix(in srgb,var(--card-tint) 9%,transparent);border-top:1px solid color-mix(in srgb,var(--card-tint) 14%,transparent);border-bottom:1px solid color-mix(in srgb,var(--card-tint) 14%,transparent);border-radius:.625rem;}
+.wheelNumbers {position:absolute;inset:0;perspective:450px;pointer-events:none;mask-image:linear-gradient(to bottom,transparent,#000 23%,#000 77%,transparent);
+  span {position:absolute;inset:calc(50% - 22px) 0 auto;height:44px;line-height:44px;font-size:2rem;font-weight:$fw-medium;font-variant-numeric:tabular-nums;text-align:center;backface-visibility:hidden;will-change:transform;transition:transform .16s ease-out,opacity .16s ease-out;}}
+.wheel[data-turning='true'] .wheelNumbers span {transition:none;}
+.wheel .wheelInput {position:absolute;top:calc(50% - 24px);left:6px;width:100px;height:48px;min-width:0;padding:0;border:0;border-radius:.5rem;background:$block-color;color:$fc-main;font-size:2rem;text-align:center;font-variant-numeric:tabular-nums;outline:2px solid $fc-contrast;cursor:text;
+  &[aria-invalid='true'] {outline-color:$error-color;}}
+.wheelUnit {color:$fc-secondary;@include fluid-text(12,10);}
+.scale {width:100%;text-align:center;
+  .moodValue {display:block;margin:0 0 .3rem;font-size:2.2rem;font-weight:$fw-semibold;font-variant-numeric:tabular-nums;line-height:1.1;color:color-mix(in srgb,var(--mood-color) 80%,var(--fc-main));transition:color .2s;}
+  .moodLabel {display:block;min-height:1.4em;color:color-mix(in srgb,var(--mood-color) 75%,var(--fc-main));@include fluid-text(14,12);}
+  input {display:block;width:100%;height:30px;margin:1.1rem 0 .7rem;accent-color:var(--mood-color);cursor:pointer;}
+}
+.sleepStops {display:flex;justify-content:space-between;gap:.45rem;
+  button {display:grid;place-items:center;width:38px;height:38px;border:0;border-radius:.625rem;background:color-mix(in srgb,var(--stop-color) 9%,var(--quiet-surface));color:color-mix(in srgb,var(--stop-color) 75%,var(--fc-main));font:inherit;cursor:pointer;transition:background .18s,color .18s;}
+  .selectedStop {background:var(--stop-color);color:#1c303b;}
+}
+.scaleEnds {display:flex;justify-content:space-between;gap:.6rem;color:$fc-secondary;@include fluid-text(12,10);}
+.cycleDate {display:flex;flex-direction:column;align-items:center;gap:.45rem;width:100%;color:$fc-secondary;@include fluid-text(13,11);}
+.cycleWheels {display:flex;align-items:center;justify-content:center;gap:.75rem;width:100%;}
+.cycleDateStatus {display:flex;align-items:center;gap:.5rem;min-height:1.2em;color:$fc-main;@include fluid-text(12,10);
+  button {padding:.1rem .25rem;border:0;background:none;color:$fc-contrast;font:inherit;cursor:pointer;
+    &:focus-visible {outline:2px solid $fc-contrast;outline-offset:2px;}}}
+.bounce {animation:bounce .4s;}
+@keyframes bounce {0%,100%{transform:translateX(0);}25%{transform:translateX(-15px) rotate(-2deg);}55%{transform:translateX(10px) rotate(1deg);}}
+
+@media(max-width:640px) {
+  .launcherSection {width:calc(100% - 2rem);}
+  .launcher {min-height:168px;padding:1rem;}
+  .overlay {height:100dvh;}
+  .progress {margin:1rem 0 .5rem;}
+  .card {padding:22px;}
+  .answerActions {grid-template-columns:repeat(2,minmax(0,1fr));}
+  .answerLeft {grid-column:1;grid-row:1;}
+  .answerRight {grid-column:2;grid-row:1;}
+  .answerUnknown {grid-column:1 / -1;grid-row:2;}
+  
+}
+@media(max-height:700px) {
+  .card {padding:18px;grid-template-rows:20px 58px 24px minmax(0,1fr);h2{font-size:1.3rem;}}
+  .deckMiddle,.deckBack {padding:18px;grid-template-rows:20px 58px 24px minmax(0,1fr);h2{font-size:1.3rem;}}
+  .card[data-card='cycle'] .cardContent {align-items:stretch;}
+  .cycleDate {justify-content:center;gap:.2rem;}
+  .cycleWheels {gap:.5rem;}
+  .cycleWheels .wheelColumn {gap:2px;}
+  .cycleWheels .wheel {width:90px;height:80px;}
+  .cycleWheels .wheelSelection {top:calc(50% - 20px);height:40px;}
+  .cycleWheels .wheelNumbers span {font-size:1.5rem;}
+  .cycleWheels .wheel .wheelInput {top:calc(50% - 20px);left:5px;width:80px;height:40px;font-size:1.5rem;}
+  .wheel {height:112px;}
+  .wheelNumbers span,.wheel .wheelInput {font-size:1.8rem;}
+  .scale .moodValue {font-size:1.8rem;}
+  .scale input {margin:.5rem 0;}
+  .sleepStops button {width:32px;height:32px;}
+  .calmScene {height:100px;transform:scale(.8);}
+  .progress {margin:.7rem 0 .3rem;}
+  
+  
+}
+@media(prefers-reduced-motion:reduce) {
+  .bounce {animation:none;}
+  .sky svg {animation:none;}
+  .launcher::before {animation:none;}
+  .gestureCues span,.unknownCue,.card,.deckBack,.deckMiddle,.progress span,.sleepStops button,.scale .moodValue,.wheelNumbers span {transition:none;}
+}

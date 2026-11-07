@@ -27,22 +27,29 @@
 }
 
 .addBtn {
-	display: flex;
-	align-items: center;
-	gap: 0.35rem;
+	display: grid;
+	place-items: center;
+	flex: 0 0 2.25rem;
+	width: 2.25rem;
+	height: 2.25rem;
 	background: $quiet-surface;
 	border: 0;
-	border-radius: 0.75rem;
-	color: $fc-contrast;
-	padding: 0.3rem 0.75rem 0.3rem 0.5rem;
-	@include fluid-text(12, 11);
-	font-weight: $fw-semibold;
+	border-radius: 0.625rem;
+	color: $fc-secondary;
+	padding: 0;
+	overflow: hidden;
 	cursor: pointer;
-	transition: background-color 0.18s ease, border-color 0.18s ease;
+	transition: background-color 0.18s ease, color 0.18s ease;
 
-	&:hover {
-		background-color: $quiet-surface-raised;
+	@media (hover: hover) and (pointer: fine) {
+		&:hover {
+			background-color: $quiet-surface-raised;
+			color: $fc-contrast;
+		}
 	}
+	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: 2px; }
+	&:focus:not(:focus-visible) { outline: none; box-shadow: none; }
+	@media (hover: none) { &:focus-visible { outline: none; } }
 }
 
 .cardBody {
@@ -107,14 +114,31 @@
 }
 
 .medCard {
+	position: relative;
 	display: flex;
 	flex-direction: column;
-	gap: 0.4rem;
-	padding: 0.75rem 1rem;
+	gap: 0.5rem;
+	padding: 0.875rem 1rem;
 	border: 0;
 	border-radius: 1rem;
 	background: $quiet-surface;
 }
+
+.medCardOpen {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	padding: 0;
+	border: 0;
+	border-radius: inherit;
+	background: transparent;
+	cursor: pointer;
+	&:focus-visible { outline: 2px solid $fc-contrast; outline-offset: -2px; }
+}
+
+.medTop,
+.medDetails { pointer-events: none; }
 
 .medTop {
 	display: flex;
@@ -125,93 +149,126 @@
 
 .medMeta {
 	display: flex;
-	align-items: center;
-	gap: 0.5rem;
+	flex-direction: column;
+	gap: 0.2rem;
 	min-width: 0;
 	flex: 1;
 }
 
-.medName {
-	@include fluid-text(14, 12);
-	font-weight: $fw-semibold;
-	color: $fc-main;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.medDosage {
-	@include fluid-text(11, 10);
-	color: $fc-main;
-	background: $block-color;
-	border-radius: 2rem;
-	padding: 0.1rem 0.5rem;
-	flex-shrink: 0;
-}
-
-:root[data-theme='light'] .medDosage {
+.medDate {
+	@include fluid-text(12, 11);
 	color: $fc-secondary;
-	background: var(--selection-surface);
-}
-
-.medRight {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	flex-shrink: 0;
+	font-weight: $fw-medium;
 }
 
 .medTime {
-	@include fluid-text(12, 11);
-	color: $fc-secondary;
+	@include fluid-text(18, 16);
+	font-weight: $fw-semibold;
+	color: $fc-main;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.25;
 }
 
-.editBtn,
-.deleteBtn {
+.medDetails {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.5rem;
+	min-width: 0;
+	width: 100%;
+}
+
+.medName {
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	width: 1.75rem;
-	height: 1.75rem;
-	background: none;
-	border: none;
-	border-radius: 50%;
-	color: var(--fc-subtle);
-	cursor: pointer;
-	transition: color 0.15s ease, background-color 0.15s ease;
-	&.editBtn:hover {
-		color: $fc-main;
-		background-color: var(--surface-hover);
-		border-radius: 0.75rem;
-	}
-
-	&.deleteBtn:hover {
-		color: $error-color;
-		background-color: rgba(239, 100, 100, 0.1);
-		border-radius: 0.75rem;
-	}
+	box-sizing: border-box;
+	min-height: 2.75rem;
+	@include fluid-text(13, 12);
+	color: $fc-main;
+	font-weight: $fw-medium;
+	padding: 0.35rem 0.65rem;
+	border-radius: 0.55rem;
+	background: $quiet-surface-raised;
+	overflow-wrap: anywhere;
+	min-width: 0;
 }
+
+.medicationList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	width: 100%;
+}
+
+.medicationItem {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	width: 100%;
+}
+
+.medicationRow {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 0.45rem;
+	width: 100%;
+}
+
+.ratingTrigger {
+	position: relative;
+	pointer-events: auto;
+	min-width: 5.5rem;
+	min-height: 2.75rem;
+	padding: 0.35rem 0.55rem;
+	border: 0;
+	border-radius: 0.65rem;
+	background: $quiet-surface-raised;
+	color: $fc-secondary;
+	@include fluid-text(12, 11);
+	cursor: pointer;
+	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: 2px; }
+	@media (hover: hover) and (pointer: fine) { &:hover { background: var(--selection-hover); } }
+}
+
+.ratingTrigger[data-effectiveness='1'] { color: #ef4444; }
+.ratingTrigger[data-effectiveness='2'] { color: #eab308; }
+.ratingTrigger[data-effectiveness='3'] { color: #22c55e; }
+:root[data-theme='light'] .ratingTrigger[data-effectiveness='1'] { color: #b91c1c; }
+:root[data-theme='light'] .ratingTrigger[data-effectiveness='2'] { color: #a16207; }
+:root[data-theme='light'] .ratingTrigger[data-effectiveness='3'] { color: #15803d; }
 
 /* ── Attack link ── */
 .attackLink {
-	@include fluid-text(11, 10);
+	@include fluid-text(12, 11);
 	color: $fc-secondary;
-	background: $block-color;
-	padding: 0.2rem 0.5rem;
-	border-radius: 0 0.375rem 0.375rem 0;
+	background: $quiet-surface-raised;
+	padding: 0.35rem 0.65rem;
+	border-radius: 0.55rem;
+	width: 100%;
+	overflow-wrap: anywhere;
 }
 
-:root[data-theme='light'] .attackLink { background: var(--selection-surface); }
-
 /* ── Effectiveness buttons ── */
-.effectivenessRow {
-	display: flex;
-	flex-wrap: wrap;
+.ratingChoices {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 0.35rem;
+	width: 100%;
+	animation: ratingReveal 0.18s ease-out;
+}
+
+@keyframes ratingReveal {
+	from { opacity: 0; transform: translateY(-4px); }
+	to { opacity: 1; transform: translateY(0); }
 }
 
 .effectBtn {
-	min-height: 2rem;
+	position: relative;
+	pointer-events: auto;
+	min-height: 2.75rem;
+	min-width: 0;
+	width: 100%;
 	padding: 0.2rem 0.6rem;
 	border-radius: 0.75rem;
 	border: 0;
@@ -246,7 +303,12 @@
 
 /* ── Note ── */
 .note {
-	@include fluid-text(11, 10);
+	@include fluid-text(13, 12);
 	color: $fc-secondary;
 	line-height: 1.5;
+	width: 100%;
+	padding: 0.55rem 0.7rem;
+	border-radius: 0.6rem;
+	background: $quiet-surface-raised;
+	overflow-wrap: anywhere;
 }

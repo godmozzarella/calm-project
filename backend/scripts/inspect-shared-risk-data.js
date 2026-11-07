@@ -52,17 +52,31 @@
   const activeIds = activeParticipants.map(row => row.userId)
   const labeledKeys = new Set()
   const today = new Date().toISOString().slice(0, 10)
-  for (const attack of source.attacks.find({ userId: { $in: activeIds } },
-    { userId: 1, startDate: 1, endDate: 1, ongoing: 1 })) {
+  // Count represented labels, not every calendar date of a long interval.
+  const sourceAttacks = source.attacks.find({ userId: { $in: activeIds } },
+    { userId: 1, startDate: 1, endDate: 1, ongoing: 1 }).toArray()
+  const attacksByUser = new Map()
+  for (const attack of sourceAttacks) {
     const start = dateKey(attack.startDate)
-    if (!start) continue
-    const end = dateKey(attack.endDate) ?? (attack.ongoing ? today : start)
-    for (let cursor = new Date(`${start}T00:00:00Z`); cursor.toISOString().slice(0, 10) <= end;
-      cursor.setUTCDate(cursor.getUTCDate() + 1)) {
-      labeledKeys.add(`${participantKey(attack.userId)}\u001f${cursor.toISOString().slice(0, 10)}`)
+    if (start) labeledKeys.add(`${participantKey(attack.userId)}\u001f${start}`)
+    if (!attacksByUser.has(attack.userId)) attacksByUser.set(attack.userId, [])
+    attacksByUser.get(attack.userId).push(attack)
+  }
+  for (const snapshot of source.risk_training_input_snapshots.find({ userId: { $in: activeIds } }).toArray()) {
+    const day = dateKey(snapshot.targetDate)
+    if (snapshot.featureSchemaVersion === 3 && day && day <= today &&
+        (attacksByUser.get(snapshot.userId) || []).some(attack => attackOnDay(attack, day))) {
+      labeledKeys.add(`${participantKey(snapshot.userId)}\u001f${day}`)
     }
   }
-  for (const outcome of source.risk_daily_outcomes.find({ userId: { $in: activeIds } }, { userId: 1, date: 1 })) {
+  for (const medication of source.medications.find({ userId: { $in: activeIds } }, { userId: 1, date: 1 }).toArray()) {
+    const day = dateKey(medication.date)
+    if (day && (attacksByUser.get(medication.userId) || []).some(attack => attackOnDay(attack, day))) {
+      labeledKeys.add(`${participantKey(medication.userId)}\u001f${day}`)
+    }
+  }
+  for (const outcome of source.risk_daily_outcomes.find({ userId: { $in: activeIds } }, { userId: 1, date: 1, outcomeDefinition: 1 })) {
+    if (outcome.outcomeDefinition === 'new-attack-onset-local-day-v1') continue
     const key = dateKey(outcome.date)
     if (key) labeledKeys.add(`${participantKey(outcome.userId)}\u001f${key}`)
   }
@@ -79,6 +93,7 @@
       sharedWeatherSnapshots: source.forecast_snapshots.countDocuments({}),
       participantsWithCurrentConsent: activeIds.length,
       recordedLabeledParticipantDays: labeledKeys.size,
+      labeledDayCoverage: 'diary-entry-and-snapshot-days',
     },
     dataset: {
       generation,
@@ -111,7 +126,7 @@
   const attacks = source.attacks.find({ userId }).toArray().filter(a => attackOnDay(a, day))
   const medications = source.medications.find({ userId }).toArray().filter(m => dateKey(m.date) === day)
   const outcome = source.risk_daily_outcomes.find({ userId }).toArray()
-    .find(item => dateKey(item.date) === day)
+    .find(item => dateKey(item.date) === day && item.outcomeDefinition !== 'new-attack-onset-local-day-v1')
   const predictions = source.risk_prediction_records.find({ userId }).toArray()
     .filter(p => dateKey(p.targetDate) === day)
     .sort((a, b) => new Date(b.issuedAt) - new Date(a.issuedAt))

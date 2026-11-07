@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { authApi } from '@/shared/api'
 import { validateEmail, validatePassword } from '@/shared/lib/validation'
+import { isCentralError } from '@/shared/lib/isCentralError'
 
 const DEBOUNCE_MS = 700
 
@@ -100,7 +101,7 @@ export const useAuth = () => {
     } catch (err) {
       if (err.retryAfter) {
         startCountdown(err.retryAfter, setLoginFormError)
-      } else {
+      } else if (!isCentralError(err)) {
         setLoginFormError(err.message ?? 'Неверный email или пароль')
       }
     } finally {
@@ -136,7 +137,7 @@ export const useAuth = () => {
     } catch (err) {
       if (err.retryAfter) {
         startCountdown(err.retryAfter, setRegisterFormError)
-      } else {
+      } else if (!isCentralError(err)) {
         setRegisterFormError(err.message ?? 'Ошибка регистрации')
       }
     } finally {
@@ -164,7 +165,7 @@ export const useAuth = () => {
       setUserNameState('')
       navigate('/profile')
     } catch (err) {
-      setVerificationError(err.message ?? 'Не удалось подтвердить email')
+      if (!isCentralError(err)) setVerificationError(err.message ?? 'Не удалось подтвердить email')
     } finally {
       setLoading(false)
     }
@@ -179,7 +180,7 @@ export const useAuth = () => {
       setResendCountdown(30)
     } catch (err) {
       if (err.retryAfter) setResendCountdown(err.retryAfter)
-      setVerificationError(err.message ?? 'Не удалось отправить код повторно')
+      if (!isCentralError(err)) setVerificationError(err.message ?? 'Не удалось отправить код повторно')
     } finally {
       setLoading(false)
     }
@@ -196,7 +197,7 @@ export const useAuth = () => {
       setResendCountdown(0)
       setRegisterFormError('')
     } catch (err) {
-      setVerificationError(err.message ?? 'Не удалось отменить регистрацию')
+      if (!isCentralError(err)) setVerificationError(err.message ?? 'Не удалось отменить регистрацию')
     } finally {
       setLoading(false)
     }

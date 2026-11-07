@@ -37,6 +37,8 @@ public class Attack {
 
 	private LocalDate startDate;
 	private LocalTime startTime;
+    private String startTimeText;
+    private String endTimeText;
 
 	private LocalDate endDate;
 	private LocalTime endTime;
@@ -57,6 +59,9 @@ public class Attack {
 
 	@CreatedDate
 	private Instant createdAt;
+	@org.springframework.data.annotation.LastModifiedDate
+	private Instant updatedAt;
+	public Instant getUpdatedAt() { return updatedAt; }
 
 	public String getId() { return id; }
 	public void setId(String id) { this.id = id; }
@@ -65,11 +70,11 @@ public class Attack {
 	public LocalDate getStartDate() { return startDate; }
 	public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
 	public LocalTime getStartTime() { return startTime; }
-	public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
+	public void setStartTime(LocalTime startTime) { this.startTime = startTime; this.startTimeText = startTime == null ? null : startTime.toString(); }
 	public LocalDate getEndDate() { return endDate; }
 	public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
 	public LocalTime getEndTime() { return endTime; }
-	public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
+	public void setEndTime(LocalTime endTime) { this.endTime = endTime; this.endTimeText = endTime == null ? null : endTime.toString(); }
 	public boolean isOngoing() { return ongoing; }
 	public void setOngoing(boolean ongoing) { this.ongoing = ongoing; }
 	public int getIntensity() { return intensity; }

@@ -1,22 +1,27 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { ATTACK_TYPE_LABELS, intensityColor } from '@/entities/attack'
 import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
+import { localMinute } from '@/shared/lib/localMinute'
 import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 import { dictionaryApi } from '@/shared/api'
+import { CloseIcon } from '@/shared/ui/icons'
+import AttackTimeWheels from './AttackTimeWheels'
 import s from './AddAttackForm.module.scss'
 
 const TYPES = Object.entries(ATTACK_TYPE_LABELS).map(([value, label]) => ({ value, label }))
 
-const todayKey = () => {
-	const d = new Date()
-	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField, toggleArrayField, onSubmit }) => {
+const AddAttackForm = ({ open, form, error, deleteError, loading, deleting, editing, onClose, setField, toggleArrayField, onSubmit, onSubmitAnother, onDelete, title }) => {
 	useBodyScrollLock(open)
+	const sheet = useRef(null)
 	const [symptoms, setSymptoms] = useState([])
 	const [triggers, setTriggers] = useState([])
+	const [, refreshClock] = useState(0)
+	useEffect(() => {
+		if (!open) return undefined
+		const timer = window.setInterval(() => refreshClock(value => value + 1), 15000)
+		return () => window.clearInterval(timer)
+	}, [open])
 
 	useEffect(() => {
 		if (!open) return
@@ -24,22 +29,31 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 		dictionaryApi.getByType('TRIGGER').then(setTriggers).catch(() => {})
 	}, [open])
 
+	useEffect(() => {
+		if (!open) return
+		const previous=document.activeElement
+		sheet.current?.querySelector('button')?.focus({ preventScroll:true })
+		return () => { if(previous?.isConnected) previous.focus({ preventScroll:true }) }
+	}, [open])
+
 	if (!open) return null
 
-	const today = todayKey()
+	const { date: today, time: currentTime } = localMinute()
+	const busy = loading || deleting
 
 	return (
-		<div className={s.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
-			<div className={s.sheet}>
+		<div className={s.overlay} onClick={e => e.target === e.currentTarget && onClose()} onKeyDown={e => { if(e.key==='Escape') { e.stopPropagation(); if(!busy) onClose() } }}>
+			<div ref={sheet} className={s.sheet} aria-busy={busy} data-attack-form role="dialog" aria-modal="true" aria-label={title || (editing ? 'Редактировать приступ' : 'Новый приступ')}>
 				<div className={s.handle} />
 
 				<div className={s.header}>
-					<h2 className={s.title}>{editing ? 'Редактировать приступ' : 'Новый приступ'}</h2>
-					<button className={s.closeBtn} onClick={onClose} aria-label="Закрыть форму приступа" data-help="Закрыть форму записи приступа.">✕</button>
+					<h2 className={s.title}>{title || (editing ? 'Редактировать приступ' : 'Новый приступ')}</h2>
+					<button className={s.closeBtn} onClick={onClose} disabled={busy} aria-label="Закрыть форму приступа" data-help="Закрыть форму записи приступа."><CloseIcon style={{fontSize:'1.2rem'}}/></button>
 				</div>
 
 				<div className={s.body}>
 					<ErrorNotice message={error} title="Не удалось сохранить приступ" />
+					<ErrorNotice message={deleteError} title="Не удалось удалить приступ" />
 
 					{/* ── Интенсивность ── */}
 					<section className={s.section}>
@@ -100,14 +114,7 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 									onChange={e => setField('startDate', e.target.value)}
 									className={s.timeInput}
 								/>
-								<input
-									type="time"
-									aria-label="Время начала приступа"
-									data-help="Укажите время начала приступа."
-									value={form.startTime}
-									onChange={e => setField('startTime', e.target.value)}
-									className={s.timeInput}
-								/>
+								<AttackTimeWheels key={`start-${form.startDate}`} label="Время начала приступа" value={form.startTime} latestTime={form.startDate === today ? currentTime : null} onChange={value => setField('startTime', value)} />
 							</div>
 							{!form.ongoing && (
 								<div className={s.timeField}>
@@ -122,14 +129,7 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 										onChange={e => setField('endDate', e.target.value)}
 										className={s.timeInput}
 									/>
-									<input
-										type="time"
-										aria-label="Время окончания приступа"
-										data-help="Укажите время окончания приступа."
-										value={form.endTime}
-										onChange={e => setField('endTime', e.target.value)}
-										className={s.timeInput}
-									/>
+									<AttackTimeWheels key={`end-${form.endDate}`} label="Время окончания приступа" value={form.endTime} latestTime={form.endDate === today ? currentTime : null} onChange={value => setField('endTime', value)} />
 								</div>
 							)}
 						</div>
@@ -203,9 +203,19 @@ const AddAttackForm = ({ open, form, error, loading, editing, onClose, setField,
 				</div>
 
 				<div className={s.footer}>
-					<button className={s.submitBtn} onClick={onSubmit} disabled={loading} data-help="Сохранить запись о приступе в дневнике.">
+					<button className={s.submitBtn} onClick={onSubmit} disabled={busy} data-help="Сохранить запись о приступе в дневнике.">
 						Сохранить приступ
 					</button>
+					{onSubmitAnother && <button className={s.anotherBtn} onClick={onSubmitAnother} disabled={busy}>Сохранить и добавить ещё</button>}
+					{editing && <button
+						type="button"
+						className={s.deleteBtn}
+						onClick={onDelete}
+						disabled={busy}
+						data-help="Удалить эту запись о приступе из дневника."
+					>
+						{deleting ? 'Удаляем приступ…' : 'Удалить приступ'}
+					</button>}
 				</div>
 			</div>
 		</div>

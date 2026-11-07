@@ -22,5 +22,12 @@ public record AttackRequest(
 		@Size(max = 30) Set<String> symptoms,
 		@Size(max = 30) Set<String> triggers,
 		@Size(max = 30) Map<String, String> painZones,
-		@Size(max = 2000) String note
-) {}
+		@Size(max = 2000) String note,
+		String timezone
+) {
+	public AttackRequest(LocalDate startDate, LocalTime startTime, LocalDate endDate, LocalTime endTime,
+			boolean ongoing, int intensity, AttackType type, Set<String> symptoms, Set<String> triggers,
+			Map<String,String> painZones, String note) {
+		this(startDate,startTime,endDate,endTime,ongoing,intensity,type,symptoms,triggers,painZones,note,null);
+	}
+}

@@ -4,6 +4,7 @@ import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import CodeBoxes from '@/shared/ui/CodeBoxes/CodeBoxes'
 import PasswordStrengthBar from '@/features/auth/ui/PasswordStrengthBar'
+import { isCentralError } from '@/shared/lib/isCentralError'
 import { VisibilityIcon, VisibilityOffIcon } from '@/shared/ui/icons'
 import s from './AccountSecuritySettings.module.scss'
 
@@ -62,7 +63,7 @@ const AccountSecuritySettings = ({ user }) => {
 				setEmailStep('code')
 			}
 		} catch (error) {
-			setEmailError(error.message || 'Не удалось проверить состояние смены почты.')
+			if (!isCentralError(error)) setEmailError(error.message || 'Не удалось проверить состояние смены почты.')
 		} finally {
 			setEmailBusy(false)
 		}
@@ -83,7 +84,7 @@ const AccountSecuritySettings = ({ user }) => {
 			setEmailStep('code')
 		} catch (error) {
 			if (error.message === 'Неверный пароль') setEmailCurrentPasswordError('Текущий пароль введён неверно.')
-			else setEmailError(error.message || 'Не удалось начать смену почты.')
+			else if (!isCentralError(error)) setEmailError(error.message || 'Не удалось начать смену почты.')
 		} finally {
 			setEmailBusy(false)
 		}
@@ -98,7 +99,7 @@ const AccountSecuritySettings = ({ user }) => {
 			setResendAfter(status.resendAfterSeconds)
 			setCode('')
 		} catch (error) {
-			setEmailError(error.message || 'Не удалось отправить новый код.')
+			if (!isCentralError(error)) setEmailError(error.message || 'Не удалось отправить новый код.')
 			if (error.retryAfter) setResendAfter(error.retryAfter)
 		} finally {
 			setEmailBusy(false)
@@ -114,7 +115,7 @@ const AccountSecuritySettings = ({ user }) => {
 			await userApi.confirmEmailChange(code)
 			await signOutAfterChange('Адрес почты изменён. Войдите в Calm с новым адресом.')
 		} catch (error) {
-			setEmailError(error.message || 'Не удалось подтвердить новый адрес.')
+			if (!isCentralError(error)) setEmailError(error.message || 'Не удалось подтвердить новый адрес.')
 		} finally {
 			setEmailBusy(false)
 		}
@@ -132,7 +133,7 @@ const AccountSecuritySettings = ({ user }) => {
 			setNewEmail('')
 			setCurrentPassword('')
 		} catch (error) {
-			setEmailError(error.message || 'Не удалось отменить смену почты.')
+			if (!isCentralError(error)) setEmailError(error.message || 'Не удалось отменить смену почты.')
 		} finally {
 			setEmailBusy(false)
 		}
@@ -169,7 +170,7 @@ const AccountSecuritySettings = ({ user }) => {
 			const message = error.message || 'Не удалось изменить пароль.'
 			if (message === 'Неверный пароль') setPasswordCurrentError('Текущий пароль введён неверно.')
 			else if (message.startsWith('Новый пароль')) setPasswordNewError(message)
-			else setPasswordGeneralError(message)
+			else if (!isCentralError(error)) setPasswordGeneralError(message)
 		} finally {
 			setPasswordBusy(false)
 		}
@@ -177,11 +178,17 @@ const AccountSecuritySettings = ({ user }) => {
 
 	return (
 		<section className={s.security} aria-label="Безопасность аккаунта">
-			<div className={s.section}>
-				<h3 className={s.title}>Электронная почта</h3>
-				<p className={s.currentValue}>{user?.email}</p>
+			<div className={s.heading}>
+				<h2>Безопасность</h2>
+			</div>
+			<p className={s.headingHint}>Почта и пароль для входа</p>
+			<details className={s.section}>
+				<summary className={s.summary}>
+					<span className={s.summaryText}><strong>Электронная почта</strong><span>{user?.email}</span></span>
+				</summary>
+				<div className={s.sectionBody}>
 				{emailStep === 'closed' ? (
-					<Button type="button" colored className={s.changeEmailButton} onClick={openEmailChange} disabled={emailBusy}>Изменить почту</Button>
+					<Button type="button" colored onClick={openEmailChange} disabled={emailBusy}>Изменить почту</Button>
 				) : emailStep === 'start' ? (
 					<form className={s.form} onSubmit={startEmailChange} autoComplete="off">
 						<p className={s.description}>Подтвердите действие текущим паролем. Пока новый адрес не подтверждён, почта аккаунта останется прежней.</p>
@@ -206,10 +213,14 @@ const AccountSecuritySettings = ({ user }) => {
 						</div>
 					</form>
 				)}
-			</div>
+				</div>
+			</details>
 
-			<div className={s.section}>
-				<h3 className={s.title}>Пароль</h3>
+			<details className={s.section}>
+				<summary className={s.summary}>
+					<span className={s.summaryText}><strong>Пароль</strong><span>Изменить пароль для входа</span></span>
+				</summary>
+				<div className={s.sectionBody}>
 				<form className={s.form} onSubmit={changePassword} autoComplete="off">
 					<p className={s.description}>После смены пароля Calm завершит все активные сеансы.</p>
 					<Input id="changePasswordCurrent" name="calm-account-check" type={passwordCurrentVisible ? 'text' : 'password'} autoComplete="off" readOnly onFocus={event => { event.currentTarget.readOnly = false }} label="Текущий пароль" value={passwordCurrent} onChange={event => { setPasswordCurrent(event.target.value); setPasswordCurrentError('') }} error={passwordCurrentError} rightElement={<PasswordToggle visible={passwordCurrentVisible} onToggle={() => setPasswordCurrentVisible(value => !value)} label="текущий пароль" />} />
@@ -219,7 +230,8 @@ const AccountSecuritySettings = ({ user }) => {
 					{passwordGeneralError && <p className={s.error} role="alert">{passwordGeneralError}</p>}
 					<Button type="submit" colored disabled={passwordBusy}>{passwordBusy ? 'Сохраняем…' : 'Изменить пароль'}</Button>
 				</form>
-			</div>
+				</div>
+			</details>
 		</section>
 	)
 }

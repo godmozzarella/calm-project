@@ -342,19 +342,19 @@ public class StatsService {
 		int best = 0, run = 0;
 		for (LocalDate d = from; !d.isAfter(to); d = d.plusDays(1)) {
 			LocalDate day = d;
-			if (attacks.stream().anyMatch(a -> a.overlaps(day)) || !noAttackDays.contains(d)) { run = 0; }
+			if (attacks.stream().anyMatch(a -> day.equals(a.getStartDate())) || !noAttackDays.contains(d)) { run = 0; }
 			else { run++; best = Math.max(best, run); }
 		}
 		return best;
 	}
 
 	private int currentStreak(String userId, LocalDate today) {
-		if (attackRepo.findInRange(userId, today, today).stream().anyMatch(a -> a.overlaps(today))) return 0;
+		if (attackRepo.findInRange(userId, today, today).stream().anyMatch(a -> today.equals(a.getStartDate()))) return 0;
 		LocalDate yesterday = today.minusDays(1);
 		List<DailyOutcome> confirmations = outcomeRepo.findByUserIdAndDateBetween(userId, LocalDate.of(2000, 1, 1), today);
 		Set<LocalDate> confirmed = confirmations.stream().map(DailyOutcome::getDate).collect(Collectors.toSet());
 		for (Attack attack : attackRepo.findInRange(userId, LocalDate.of(2000, 1, 1), yesterday)) {
-			confirmed.removeIf(attack::overlaps);
+			confirmed.remove(attack.getStartDate());
 		}
 		int run = 0;
 		LocalDate firstDay = confirmed.contains(today) ? today : yesterday;

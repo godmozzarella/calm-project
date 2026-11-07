@@ -6,6 +6,27 @@ import { test } from 'node:test'
 const source = readFileSync(new URL('./httpClient.js', import.meta.url), 'utf8')
     .replace(/^import .*sessionActivity'.*$/m, 'const isSessionIdle = () => false; const clearSessionActivity = () => {}')
 
+test('a server failure keeps its status and emits one bottom-notice event', async () => {
+    const previous = { fetch: globalThis.fetch, window: globalThis.window, storage: globalThis.localStorage, customEvent: globalThis.CustomEvent }
+    try {
+        const events = []
+        globalThis.localStorage = { getItem: () => null }
+        globalThis.window = { dispatchEvent: event => events.push(event) }
+        globalThis.CustomEvent = class { constructor(type, options) { this.type = type; this.detail = options.detail } }
+        globalThis.fetch = async () => new Response(JSON.stringify({ message: 'Сервис временно недоступен' }), { status: 503 })
+        const code = source.replace('import.meta.env.VITE_API_URL', 'undefined') + '\n// server-notice test'
+        const { http } = await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`)
+        await assert.rejects(http.get('/forecast'), error => error.status === 503)
+        assert.equal(events.filter(event => event.type === 'calm:show-error').length, 1)
+        assert.equal(events.find(event => event.type === 'calm:show-error').detail.message, 'Сервис временно недоступен')
+    } finally {
+        globalThis.fetch = previous.fetch
+        globalThis.window = previous.window
+        globalThis.localStorage = previous.storage
+        globalThis.CustomEvent = previous.customEvent
+    }
+})
+
 test('a protected request refreshes at most once when the retry is also unauthorized', async () => {
     const originalFetch = globalThis.fetch
     const originalWindow = globalThis.window

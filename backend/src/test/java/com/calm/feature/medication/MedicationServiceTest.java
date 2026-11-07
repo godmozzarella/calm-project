@@ -62,6 +62,7 @@ class MedicationServiceTest {
 		assertThat(saved.getPersonalMedicationId()).isEqualTo("personal-1");
 		assertThat(saved.trainingName()).isEqualTo(Medication.PERSONAL_LABEL);
 		assertThat(service.displayName("user-1", saved)).isEqualTo("Мой препарат");
+		verify(personalService).rememberDosageIfAbsent("user-1", "personal-1", "100");
 	}
 
 	@Test
@@ -75,11 +76,32 @@ class MedicationServiceTest {
 		when(repo.findLegacyPersonal("user-1")).thenReturn(List.of(oldIntake));
 		when(personalService.remember("user-1", "Старое название")).thenReturn(personal);
 		when(personalService.listActive("user-1")).thenReturn(List.of(personal));
+		when(repo.findPersonalHistoryForDefaults(eq("user-1"), anySet())).thenReturn(List.of());
 
 		assertThat(service.listPersonal("user-1")).containsExactly(personal);
 		assertThat(oldIntake.getName()).isEqualTo(Medication.PERSONAL_LABEL);
 		assertThat(oldIntake.getPersonalMedicationId()).isEqualTo("personal-old");
 		verify(repo).save(oldIntake);
+	}
+
+	@Test
+	void existingPersonalMedicineGetsDefaultFromEarliestRecordedDose() {
+		var personal = new PersonalMedication("user-1", "Мой препарат", "мой препарат");
+		personal.setId("personal-1");
+		var first = new Medication();
+		first.setPersonalMedicationId("personal-1");
+		first.setDosage("100");
+		var later = new Medication();
+		later.setPersonalMedicationId("personal-1");
+		later.setDosage("200");
+		when(repo.findLegacyPersonal("user-1")).thenReturn(List.of());
+		when(personalService.listActive("user-1")).thenReturn(List.of(personal));
+		when(repo.findPersonalHistoryForDefaults(eq("user-1"), anySet())).thenReturn(List.of(first, later));
+
+		service.listPersonal("user-1");
+
+		verify(personalService).rememberDosageIfAbsent("user-1", "personal-1", "100");
+		verify(personalService, never()).rememberDosageIfAbsent("user-1", "personal-1", "200");
 	}
 
 	@Test

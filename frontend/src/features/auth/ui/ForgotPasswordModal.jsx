@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { authApi } from '@/shared/api'
+import { isCentralError } from '@/shared/lib/isCentralError'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import CodeBoxes from '@/shared/ui/CodeBoxes/CodeBoxes'
@@ -42,7 +43,7 @@ const ForgotPasswordModal = ({ initialEmail = '', onClose }) => {
 			setPassword('')
 			setRepeat('')
 		} catch (requestError) {
-			setError(requestError.message || 'Не удалось выполнить запрос. Попробуйте позже.')
+			if (!isCentralError(requestError)) setError(requestError.message || 'Не удалось выполнить запрос. Попробуйте позже.')
 			if (requestError.retryAfter) setResendAfter(requestError.retryAfter)
 		} finally {
 			setBusy(false)
@@ -60,7 +61,7 @@ const ForgotPasswordModal = ({ initialEmail = '', onClose }) => {
             setCode('')
             setStep('password')
         } catch (requestError) {
-            setError(requestError.message || 'Не удалось проверить код.')
+            if (!isCentralError(requestError)) setError(requestError.message || 'Не удалось проверить код.')
         } finally { setBusy(false) }
     }
 
@@ -79,7 +80,7 @@ const ForgotPasswordModal = ({ initialEmail = '', onClose }) => {
 			setPassword('')
 			setRepeat('')
 		} catch (requestError) {
-			setError(requestError.message || 'Не удалось изменить пароль.')
+			if (!isCentralError(requestError)) setError(requestError.message || 'Не удалось изменить пароль.')
 		} finally {
 			setBusy(false)
 		}

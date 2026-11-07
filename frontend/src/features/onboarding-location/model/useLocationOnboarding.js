@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 
 import { userApi, forecastApi } from '@/shared/api'
 import { getCurrentUser, setCurrentUser } from '@/entities/user'
+import { isCentralError } from '@/shared/lib/isCentralError'
 
 /**
  * Хук онбординга локации: поиск города (через бэк) + геолокация браузера +
@@ -33,7 +34,7 @@ export const useLocationOnboarding = ({ setUser }) => {
 			const list = await forecastApi.geocode(trimmed, 6)
 			setResults(Array.isArray(list) ? list : [])
 		} catch (e) {
-			setError(e.message || 'Не удалось найти город')
+			if (!isCentralError(e)) setError(e.message || 'Не удалось найти город')
 			setResults([])
 		} finally {
 			setSearching(false)
@@ -88,7 +89,7 @@ export const useLocationOnboarding = ({ setUser }) => {
 			setUser(updated)
 			return updated
 		} catch (e) {
-			setError(e.message || 'Не удалось сохранить локацию')
+			if (!isCentralError(e)) setError(e.message || 'Не удалось сохранить локацию')
 			throw e
 		} finally {
 			setSaving(false)

@@ -27,6 +27,9 @@ import java.nio.file.Paths;
 @Service
 public class AccountDeletionService {
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private org.springframework.context.ApplicationEventPublisher events;
+
 	private static final Logger log = LoggerFactory.getLogger(AccountDeletionService.class);
 
 	private final UserRepository userRepository;
@@ -80,6 +83,7 @@ public class AccountDeletionService {
 		// Аватар-файл удаляем best-effort: даже если не получилось — пользователя всё равно сносим.
 		tryDeleteAvatar(user.getAvatarUrl());
 
+        if (events != null) events.publishEvent(new com.calm.feature.risk.AccountDeletedEvent(userId));
 		userRepository.delete(user);
 		log.info("Аккаунт удалён: приступов={}, препаратов={}", attacks, meds);
 	}

@@ -24,10 +24,14 @@ class DailyOutcomeServiceTest {
 		var service = new DailyOutcomeService(outcomes, attacks, predictions);
 		var today = LocalDate.now(ZoneId.of("UTC"));
 		when(attacks.findInRange("user-1", today, today)).thenReturn(List.of());
-		when(outcomes.save(any(DailyOutcome.class))).thenAnswer(call -> call.getArgument(0));
+		when(outcomes.save(any(DailyOutcome.class))).thenAnswer(call -> {
+            DailyOutcome mark = call.getArgument(0);
+            when(outcomes.findByUserIdAndDate(mark.getUserId(), mark.getDate())).thenReturn(Optional.of(mark));
+            return mark;
+        });
 
 		assertThat(service.confirmNoAttack("user-1", today, "UTC").status())
-				.isEqualTo(DailyOutcomeResponse.Status.NO_ATTACK);
+				.isEqualTo(DailyOutcomeResponse.Status.NO_ATTACK_STARTED);
 		verify(outcomes).save(any(DailyOutcome.class));
 	}
 
@@ -57,11 +61,15 @@ class DailyOutcomeServiceTest {
 				.thenReturn(Optional.of(prediction));
 		when(attacks.findInRange("user-1", date, date)).thenReturn(List.of());
 		when(outcomes.findByUserIdAndDate("user-1", date)).thenReturn(Optional.empty());
-		when(outcomes.save(any(DailyOutcome.class))).thenAnswer(call -> call.getArgument(0));
+		when(outcomes.save(any(DailyOutcome.class))).thenAnswer(call -> {
+            DailyOutcome mark = call.getArgument(0);
+            when(outcomes.findByUserIdAndDate(mark.getUserId(), mark.getDate())).thenReturn(Optional.of(mark));
+            return mark;
+        });
 
 		var result = service.confirmNoAttack("user-1", date, "Not/A-Timezone");
 
-		assertThat(result.status()).isEqualTo(DailyOutcomeResponse.Status.NO_ATTACK);
+		assertThat(result.status()).isEqualTo(DailyOutcomeResponse.Status.NO_ATTACK_STARTED);
 		verify(outcomes).save(any(DailyOutcome.class));
 	}
 
@@ -81,7 +89,7 @@ class DailyOutcomeServiceTest {
 	}
 
 	@Test
-	void continuationDayIsPositiveAndCannotBeConfirmedQuiet() {
+	void continuationDoesNotBlockNoNewStartMark() {
 		var outcomes = mock(DailyOutcomeRepository.class);
 		var attacks = mock(AttackRepository.class);
 		var predictions = mock(RiskPredictionRecordRepository.class);
@@ -91,9 +99,28 @@ class DailyOutcomeServiceTest {
 		attack.setStartDate(day.minusDays(2));
 		attack.setEndDate(day);
 		when(attacks.findInRange("user-1", day, day)).thenReturn(List.of(attack));
-		assertThat(service.get("user-1", day).status()).isEqualTo(DailyOutcomeResponse.Status.ATTACK_PRESENT);
-		assertThatThrownBy(() -> service.confirmNoAttack("user-1", day, "UTC"))
-				.isInstanceOf(ResponseStatusException.class);
-		verify(outcomes, never()).save(any());
+		assertThat(service.get("user-1", day).status()).isEqualTo(DailyOutcomeResponse.Status.UNKNOWN);
+        assertThat(service.get("user-1", day).headachePresent()).isTrue();
+        when(outcomes.save(any(DailyOutcome.class))).thenAnswer(call -> {
+            DailyOutcome mark = call.getArgument(0);
+            when(outcomes.findByUserIdAndDate("user-1", day)).thenReturn(Optional.of(mark));
+            return mark;
+        });
+        assertThat(service.confirmNoAttack("user-1", day, "UTC").status())
+            .isEqualTo(DailyOutcomeResponse.Status.NO_ATTACK_STARTED);
+        verify(outcomes).save(any());
 	}
+    @Test void concurrentNewStartCannotLeaveHiddenNegativeMark() {
+        var outcomes = mock(DailyOutcomeRepository.class);
+        var attacks = mock(AttackRepository.class);
+        var predictions = mock(RiskPredictionRecordRepository.class);
+        var day = LocalDate.now(ZoneId.of("UTC")).minusDays(1);
+        var attack = new Attack(); attack.setStartDate(day);
+        when(attacks.findInRange("u", day, day)).thenReturn(List.of(), List.of(attack));
+        var service = new DailyOutcomeService(outcomes, attacks, predictions);
+        assertThatThrownBy(() -> service.confirmNoAttack("u", day, "UTC"))
+            .isInstanceOf(ResponseStatusException.class);
+        verify(outcomes).deleteByUserIdAndDate("u", day);
+    }
+
 }

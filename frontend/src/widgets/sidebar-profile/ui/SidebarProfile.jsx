@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { createPortal } from 'react-dom'
 import ContrastIcon from '@mui/icons-material/Contrast'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 
 import { Input } from '@/shared/ui/Input'
 import CodeBoxes from '@/shared/ui/CodeBoxes/CodeBoxes'
 import { notifyError } from '@/shared/lib/notifyError'
+import { isCentralError } from '@/shared/lib/isCentralError'
 import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 import { Button } from '@/shared/ui/Button'
 import {
@@ -28,6 +30,7 @@ import {
 	EditLocationIcon,
 } from '@/shared/ui/icons'
 import { useEditProfile } from '@/features/edit-profile'
+import DiaryProfileFields from '@/features/edit-profile/ui/DiaryProfileFields'
 import AccountSecuritySettings from '@/features/edit-profile/ui/AccountSecuritySettings'
 import { LocationOnboarding } from '@/features/onboarding-location'
 import { clearCurrentUser, setCurrentUser } from '@/entities/user'
@@ -76,7 +79,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 		try {
 			setParticipation(await riskApi.getParticipation())
 		} catch (e) {
-			setParticipationError(e.message || 'Не удалось загрузить статус участия.')
+			if (!isCentralError(e)) setParticipationError(e.message || 'Не удалось загрузить статус участия.')
 		} finally {
 			setLoadingParticipation(false)
 		}
@@ -92,7 +95,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 				: await riskApi.withdrawSharedModelPilot()
 			setParticipation(result)
 		} catch (e) {
-			setParticipationError(e.message || 'Не удалось сохранить решение.')
+			if (!isCentralError(e)) setParticipationError(e.message || 'Не удалось сохранить решение.')
 			if (join) {
 				try { setParticipation(await riskApi.getParticipation()) } catch { /* Preserve the save error. */ }
 			}
@@ -130,7 +133,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 			const res = await forecastApi.sendTestNotification()
 			setTestMessage(res?.message || 'Письмо отправлено')
 		} catch (e) {
-			setTestMessage(e.message || 'Ошибка отправки')
+			if (!isCentralError(e)) setTestMessage(e.message || 'Ошибка отправки')
 		} finally {
 			setSendingTest(false)
 			setTimeout(() => setTestMessage(null), 8000)
@@ -147,7 +150,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 			setVerificationCooldown(30)
 			setVerificationCode('')
 		} catch (e) {
-			setVerificationError(e.message || 'Не удалось отправить код.')
+			if (!isCentralError(e)) setVerificationError(e.message || 'Не удалось отправить код.')
 			const retry = e.message?.match(/через\s+(\d+)\s+сек/i)
 			if (retry) setVerificationCooldown(Number(retry[1]))
 		} finally {
@@ -173,7 +176,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 			setVerificationCode('')
 			setTestMessage('Email подтверждён, уведомления включены.')
 		} catch (e) {
-			setVerificationError(e.message || 'Не удалось подтвердить код.')
+			if (!isCentralError(e)) setVerificationError(e.message || 'Не удалось подтвердить код.')
 		} finally {
 			setVerificationChecking(false)
 		}
@@ -198,6 +201,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 		editData,
 		tempAvatar,
 		passwordError,
+		saving, profileLoading, profileLoaded, loadProfile,
 		openForm,
 		closeForm,
 		handleInputChange,
@@ -233,7 +237,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 	}
 
 	const handleBackToMain = () => {
-		closeForm()
+		if(closeForm()===false) return
 		setView('main')
 	}
 
@@ -313,9 +317,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 							)}
 						</nav>
 
-						<div className={s.divider} />
-
-						<div className={s.sectionLabel}>Настройки</div>
+						<div className={s.sectionDivider}><span>Настройки</span></div>
 						<nav className={s.navSection}>
 							<button className={s.navItem} onClick={openParticipation} data-help="Узнать об участии в общей модели и при желании изменить своё согласие.">
 								<span className={s.navIcon}><AnalyticsIcon fontSize="small" /></span>
@@ -408,41 +410,46 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 					{/* ── Edit profile sub-panel ── */}
 					<div className={`${s.panel} ${s.editPanel} ${view === 'edit' ? s.panelVisible : s.panelHiddenRight}`}>
 						<div className={s.panelHeader}>
-							<button className={s.iconBtn} onClick={handleBackToMain} aria-label="Назад">
+							<button className={`${s.iconBtn} ${s.editBackBtn}`} onClick={handleBackToMain} aria-label="Назад">
 								<BackIcon fontSize="small" />
 							</button>
-							<span className={s.panelTitle}>Редактирование</span>
+						<span className={s.panelTitle}>Профиль</span>
 						</div>
 
 						{editData && (
 							<form
 								className={s.editForm}
-												autoComplete="off"
+								autoComplete="off"
 								onSubmit={e => {
 									e.preventDefault()
 									handleSaveChanges(handleBackToMain)
 								}}
 							>
-								<div className={s.editAvatarSection}>
-									<label htmlFor="editAvatarUpload" className={s.avatarWrapper}>
-										{tempAvatar ? (
-											<img className={s.avatar} src={resolveAvatar(tempAvatar)} alt="Аватар" />
-										) : (
-											<div className={s.avatarPlaceholder}>
-												<span className={s.initials}>{initials}</span>
+								<div className={s.editSectionHeading}>
+									<h2>Основное</h2>
+								</div>
+								<div className={s.editIdentityCard}>
+									<div className={s.editAvatarSection}>
+										<label htmlFor="editAvatarUpload" className={s.avatarWrapper}>
+											{tempAvatar ? (
+												<img className={s.avatar} src={resolveAvatar(tempAvatar)} alt="Аватар" />
+											) : (
+												<div className={s.avatarPlaceholder}>
+													<span className={s.initials}>{initials}</span>
+												</div>
+											)}
+											<div className={s.avatarOverlay}>
+												<PhotoCameraIcon style={{ fontSize: '1.25rem' }} />
 											</div>
-										)}
-										<div className={s.avatarOverlay}>
-											<PhotoCameraIcon style={{ fontSize: '1.25rem' }} />
-										</div>
-										<input
-											type="file"
-											id="editAvatarUpload"
-											accept="image/*"
-											className={s.fileInput}
-											onChange={handleAvatarUpload}
-										/>
-									</label>
+											<input
+												type="file"
+												id="editAvatarUpload"
+												accept="image/*"
+												aria-label="Загрузить фото профиля"
+												className={s.fileInput}
+												onChange={handleAvatarUpload}
+											/>
+										</label>
 									{tempAvatar && (
 										<button
 											type="button"
@@ -453,30 +460,31 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 											Удалить фото
 										</button>
 									)}
-								</div>
+									</div>
 
-								<div className={s.formFields}>
-									<Input
-										id="name"
-										type="text"
-										label="Имя"
-										placeholder="Ваше имя"
-										value={editData.name}
-										onChange={handleInputChange}
-									/>
+									<div className={s.formFields}>
+										<Input
+											id="name"
+											type="text"
+											label="Имя"
+											placeholder="Ваше имя"
+											value={editData.name}
+											onChange={handleInputChange}
+										/>
+									</div>
 								</div>
+								<DiaryProfileFields data={editData} onChange={handleInputChange} loading={profileLoading} loaded={profileLoaded} saving={saving} onRetry={loadProfile}/>
 								{passwordError && <p className={s.testMessage} role="alert">{passwordError}</p>}
 
-								<Button type="submit" colored className={s.saveBtn}>
-									Сохранить изменения
+								<Button type="submit" colored className={s.saveBtn} disabled={saving || !profileLoaded}>
+									{saving?'Сохраняем…':'Сохранить изменения'}
 								</Button>
 							</form>
 						)}
 						{editData && <AccountSecuritySettings user={user} />}
 						{editData && <div className={`${s.deleteAccountSection} ${s.securityDeleteAccount}`}>
-							<p>Удаление аккаунта безвозвратно удалит ваши записи и настройки.</p>
 							<button type="button" className={s.deleteAccountButton} onClick={handleDeleteAccount}>
-								<DeleteIcon fontSize="small" />
+								<DeleteOutlineIcon fontSize="small" />
 								Удалить аккаунт
 							</button>
 						</div>}
@@ -542,6 +550,7 @@ const SidebarProfile = ({ openMenu, setOpenMenu, user, setUser }) => {
 				open={locationModalOpen}
 				onClose={() => setLocationModalOpen(false)}
 				setUser={setUser}
+				currentCity={user?.city}
 			/>
 			{verificationOpen && createPortal(
 				<div className={s.verificationOverlay} onClick={event => event.target === event.currentTarget && setVerificationOpen(false)}>

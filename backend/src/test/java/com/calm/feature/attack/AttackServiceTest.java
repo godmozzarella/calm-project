@@ -99,14 +99,11 @@ class AttackServiceTest {
 		var spanning = new AttackRequest(start, LocalTime.of(10, 0), end, LocalTime.of(11, 0),
 				false, 5, AttackType.PRESSING, null, null, null, null);
 		when(repo.save(any(Attack.class))).thenAnswer(inv -> inv.getArgument(0));
-		when(outcomes.findByUserIdAndDateBetween("user-1", start, end)).thenReturn(List.of(
-				new DailyOutcome("user-1", start, Instant.now()),
-				new DailyOutcome("user-1", start.plusDays(1), Instant.now()),
-				new DailyOutcome("user-1", end, Instant.now())));
+
 		withOutcomes.create("user-1", spanning);
 		verify(outcomes).deleteByUserIdAndDate("user-1", start);
-		verify(outcomes).deleteByUserIdAndDate("user-1", start.plusDays(1));
-		verify(outcomes).deleteByUserIdAndDate("user-1", end);
+		verify(outcomes, never()).deleteByUserIdAndDate("user-1", start.plusDays(1));
+		verify(outcomes, never()).deleteByUserIdAndDate("user-1", end);
 	}
 
 	@Test
@@ -171,6 +168,22 @@ class AttackServiceTest {
 		assertThatThrownBy(() -> service.create("user-1", invalid))
 				.isInstanceOf(ResponseStatusException.class)
 				.hasMessageContaining("раньше начала");
+		verify(repo, never()).save(any());
+	}
+
+	@Test
+	void rejectsFutureLocalStartAndEnd() {
+		var checked = new AttackService(repo, null, null,
+				java.time.Clock.fixed(java.time.Instant.parse("2026-11-05T09:00:00Z"), java.time.ZoneOffset.UTC));
+		var day = LocalDate.of(2026, 11, 5);
+		var futureStart = new AttackRequest(day, LocalTime.of(12, 1), null, null,
+				true, 5, AttackType.PRESSING, null, null, null, null, "Europe/Moscow");
+		assertThatThrownBy(() -> checked.create("user-1", futureStart))
+				.hasMessageContaining("Начало не может быть в будущем");
+		var futureEnd = new AttackRequest(day, LocalTime.of(11, 0), day, LocalTime.of(12, 1),
+				false, 5, AttackType.PRESSING, null, null, null, null, "Europe/Moscow");
+		assertThatThrownBy(() -> checked.create("user-1", futureEnd))
+				.hasMessageContaining("Конец не может быть в будущем");
 		verify(repo, never()).save(any());
 	}
 
