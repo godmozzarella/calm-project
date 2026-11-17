@@ -1,4 +1,8 @@
-peaceofmindforyourhead.duckdns.org {
+calmprj.ru {
 	encode zstd gzip
 	reverse_proxy frontend:80
+}
+
+www.calmprj.ru, peaceofmindforyourhead.duckdns.org {
+	redir https://calmprj.ru{uri} 308
 }

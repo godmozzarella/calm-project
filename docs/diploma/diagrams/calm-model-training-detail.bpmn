@@ -1,0 +1,311 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_TrainingDetail" targetNamespace="https://calmprj.ru/bpmn" exporter="Calm diploma" exporterVersion="1">
+  <bpmn:process id="Process_TrainingDetail" name="Calm — обучение модели нового приступа" isExecutable="false">
+    <bpmn:startEvent id="start" name="Принято решение об обучении модели">
+      <bpmn:outgoing>t1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="protocol" name="Определить цель, момент прогноза и горизонт">
+      <bpmn:incoming>t1</bpmn:incoming>
+      <bpmn:outgoing>t2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="consent" name="Отобрать данные с действующим согласием">
+      <bpmn:incoming>t2</bpmn:incoming>
+      <bpmn:outgoing>t3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="snapshot" name="Подготовить своевременные снимки признаков">
+      <bpmn:incoming>t3</bpmn:incoming>
+      <bpmn:outgoing>t4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="outcome" name="Определить подтверждённый исход периода">
+      <bpmn:incoming>t4</bpmn:incoming>
+      <bpmn:outgoing>t5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="check" name="Проверить качество и пригодность примеров">
+      <bpmn:incoming>t5</bpmn:incoming>
+      <bpmn:outgoing>t6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="enough" name="Данных достаточно?" gatewayDirection="Diverging" default="insufficient">
+      <bpmn:incoming>t6</bpmn:incoming>
+      <bpmn:outgoing>sufficient</bpmn:outgoing>
+      <bpmn:outgoing>insufficient</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="short" name="Обучение отложено">
+      <bpmn:incoming>insufficient</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="split" name="Разделить данные по времени">
+      <bpmn:incoming>sufficient</bpmn:incoming>
+      <bpmn:outgoing>t7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="prepare" name="Настроить обработку признаков на обучающей части">
+      <bpmn:incoming>t7</bpmn:incoming>
+      <bpmn:outgoing>t8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="train" name="Обучить кандидатные модели">
+      <bpmn:incoming>t8</bpmn:incoming>
+      <bpmn:outgoing>t9</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="assess" name="Проверить качество на отложенных данных">
+      <bpmn:incoming>t9</bpmn:incoming>
+      <bpmn:outgoing>t10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="compare" name="Сравнить модели с базовым прогнозом">
+      <bpmn:incoming>t10</bpmn:incoming>
+      <bpmn:outgoing>t11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="review" name="Оценить результаты и решить вопрос внедрения">
+      <bpmn:incoming>t11</bpmn:incoming>
+      <bpmn:outgoing>t12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="approved" name="Внедрение одобрено?" gatewayDirection="Diverging" default="decline">
+      <bpmn:incoming>t12</bpmn:incoming>
+      <bpmn:outgoing>approve</bpmn:outgoing>
+      <bpmn:outgoing>decline</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="activate" name="Активировать проверенную версию модели">
+      <bpmn:incoming>approve</bpmn:incoming>
+      <bpmn:outgoing>t13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="deployed" name="Попытка активации завершена">
+      <bpmn:incoming>t13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="keep" name="Действующая версия модели сохранена">
+      <bpmn:incoming>decline</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="t1" sourceRef="start" targetRef="protocol" />
+    <bpmn:sequenceFlow id="t2" sourceRef="protocol" targetRef="consent" />
+    <bpmn:sequenceFlow id="t3" sourceRef="consent" targetRef="snapshot" />
+    <bpmn:sequenceFlow id="t4" sourceRef="snapshot" targetRef="outcome" />
+    <bpmn:sequenceFlow id="t5" sourceRef="outcome" targetRef="check" />
+    <bpmn:sequenceFlow id="t6" sourceRef="check" targetRef="enough" />
+    <bpmn:sequenceFlow id="sufficient" sourceRef="enough" targetRef="split" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">Да</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="insufficient" sourceRef="enough" targetRef="short" name="Нет" />
+    <bpmn:sequenceFlow id="t7" sourceRef="split" targetRef="prepare" />
+    <bpmn:sequenceFlow id="t8" sourceRef="prepare" targetRef="train" />
+    <bpmn:sequenceFlow id="t9" sourceRef="train" targetRef="assess" />
+    <bpmn:sequenceFlow id="t10" sourceRef="assess" targetRef="compare" />
+    <bpmn:sequenceFlow id="t11" sourceRef="compare" targetRef="review" />
+    <bpmn:sequenceFlow id="t12" sourceRef="review" targetRef="approved" />
+    <bpmn:sequenceFlow id="approve" sourceRef="approved" targetRef="activate" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">Да</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="decline" sourceRef="approved" targetRef="keep" name="Нет" />
+    <bpmn:sequenceFlow id="t13" sourceRef="activate" targetRef="deployed" />
+    <bpmn:textAnnotation id="definition">
+      <bpmn:text>Цель: новое начало приступа в заданном периоде. Продолжение старого приступа не равно новому началу.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="assoc_definition" sourceRef="protocol" targetRef="definition" />
+    <bpmn:textAnnotation id="inputs">
+      <bpmn:text>Признаки: история приступов и приёмов, доступные ответы опроса, прогноз погоды и состояние на момент прогноза.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="assoc_inputs" sourceRef="snapshot" targetRef="inputs" />
+    <bpmn:textAnnotation id="labels">
+      <bpmn:text>Новое начало = 1; явное подтверждение отсутствия новых начал = 0; неизвестный исход исключается из обучения.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="assoc_labels" sourceRef="outcome" targetRef="labels" />
+    <bpmn:textAnnotation id="evaluation">
+      <bpmn:text>Проверить качество вероятностей, калибровку, полноту и точность; сравнить с базовой частотой. Преобразования подбираются только на обучающих данных.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="assoc_evaluation" sourceRef="assess" targetRef="evaluation" />
+  </bpmn:process>
+  <bpmn:collaboration id="Collab_TrainingDetail">
+    <bpmn:participant id="Pool_TrainingDetail" name="Calm" processRef="Process_TrainingDetail" />
+  </bpmn:collaboration>
+  <bpmndi:BPMNDiagram id="Diagram_TrainingDetail" name="Calm — обучение модели нового приступа">
+    <bpmndi:BPMNPlane id="Plane_TrainingDetail" bpmnElement="Collab_TrainingDetail">
+      <bpmndi:BPMNShape id="shape_Pool_TrainingDetail" bpmnElement="Pool_TrainingDetail" isHorizontal="true">
+        <dc:Bounds x="30" y="80" width="2770" height="1050" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_start" bpmnElement="start">
+        <dc:Bounds x="100" y="300" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="35" y="343" width="166" height="48" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_protocol" bpmnElement="protocol">
+        <dc:Bounds x="260" y="278" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_consent" bpmnElement="consent">
+        <dc:Bounds x="580" y="278" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_snapshot" bpmnElement="snapshot">
+        <dc:Bounds x="900" y="278" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_outcome" bpmnElement="outcome">
+        <dc:Bounds x="1220" y="278" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_check" bpmnElement="check">
+        <dc:Bounds x="1540" y="278" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_enough" bpmnElement="enough" isMarkerVisible="true">
+        <dc:Bounds x="1880" y="298" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1820" y="238" width="160" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_short" bpmnElement="short">
+        <dc:Bounds x="2030" y="150" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1965" y="193" width="166" height="48" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_split" bpmnElement="split">
+        <dc:Bounds x="2040" y="278" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_prepare" bpmnElement="prepare">
+        <dc:Bounds x="2380" y="278" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_train" bpmnElement="train">
+        <dc:Bounds x="2380" y="500" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_assess" bpmnElement="assess">
+        <dc:Bounds x="2040" y="500" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_compare" bpmnElement="compare">
+        <dc:Bounds x="1700" y="500" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_review" bpmnElement="review">
+        <dc:Bounds x="1360" y="500" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_approved" bpmnElement="approved" isMarkerVisible="true">
+        <dc:Bounds x="1190" y="520" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1130" y="460" width="160" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_activate" bpmnElement="activate">
+        <dc:Bounds x="850" y="500" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_deployed" bpmnElement="deployed">
+        <dc:Bounds x="600" y="522" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="535" y="565" width="166" height="48" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_keep" bpmnElement="keep">
+        <dc:Bounds x="1192" y="742" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1127" y="785" width="166" height="48" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_definition" bpmnElement="definition">
+        <dc:Bounds x="270" y="110" width="650" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_inputs" bpmnElement="inputs">
+        <dc:Bounds x="850" y="815" width="660" height="105" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_labels" bpmnElement="labels">
+        <dc:Bounds x="1530" y="970" width="650" height="105" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_evaluation" bpmnElement="evaluation">
+        <dc:Bounds x="2090" y="825" width="590" height="105" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_t1" bpmnElement="t1">
+        <di:waypoint x="136" y="318" />
+        <di:waypoint x="260" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_t2" bpmnElement="t2">
+        <di:waypoint x="510" y="318" />
+        <di:waypoint x="580" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_t3" bpmnElement="t3">
+        <di:waypoint x="830" y="318" />
+        <di:waypoint x="900" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_t4" bpmnElement="t4">
+        <di:waypoint x="1150" y="318" />
+        <di:waypoint x="1220" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_t5" bpmnElement="t5">
+        <di:waypoint x="1470" y="318" />
+        <di:waypoint x="1540" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_t6" bpmnElement="t6">
+        <di:waypoint x="1790" y="318" />
+        <di:waypoint x="1880" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_sufficient" bpmnElement="sufficient">
+        <di:waypoint x="1920" y="318" />
+        <di:waypoint x="2040" y="318" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1950" y="286" width="45" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_insufficient" bpmnElement="insufficient">
+        <di:waypoint x="1900" y="298" />
+        <di:waypoint x="1900" y="168" />
+        <di:waypoint x="2030" y="168" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1930" y="140" width="45" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_t7" bpmnElement="t7">
+        <di:waypoint x="2290" y="318" />
+        <di:waypoint x="2380" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_t8" bpmnElement="t8">
+        <di:waypoint x="2505" y="358" />
+        <di:waypoint x="2505" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_t9" bpmnElement="t9">
+        <di:waypoint x="2380" y="540" />
+        <di:waypoint x="2290" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_t10" bpmnElement="t10">
+        <di:waypoint x="2040" y="540" />
+        <di:waypoint x="1950" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_t11" bpmnElement="t11">
+        <di:waypoint x="1700" y="540" />
+        <di:waypoint x="1610" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_t12" bpmnElement="t12">
+        <di:waypoint x="1360" y="540" />
+        <di:waypoint x="1230" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_approve" bpmnElement="approve">
+        <di:waypoint x="1190" y="540" />
+        <di:waypoint x="1100" y="540" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1120" y="508" width="45" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_decline" bpmnElement="decline">
+        <di:waypoint x="1210" y="560" />
+        <di:waypoint x="1210" y="742" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1225" y="650" width="45" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_t13" bpmnElement="t13">
+        <di:waypoint x="850" y="540" />
+        <di:waypoint x="636" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_assoc_definition" bpmnElement="assoc_definition">
+        <di:waypoint x="385" y="278" />
+        <di:waypoint x="385" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_assoc_inputs" bpmnElement="assoc_inputs">
+        <di:waypoint x="1025" y="358" />
+        <di:waypoint x="1025" y="390" />
+        <di:waypoint x="700" y="390" />
+        <di:waypoint x="700" y="790" />
+        <di:waypoint x="1100" y="790" />
+        <di:waypoint x="1100" y="815" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_assoc_labels" bpmnElement="assoc_labels">
+        <di:waypoint x="1345" y="358" />
+        <di:waypoint x="1345" y="400" />
+        <di:waypoint x="2240" y="400" />
+        <di:waypoint x="2240" y="940" />
+        <di:waypoint x="1800" y="940" />
+        <di:waypoint x="1800" y="970" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_assoc_evaluation" bpmnElement="assoc_evaluation">
+        <di:waypoint x="2165" y="580" />
+        <di:waypoint x="2165" y="825" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

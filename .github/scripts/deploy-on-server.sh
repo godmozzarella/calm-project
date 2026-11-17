@@ -144,7 +144,10 @@ deployment_phase='source integrity verification'
   < backend/scripts/release-source-manifest.js > "$backup_dir/source-after.json"
 cmp "$backup_dir/source-before.json" "$backup_dir/source-after.json"
 deployment_phase='application startup'
-"${compose[@]}" up -d --no-deps --wait --wait-timeout 300 backend frontend caddy
+"${compose[@]}" up -d --no-deps --wait --wait-timeout 300 backend frontend
+# A bind-mounted Caddyfile change does not trigger Compose to recreate Caddy.
+deployment_phase='Caddy configuration startup'
+"${compose[@]}" up -d --no-deps --force-recreate --wait --wait-timeout 300 caddy
 # Rebuild the existing dataset from all historical diary entries before starting the loop.
 deployment_phase='historical dataset export'
 "${compose[@]}" run --rm -T --no-deps --entrypoint /bin/sh training-worker -c \
