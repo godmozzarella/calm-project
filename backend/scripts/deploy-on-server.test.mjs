@@ -100,6 +100,7 @@ test('release backs up and checks source before starting updated services and re
     assert(i('mongodump') < i('MIGRATION'))
     assert(i('MIGRATION') < i('"caddy"'))
     assert(i('"caddy"') < i('/scripts/export-shared-risk-training.js'))
+    assert(run.commands.some(line => line.includes('"--force-recreate"') && line.includes('"caddy"')))
     const dockerTag = run.commands.findIndex(line => line.includes('"image","tag"'))
     assert(dockerTag >= 0 && dockerTag < i('"build"'))
     assert.match(run.rollbackConfig, /image: "calm-release-rollback-backend:[a-f0-9]{40}"/)

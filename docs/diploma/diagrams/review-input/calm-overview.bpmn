@@ -1,0 +1,759 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_Calm" targetNamespace="https://calmprj.ru/bpmn" exporter="Calm overview generator" exporterVersion="1">
+  <bpmn:process id="Process_Calm" name="Calm · общая схема процессов" isExecutable="false">
+    <bpmn:documentation>Обзорная неисполняемая модель. «+» — свёрнутый подпроцесс. Внутри: действия участников, проверки, сохранение, отмена и обработка ошибок. Сплошная стрелка — последовательность; пунктир с кружком — сообщение внешнему участнику; X — выбор одной ветви. Ветви 1–7 возвращают к выбору действия; ветвь 8 завершает сеанс при успехе. Административные и фоновые запуски независимы. Дорожки разделяют группы процессов. Детальные роли и обмен с БД раскрываются ниже; VPS относится к развёртыванию. Схема описывает код проекта. Настройки запуска worker и доставки писем на VPS здесь не подтверждаются.</bpmn:documentation>
+    <bpmn:laneSet id="LaneSet_Calm">
+      <bpmn:lane id="Main" name="Работа пользователя с системой">
+        <bpmn:flowNodeRef>Opened</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Access</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Allowed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>NoAccess</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Workspace</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Choice</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Attacks</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Meds</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Daily</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Risk</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Stats</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Profile</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Consent</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Exit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>ExitGate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Finished</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Result</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Merge</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Admin" name="Администрирование">
+        <bpmn:flowNodeRef>AdminStart</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Role</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>RoleGate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AdminWork</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>AdminEnd</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Denied</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>DeniedEnd</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Background" name="Фоновые процессы">
+        <bpmn:flowNodeRef>NotifyStart</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Notify</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>NotifyEnd</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>CaptureStart</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Capture</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>CaptureEnd</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>ExportStart</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Export</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>ExportEnd</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Opened" name="Открытие приложения">
+      <bpmn:outgoing>F01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="Access" name="Обеспечить доступ к системе">
+      <bpmn:documentation>Проверка и обновление сессии; вход; регистрация с подтверждением почты; восстановление доступа. Ошибки ввода, повторная отправка кода и отмена раскрываются внутри подпроцесса.</bpmn:documentation>
+      <bpmn:incoming>F01</bpmn:incoming>
+      <bpmn:outgoing>F02</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:exclusiveGateway id="Allowed" name="Доступ получен?" gatewayDirection="Diverging">
+      <bpmn:incoming>F02</bpmn:incoming>
+      <bpmn:outgoing>F03</bpmn:outgoing>
+      <bpmn:outgoing>F04</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="NoAccess" name="Доступ не получен">
+      <bpmn:incoming>F03</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:subProcess id="Workspace" name="Подготовить рабочее пространство; выбрать действие">
+      <bpmn:documentation>Первый вход: настройка профиля дневника и города с возможностью пропуска. Затем загрузка данных, календарь и выбор сценария. При повторном входе используются сохранённые настройки; опрос можно отложить.</bpmn:documentation>
+      <bpmn:incoming>F04</bpmn:incoming>
+      <bpmn:incoming>F07</bpmn:incoming>
+      <bpmn:incoming>F10</bpmn:incoming>
+      <bpmn:outgoing>F05</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:exclusiveGateway id="Choice" name="Выбранный сценарий" gatewayDirection="Diverging">
+      <bpmn:incoming>F05</bpmn:incoming>
+      <bpmn:outgoing>SelectAttacks</bpmn:outgoing>
+      <bpmn:outgoing>SelectMeds</bpmn:outgoing>
+      <bpmn:outgoing>SelectDaily</bpmn:outgoing>
+      <bpmn:outgoing>SelectRisk</bpmn:outgoing>
+      <bpmn:outgoing>SelectStats</bpmn:outgoing>
+      <bpmn:outgoing>SelectProfile</bpmn:outgoing>
+      <bpmn:outgoing>SelectConsent</bpmn:outgoing>
+      <bpmn:outgoing>SelectExit</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:subProcess id="Attacks" name="Вести дневник приступов">
+      <bpmn:documentation>Создание, просмотр, изменение, завершение и удаление приступов; время, интенсивность, тип, симптомы, триггеры, зоны боли и заметки. Проверка владельца и данных. Устранение противоречащей отметки об отсутствии нового начала; уточнение исследовательских исходов.</bpmn:documentation>
+      <bpmn:incoming>SelectAttacks</bpmn:incoming>
+      <bpmn:outgoing>ReturnAttacks</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="Meds" name="Учитывать приём препаратов">
+      <bpmn:documentation>Справочник и личные препараты; дозировка, время, связь с приступом при необходимости, оценка эффекта, изменение и удаление. Приём не обязателен после записи приступа.</bpmn:documentation>
+      <bpmn:incoming>SelectMeds</bpmn:incoming>
+      <bpmn:outgoing>ReturnMeds</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="Daily" name="Вести ежедневные наблюдения">
+      <bpmn:documentation>Опрос текущего дня, сон, стресс, новые начала приступов, препараты и алкоголь; условные вопросы о менструации и календарные отметки. Отдельно: подтверждение дня без НОВЫХ начал приступов и отмена подтверждения. Отсутствие записи не равно отрицательному исходу.</bpmn:documentation>
+      <bpmn:incoming>SelectDaily</bpmn:incoming>
+      <bpmn:outgoing>ReturnDaily</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="Risk" name="Получить погоду и оценку риска">
+      <bpmn:documentation>Получение данных среды по городу; доступность и свежесть данных; резервные сохранённые данные. Действующий расчёт по правилам учитывает погоду и историю. Результат: балл, уровень, причины либо недоступность. Это не обученная модель и не подтверждённая вероятность. Опрос не является обязательным условием расчёта.</bpmn:documentation>
+      <bpmn:incoming>SelectRisk</bpmn:incoming>
+      <bpmn:outgoing>ReturnRisk</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="Stats" name="Просмотреть статистику и сформировать отчёт">
+      <bpmn:documentation>Просмотр истории и статистики за период; частота и интенсивность приступов, симптомы, триггеры, зоны боли, препараты и оценки эффекта. Необязательные PDF, CSV и печать. Отчёты формируются клиентом из загруженных данных.</bpmn:documentation>
+      <bpmn:incoming>SelectStats</bpmn:incoming>
+      <bpmn:outgoing>ReturnStats</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="Profile" name="Изменить профиль и настройки">
+      <bpmn:documentation>Имя, аватар, настройки дневника, местоположение и его режим, уведомления и оформление; смена пароля и почты с необходимыми подтверждениями. Управление аккаунтом не требует новой записи приступа.</bpmn:documentation>
+      <bpmn:incoming>SelectProfile</bpmn:incoming>
+      <bpmn:outgoing>ReturnProfile</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="Consent" name="Управлять согласием на исследование">
+      <bpmn:documentation>Просмотр условий, согласие при открытом наборе, отказ и отзыв согласия. Проверяются версия и содержание согласия, доступность набора и административные ограничения. Отказ не блокирует дневник.</bpmn:documentation>
+      <bpmn:incoming>SelectConsent</bpmn:incoming>
+      <bpmn:outgoing>ReturnConsent</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="Exit" name="Выйти из аккаунта или удалить аккаунт">
+      <bpmn:documentation>Два альтернативных сценария: выход завершает сессию; подтверждённое удаление запускает удаление связанных данных приложения. Не подразумевает удаление ранее скачанных файлов или внешних резервных копий.</bpmn:documentation>
+      <bpmn:incoming>SelectExit</bpmn:incoming>
+      <bpmn:outgoing>F08</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:exclusiveGateway id="ExitGate" name="Сеанс завершён?" gatewayDirection="Diverging">
+      <bpmn:incoming>F08</bpmn:incoming>
+      <bpmn:outgoing>F09</bpmn:outgoing>
+      <bpmn:outgoing>F10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Finished" name="Сеанс завершён">
+      <bpmn:incoming>F09</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:startEvent id="AdminStart" name="Запрос администратора">
+      <bpmn:outgoing>A01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Role" name="Проверить сессию и роль администратора">
+      <bpmn:incoming>A01</bpmn:incoming>
+      <bpmn:outgoing>A02</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="RoleGate" name="" gatewayDirection="Diverging">
+      <bpmn:incoming>A02</bpmn:incoming>
+      <bpmn:outgoing>A03</bpmn:outgoing>
+      <bpmn:outgoing>A05</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:subProcess id="AdminWork" name="Управлять пользователями, справочниками, настройками и рассылками">
+      <bpmn:documentation>Поиск и удаление пользователей, изменение ролей, ограничение участия в исследовании; справочники; настройки внешних данных и порога уведомлений; подтверждаемая email-рассылка. После действия администратор может начать следующий запрос.</bpmn:documentation>
+      <bpmn:incoming>A03</bpmn:incoming>
+      <bpmn:outgoing>A04</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:endEvent id="AdminEnd" name="Результат операции">
+      <bpmn:incoming>A04</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Denied" name="Сообщить об отказе в доступе">
+      <bpmn:incoming>A05</bpmn:incoming>
+      <bpmn:outgoing>A06</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="DeniedEnd" name="Результат операции">
+      <bpmn:incoming>A06</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:startEvent id="NotifyStart" name="По расписанию">
+      <bpmn:outgoing>B01</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="NotifyStart_definition">
+        <bpmn:timeCycle>Настраиваемое расписание</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="Notify" name="Проверить условия и отправить погодные уведомления">
+      <bpmn:documentation>Подтверждённая почта, включённые уведомления, город, порог погодного риска и отсутствие повторной отправки за день. При недоступности почты или погоды обрабатывается ошибка. Если условия не выполнены, отправка пропускается.</bpmn:documentation>
+      <bpmn:incoming>B01</bpmn:incoming>
+      <bpmn:outgoing>B02</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:endEvent id="NotifyEnd" name="Результат операции">
+      <bpmn:incoming>B02</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:startEvent id="CaptureStart" name="Срок фиксации или изменение данных">
+      <bpmn:outgoing>B03</bpmn:outgoing>
+      <bpmn:conditionalEventDefinition id="CaptureStart_definition">
+        <bpmn:condition>Наступил срок фиксации либо изменились данные дневника</bpmn:condition>
+      </bpmn:conditionalEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="Capture" name="Фиксировать входные данные и уточнять наблюдаемые исходы">
+      <bpmn:documentation>Раздельные протоколы до начала дня и после опроса. Опросный снимок создаётся при первом сохранении опроса; далее он неизменяем. Изменения дневника и фоновые задания уточняют исходы. Неизвестное не считается отсутствием приступа; завершение горизонта учитывается отдельно.</bpmn:documentation>
+      <bpmn:incoming>B03</bpmn:incoming>
+      <bpmn:outgoing>B04</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:endEvent id="CaptureEnd" name="Результат операции">
+      <bpmn:incoming>B04</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:startEvent id="ExportStart" name="При работающем экспортёре">
+      <bpmn:outgoing>B05</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="ExportStart_definition">
+        <bpmn:timeCycle>Настраиваемое расписание</bpmn:timeCycle>
+      </bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="Export" name="Проверить согласия и подготовить исследовательскую выгрузку">
+      <bpmn:documentation>Отдельный worker при его запуске. Проверка актуального согласия, прав и протокола; псевдонимизация; раздельные наборы и признаки пригодности для обучения. Старые записи истории не требуют опроса для всех видов экспорта. Экспорт не обучает модель. Отозванные согласия учитываются при следующем обновлении выгрузки.</bpmn:documentation>
+      <bpmn:incoming>B05</bpmn:incoming>
+      <bpmn:outgoing>B06</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:endEvent id="ExportEnd" name="Выгрузка данных">
+      <bpmn:incoming>B06</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="F01" sourceRef="Opened" targetRef="Access" />
+    <bpmn:sequenceFlow id="F02" sourceRef="Access" targetRef="Allowed" />
+    <bpmn:sequenceFlow id="F03" name="Нет" sourceRef="Allowed" targetRef="NoAccess" />
+    <bpmn:sequenceFlow id="F04" name="Да" sourceRef="Allowed" targetRef="Workspace" />
+    <bpmn:sequenceFlow id="F05" sourceRef="Workspace" targetRef="Choice" />
+    <bpmn:sequenceFlow id="SelectAttacks" name="1" sourceRef="Choice" targetRef="Attacks">
+      <bpmn:conditionExpression>Выбран сценарий 1</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="ReturnAttacks" sourceRef="Attacks" targetRef="Merge" />
+    <bpmn:sequenceFlow id="SelectMeds" name="2" sourceRef="Choice" targetRef="Meds">
+      <bpmn:conditionExpression>Выбран сценарий 2</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="ReturnMeds" sourceRef="Meds" targetRef="Merge" />
+    <bpmn:sequenceFlow id="SelectDaily" name="3" sourceRef="Choice" targetRef="Daily">
+      <bpmn:conditionExpression>Выбран сценарий 3</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="ReturnDaily" sourceRef="Daily" targetRef="Merge" />
+    <bpmn:sequenceFlow id="SelectRisk" name="4" sourceRef="Choice" targetRef="Risk">
+      <bpmn:conditionExpression>Выбран сценарий 4</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="ReturnRisk" sourceRef="Risk" targetRef="Merge" />
+    <bpmn:sequenceFlow id="SelectStats" name="5" sourceRef="Choice" targetRef="Stats">
+      <bpmn:conditionExpression>Выбран сценарий 5</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="ReturnStats" sourceRef="Stats" targetRef="Merge" />
+    <bpmn:sequenceFlow id="SelectProfile" name="6" sourceRef="Choice" targetRef="Profile">
+      <bpmn:conditionExpression>Выбран сценарий 6</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="ReturnProfile" sourceRef="Profile" targetRef="Merge" />
+    <bpmn:sequenceFlow id="SelectConsent" name="7" sourceRef="Choice" targetRef="Consent">
+      <bpmn:conditionExpression>Выбран сценарий 7</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="ReturnConsent" sourceRef="Consent" targetRef="Merge" />
+    <bpmn:sequenceFlow id="SelectExit" name="8" sourceRef="Choice" targetRef="Exit">
+      <bpmn:conditionExpression>Выбран сценарий 8</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="F06" sourceRef="Merge" targetRef="Result" />
+    <bpmn:sequenceFlow id="F07" name="Продолжить работу" sourceRef="Result" targetRef="Workspace" />
+    <bpmn:sequenceFlow id="F08" sourceRef="Exit" targetRef="ExitGate" />
+    <bpmn:sequenceFlow id="F09" name="Да" sourceRef="ExitGate" targetRef="Finished" />
+    <bpmn:sequenceFlow id="F10" name="Нет: отмена или ошибка" sourceRef="ExitGate" targetRef="Workspace" />
+    <bpmn:sequenceFlow id="A01" sourceRef="AdminStart" targetRef="Role" />
+    <bpmn:sequenceFlow id="A02" sourceRef="Role" targetRef="RoleGate" />
+    <bpmn:sequenceFlow id="A03" name="Разрешено" sourceRef="RoleGate" targetRef="AdminWork" />
+    <bpmn:sequenceFlow id="A04" sourceRef="AdminWork" targetRef="AdminEnd" />
+    <bpmn:sequenceFlow id="A05" name="Нет прав" sourceRef="RoleGate" targetRef="Denied" />
+    <bpmn:sequenceFlow id="A06" sourceRef="Denied" targetRef="DeniedEnd" />
+    <bpmn:sequenceFlow id="B01" sourceRef="NotifyStart" targetRef="Notify" />
+    <bpmn:sequenceFlow id="B02" sourceRef="Notify" targetRef="NotifyEnd" />
+    <bpmn:sequenceFlow id="B03" sourceRef="CaptureStart" targetRef="Capture" />
+    <bpmn:sequenceFlow id="B04" sourceRef="Capture" targetRef="CaptureEnd" />
+    <bpmn:sequenceFlow id="B05" sourceRef="ExportStart" targetRef="Export" />
+    <bpmn:sequenceFlow id="B06" sourceRef="Export" targetRef="ExportEnd" />
+    <bpmn:task id="Result" name="Показать результат или состояние операции">
+      <bpmn:documentation>Успех, отсутствие данных, отмена либо ошибка. Ошибка не представляется как успешное сохранение. Детальные проверки и повтор ввода находятся внутри выбранного подпроцесса.</bpmn:documentation>
+      <bpmn:incoming>F06</bpmn:incoming>
+      <bpmn:outgoing>F07</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Merge" name="" gatewayDirection="Converging">
+      <bpmn:incoming>ReturnAttacks</bpmn:incoming>
+      <bpmn:incoming>ReturnMeds</bpmn:incoming>
+      <bpmn:incoming>ReturnDaily</bpmn:incoming>
+      <bpmn:incoming>ReturnRisk</bpmn:incoming>
+      <bpmn:incoming>ReturnStats</bpmn:incoming>
+      <bpmn:incoming>ReturnProfile</bpmn:incoming>
+      <bpmn:incoming>ReturnConsent</bpmn:incoming>
+      <bpmn:outgoing>F06</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:textAnnotation id="ModelNote">
+      <bpmn:documentation>Пояснение статуса исследовательских моделей, а не исполняемая задача текущей системы.</bpmn:documentation>
+      <bpmn:text>Логистическая регрессия и XGBoost:
+планируемое обучение и сравнение.
+В действующий расчёт не внедрены.
+
+Выгрузка данных ≠ обучение модели.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="NoteLink" sourceRef="Export" targetRef="ModelNote" />
+  </bpmn:process>
+  <bpmn:collaboration id="Collaboration_Calm">
+    <bpmn:participant id="Pool" name="Calm — процессы эксплуатации" processRef="Process_Calm" />
+    <bpmn:participant id="Mail" name="Почтовый сервис Коды, служебные письма, уведомления" />
+    <bpmn:participant id="Weather" name="Внешние геосервисы и данные среды Open-Meteo · Nominatim · NOAA SWPC">
+      <bpmn:documentation>Обобщённый внешний участник верхнего уровня. На подробной схеме разделяется на фактических поставщиков.</bpmn:documentation>
+    </bpmn:participant>
+    <bpmn:messageFlow id="MailAccess" name="Служебные письма" sourceRef="Access" targetRef="Mail" />
+    <bpmn:messageFlow id="WeatherRequest" name="Запрос" sourceRef="Risk" targetRef="Weather" />
+    <bpmn:messageFlow id="WeatherResponse" name="Данные среды" sourceRef="Weather" targetRef="Risk" />
+    <bpmn:messageFlow id="MailNotify" name="Уведомления" sourceRef="Notify" targetRef="Mail" />
+  </bpmn:collaboration>
+  <bpmndi:BPMNDiagram id="Diagram_Calm" name="Calm · общая схема процессов">
+    <bpmndi:BPMNPlane id="Plane_Calm" bpmnElement="Collaboration_Calm">
+      <bpmndi:BPMNShape id="Pool_di" bpmnElement="Pool" isHorizontal="true">
+        <dc:Bounds x="60" y="240" width="2280" height="1270" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Background_di" bpmnElement="Background" isHorizontal="true">
+        <dc:Bounds x="100" y="1220" width="2240" height="290" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Admin_di" bpmnElement="Admin" isHorizontal="true">
+        <dc:Bounds x="100" y="1020" width="2240" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Main_di" bpmnElement="Main" isHorizontal="true">
+        <dc:Bounds x="100" y="240" width="2240" height="780" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Opened_di" bpmnElement="Opened">
+        <dc:Bounds x="192" y="582" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="165" y="628" width="100" height="46" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Result_di" bpmnElement="Result">
+        <dc:Bounds x="1850" y="552" width="250" height="78" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Merge_di" bpmnElement="Merge" isMarkerVisible="true">
+        <dc:Bounds x="1700" y="571" width="40" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Access_di" bpmnElement="Access" isExpanded="false">
+        <dc:Bounds x="300" y="561" width="230" height="78" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Allowed_di" bpmnElement="Allowed" isMarkerVisible="true">
+        <dc:Bounds x="590" y="580" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="562" y="645" width="100" height="45" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="NoAccess_di" bpmnElement="NoAccess">
+        <dc:Bounds x="592" y="392" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="555" y="342" width="112" height="42" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Workspace_di" bpmnElement="Workspace" isExpanded="false">
+        <dc:Bounds x="720" y="552" width="230" height="96" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Choice_di" bpmnElement="Choice" isMarkerVisible="true">
+        <dc:Bounds x="1030" y="580" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="910" y="665" width="115" height="44" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Attacks_di" bpmnElement="Attacks" isExpanded="false">
+        <dc:Bounds x="1220" y="312" width="300" height="66" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Meds_di" bpmnElement="Meds" isExpanded="false">
+        <dc:Bounds x="1220" y="394" width="300" height="66" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Daily_di" bpmnElement="Daily" isExpanded="false">
+        <dc:Bounds x="1220" y="476" width="300" height="66" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Risk_di" bpmnElement="Risk" isExpanded="false">
+        <dc:Bounds x="1220" y="558" width="300" height="66" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Stats_di" bpmnElement="Stats" isExpanded="false">
+        <dc:Bounds x="1220" y="640" width="300" height="66" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Profile_di" bpmnElement="Profile" isExpanded="false">
+        <dc:Bounds x="1220" y="722" width="300" height="66" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Consent_di" bpmnElement="Consent" isExpanded="false">
+        <dc:Bounds x="1220" y="804" width="300" height="66" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Exit_di" bpmnElement="Exit" isExpanded="false">
+        <dc:Bounds x="1220" y="886" width="300" height="66" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExitGate_di" bpmnElement="ExitGate" isMarkerVisible="true">
+        <dc:Bounds x="1600" y="899" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1645" y="945" width="120" height="44" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Finished_di" bpmnElement="Finished">
+        <dc:Bounds x="1812" y="901" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1775" y="950" width="110" height="45" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AdminStart_di" bpmnElement="AdminStart">
+        <dc:Bounds x="192" y="1072" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="156" y="1120" width="120" height="44" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Role_di" bpmnElement="Role">
+        <dc:Bounds x="300" y="1051" width="230" height="78" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="RoleGate_di" bpmnElement="RoleGate" isMarkerVisible="true">
+        <dc:Bounds x="590" y="1070" width="40" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AdminWork_di" bpmnElement="AdminWork" isExpanded="false">
+        <dc:Bounds x="760" y="1045" width="410" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="AdminEnd_di" bpmnElement="AdminEnd">
+        <dc:Bounds x="1282" y="1072" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1245" y="1025" width="115" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Denied_di" bpmnElement="Denied">
+        <dc:Bounds x="760" y="1153" width="410" height="44" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="DeniedEnd_di" bpmnElement="DeniedEnd">
+        <dc:Bounds x="1282" y="1157" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1274" y="1200" width="52" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="NotifyStart_di" bpmnElement="NotifyStart">
+        <dc:Bounds x="192" y="1272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="150" y="1318" width="125" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Notify_di" bpmnElement="Notify" isExpanded="false">
+        <dc:Bounds x="320" y="1248" width="345" height="84" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="NotifyEnd_di" bpmnElement="NotifyEnd">
+        <dc:Bounds x="742" y="1272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="734" y="1315" width="52" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CaptureStart_di" bpmnElement="CaptureStart">
+        <dc:Bounds x="192" y="1412" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="145" y="1458" width="150" height="44" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Capture_di" bpmnElement="Capture" isExpanded="false">
+        <dc:Bounds x="320" y="1390" width="430" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CaptureEnd_di" bpmnElement="CaptureEnd">
+        <dc:Bounds x="822" y="1412" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="814" y="1455" width="52" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExportStart_di" bpmnElement="ExportStart">
+        <dc:Bounds x="1002" y="1272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="955" y="1320" width="135" height="44" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Export_di" bpmnElement="Export" isExpanded="false">
+        <dc:Bounds x="1130" y="1248" width="390" height="84" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExportEnd_di" bpmnElement="ExportEnd">
+        <dc:Bounds x="1602" y="1272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1577" y="1315" width="86" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ModelNote_di" bpmnElement="ModelNote">
+        <dc:Bounds x="1760" y="1270" width="520" height="160" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="F01_di" bpmnElement="F01">
+        <di:waypoint x="228" y="600" />
+        <di:waypoint x="300" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F02_di" bpmnElement="F02">
+        <di:waypoint x="530" y="600" />
+        <di:waypoint x="590" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F03_di" bpmnElement="F03">
+        <di:waypoint x="610" y="580" />
+        <di:waypoint x="610" y="428" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="620" y="485" width="45" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F04_di" bpmnElement="F04">
+        <di:waypoint x="630" y="600" />
+        <di:waypoint x="720" y="600" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="650" y="570" width="45" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F05_di" bpmnElement="F05">
+        <di:waypoint x="950" y="600" />
+        <di:waypoint x="1030" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SelectAttacks_di" bpmnElement="SelectAttacks">
+        <di:waypoint x="1070" y="600" />
+        <di:waypoint x="1140" y="345" />
+        <di:waypoint x="1220" y="345" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1148" y="322" width="30" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ReturnAttacks_di" bpmnElement="ReturnAttacks">
+        <di:waypoint x="1520" y="345" />
+        <di:waypoint x="1590" y="345" />
+        <di:waypoint x="1700" y="591" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SelectMeds_di" bpmnElement="SelectMeds">
+        <di:waypoint x="1070" y="600" />
+        <di:waypoint x="1140" y="427" />
+        <di:waypoint x="1220" y="427" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1148" y="404" width="30" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ReturnMeds_di" bpmnElement="ReturnMeds">
+        <di:waypoint x="1520" y="427" />
+        <di:waypoint x="1590" y="427" />
+        <di:waypoint x="1700" y="591" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SelectDaily_di" bpmnElement="SelectDaily">
+        <di:waypoint x="1070" y="600" />
+        <di:waypoint x="1140" y="509" />
+        <di:waypoint x="1220" y="509" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1148" y="486" width="30" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ReturnDaily_di" bpmnElement="ReturnDaily">
+        <di:waypoint x="1520" y="509" />
+        <di:waypoint x="1590" y="509" />
+        <di:waypoint x="1707" y="598" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SelectRisk_di" bpmnElement="SelectRisk">
+        <di:waypoint x="1070" y="600" />
+        <di:waypoint x="1140" y="591" />
+        <di:waypoint x="1220" y="591" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1148" y="568" width="30" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ReturnRisk_di" bpmnElement="ReturnRisk">
+        <di:waypoint x="1520" y="591" />
+        <di:waypoint x="1700" y="591" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SelectStats_di" bpmnElement="SelectStats">
+        <di:waypoint x="1070" y="600" />
+        <di:waypoint x="1140" y="673" />
+        <di:waypoint x="1220" y="673" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1148" y="650" width="30" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ReturnStats_di" bpmnElement="ReturnStats">
+        <di:waypoint x="1520" y="673" />
+        <di:waypoint x="1590" y="673" />
+        <di:waypoint x="1701" y="592" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SelectProfile_di" bpmnElement="SelectProfile">
+        <di:waypoint x="1070" y="600" />
+        <di:waypoint x="1140" y="755" />
+        <di:waypoint x="1220" y="755" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1148" y="732" width="30" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ReturnProfile_di" bpmnElement="ReturnProfile">
+        <di:waypoint x="1520" y="755" />
+        <di:waypoint x="1590" y="755" />
+        <di:waypoint x="1700" y="591" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SelectConsent_di" bpmnElement="SelectConsent">
+        <di:waypoint x="1070" y="600" />
+        <di:waypoint x="1140" y="837" />
+        <di:waypoint x="1220" y="837" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1148" y="814" width="30" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ReturnConsent_di" bpmnElement="ReturnConsent">
+        <di:waypoint x="1520" y="837" />
+        <di:waypoint x="1590" y="837" />
+        <di:waypoint x="1700" y="591" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SelectExit_di" bpmnElement="SelectExit">
+        <di:waypoint x="1070" y="600" />
+        <di:waypoint x="1140" y="919" />
+        <di:waypoint x="1220" y="919" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1148" y="896" width="30" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F06_di" bpmnElement="F06">
+        <di:waypoint x="1740" y="591" />
+        <di:waypoint x="1850" y="591" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F07_di" bpmnElement="F07">
+        <di:waypoint x="1975" y="552" />
+        <di:waypoint x="1975" y="272" />
+        <di:waypoint x="835" y="272" />
+        <di:waypoint x="835" y="552" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1788" y="246" width="65" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F08_di" bpmnElement="F08">
+        <di:waypoint x="1520" y="919" />
+        <di:waypoint x="1600" y="919" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F09_di" bpmnElement="F09">
+        <di:waypoint x="1640" y="919" />
+        <di:waypoint x="1812" y="919" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1710" y="890" width="45" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="F10_di" bpmnElement="F10">
+        <di:waypoint x="1620" y="939" />
+        <di:waypoint x="1620" y="1000" />
+        <di:waypoint x="835" y="1000" />
+        <di:waypoint x="835" y="648" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="970" y="970" width="250" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A01_di" bpmnElement="A01">
+        <di:waypoint x="228" y="1090" />
+        <di:waypoint x="300" y="1090" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A02_di" bpmnElement="A02">
+        <di:waypoint x="530" y="1090" />
+        <di:waypoint x="590" y="1090" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A03_di" bpmnElement="A03">
+        <di:waypoint x="630" y="1090" />
+        <di:waypoint x="760" y="1090" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="650" y="1060" width="105" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A04_di" bpmnElement="A04">
+        <di:waypoint x="1170" y="1090" />
+        <di:waypoint x="1282" y="1090" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A05_di" bpmnElement="A05">
+        <di:waypoint x="610" y="1110" />
+        <di:waypoint x="610" y="1175" />
+        <di:waypoint x="760" y="1175" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="635" y="1145" width="100" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="A06_di" bpmnElement="A06">
+        <di:waypoint x="1170" y="1175" />
+        <di:waypoint x="1282" y="1175" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B01_di" bpmnElement="B01">
+        <di:waypoint x="228" y="1290" />
+        <di:waypoint x="320" y="1290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B02_di" bpmnElement="B02">
+        <di:waypoint x="665" y="1290" />
+        <di:waypoint x="742" y="1290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B03_di" bpmnElement="B03">
+        <di:waypoint x="228" y="1430" />
+        <di:waypoint x="320" y="1430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B04_di" bpmnElement="B04">
+        <di:waypoint x="750" y="1430" />
+        <di:waypoint x="822" y="1430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B05_di" bpmnElement="B05">
+        <di:waypoint x="1038" y="1290" />
+        <di:waypoint x="1130" y="1290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="B06_di" bpmnElement="B06">
+        <di:waypoint x="1520" y="1290" />
+        <di:waypoint x="1602" y="1290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="NoteLink_di" bpmnElement="NoteLink">
+        <di:waypoint x="1520" y="1310" />
+        <di:waypoint x="1690" y="1310" />
+        <di:waypoint x="1690" y="1350" />
+        <di:waypoint x="1760" y="1350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Mail_di" bpmnElement="Mail" isHorizontal="true">
+        <dc:Bounds x="200" y="90" width="520" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Weather_di" bpmnElement="Weather" isHorizontal="true">
+        <dc:Bounds x="1300" y="90" width="880" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="MailAccess_di" bpmnElement="MailAccess">
+        <di:waypoint x="415" y="561" />
+        <di:waypoint x="415" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="425" y="200" width="185" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="WeatherRequest_di" bpmnElement="WeatherRequest">
+        <di:waypoint x="1500" y="558" />
+        <di:waypoint x="1500" y="550" />
+        <di:waypoint x="2240" y="550" />
+        <di:waypoint x="2240" y="190" />
+        <di:waypoint x="2100" y="190" />
+        <di:waypoint x="2100" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2145" y="490" width="85" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="WeatherResponse_di" bpmnElement="WeatherResponse">
+        <di:waypoint x="2180" y="160" />
+        <di:waypoint x="2280" y="160" />
+        <di:waypoint x="2280" y="636" />
+        <di:waypoint x="1500" y="636" />
+        <di:waypoint x="1500" y="624" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2156" y="642" width="73" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MailNotify_di" bpmnElement="MailNotify">
+        <di:waypoint x="320" y="1270" />
+        <di:waypoint x="175" y="1270" />
+        <di:waypoint x="175" y="190" />
+        <di:waypoint x="260" y="190" />
+        <di:waypoint x="260" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="185" y="970" width="130" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="Access" />
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="Workspace" />
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="Attacks" />
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="Meds" />
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="Daily" />
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="Risk" />
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="Stats" />
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="Profile" />
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="Consent" />
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="Exit" />
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="AdminWork" />
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="Notify" />
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="Capture" />
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="Export" />
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

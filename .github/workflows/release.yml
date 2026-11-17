@@ -72,6 +72,12 @@ jobs:
       - name: Check public HTTPS
         run: |
           curl --fail --silent --show-error --retry 6 --retry-delay 5 \
-            https://peaceofmindforyourhead.duckdns.org/api/actuator/health
+            https://calmprj.ru/api/actuator/health
           curl --fail --silent --show-error --output /dev/null \
-            https://peaceofmindforyourhead.duckdns.org/
+            https://calmprj.ru/
+          for host in www.calmprj.ru peaceofmindforyourhead.duckdns.org; do
+            result=$(curl --silent --show-error --retry 6 --retry-delay 5 \
+              --output /dev/null --write-out '%{http_code} %{redirect_url}' \
+              "https://${host}/privacy-policy?domain-check=1")
+            test "$result" = '308 https://calmprj.ru/privacy-policy?domain-check=1'
+          done

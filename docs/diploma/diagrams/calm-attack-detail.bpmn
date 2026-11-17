@@ -1,0 +1,356 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_AttackDetail" targetNamespace="https://calmprj.ru/bpmn" exporter="Calm diploma" exporterVersion="1">
+  <bpmn:process id="Process_AttackDetail" name="Calm — запись приступа" isExecutable="false">
+    <bpmn:startEvent id="start" name="Пользователь решил записать приступ">
+      <bpmn:outgoing>a1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="join" name="" gatewayDirection="Converging">
+      <bpmn:incoming>a1</bpmn:incoming>
+      <bpmn:incoming>retry</bpmn:incoming>
+      <bpmn:outgoing>a2</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="time" name="Указать дату и время начала">
+      <bpmn:incoming>a2</bpmn:incoming>
+      <bpmn:outgoing>a3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="active" name="Указать, продолжается ли приступ">
+      <bpmn:incoming>a3</bpmn:incoming>
+      <bpmn:outgoing>a4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gate" name="Приступ продолжается?" gatewayDirection="Diverging" default="ongoing">
+      <bpmn:incoming>a4</bpmn:incoming>
+      <bpmn:outgoing>completed</bpmn:outgoing>
+      <bpmn:outgoing>ongoing</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="endtime" name="Указать дату окончания и при наличии время">
+      <bpmn:incoming>completed</bpmn:incoming>
+      <bpmn:outgoing>a5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="merge" name="" gatewayDirection="Converging">
+      <bpmn:incoming>ongoing</bpmn:incoming>
+      <bpmn:incoming>a5</bpmn:incoming>
+      <bpmn:outgoing>a6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="pain" name="Указать интенсивность и тип боли">
+      <bpmn:incoming>a6</bpmn:incoming>
+      <bpmn:outgoing>a7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="symptoms" name="Отметить симптомы и возможные триггеры">
+      <bpmn:incoming>a7</bpmn:incoming>
+      <bpmn:outgoing>a8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="note" name="Добавить заметку при необходимости">
+      <bpmn:incoming>a8</bpmn:incoming>
+      <bpmn:outgoing>a9</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="submit" name="Сохранить приступ">
+      <bpmn:incoming>a9</bpmn:incoming>
+      <bpmn:outgoing>a10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="validate" name="Проверить данные приступа">
+      <bpmn:incoming>a10</bpmn:incoming>
+      <bpmn:outgoing>a11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="valid" name="Данные корректны?" gatewayDirection="Diverging" default="invalid">
+      <bpmn:incoming>a11</bpmn:incoming>
+      <bpmn:outgoing>good</bpmn:outgoing>
+      <bpmn:outgoing>invalid</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="error" name="Показать ошибку ввода">
+      <bpmn:incoming>invalid</bpmn:incoming>
+      <bpmn:outgoing>retry</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="save" name="Сохранить запись в дневнике">
+      <bpmn:incoming>good</bpmn:incoming>
+      <bpmn:outgoing>a12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="saved" name="Запись сохранена?" gatewayDirection="Diverging" default="failed">
+      <bpmn:incoming>a12</bpmn:incoming>
+      <bpmn:outgoing>saveok</bpmn:outgoing>
+      <bpmn:outgoing>failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="saveerror" name="Показать ошибку сохранения">
+      <bpmn:incoming>failed</bpmn:incoming>
+      <bpmn:outgoing>a13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="update" name="Обновить состояние дневника и связанных исходов">
+      <bpmn:incoming>saveok</bpmn:incoming>
+      <bpmn:outgoing>a14</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="show" name="Показать сохранённый приступ">
+      <bpmn:incoming>a14</bpmn:incoming>
+      <bpmn:outgoing>a15</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="finish" name="Приступ записан">
+      <bpmn:incoming>a15</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="failedEnd" name="Запись не сохранена">
+      <bpmn:incoming>a13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="a1" sourceRef="start" targetRef="join" />
+    <bpmn:sequenceFlow id="a2" sourceRef="join" targetRef="time" />
+    <bpmn:sequenceFlow id="a3" sourceRef="time" targetRef="active" />
+    <bpmn:sequenceFlow id="a4" sourceRef="active" targetRef="gate" />
+    <bpmn:sequenceFlow id="completed" sourceRef="gate" targetRef="endtime" name="Нет, завершён">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">Нет, завершён</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="ongoing" sourceRef="gate" targetRef="merge" name="Да, продолжается" />
+    <bpmn:sequenceFlow id="a5" sourceRef="endtime" targetRef="merge" />
+    <bpmn:sequenceFlow id="a6" sourceRef="merge" targetRef="pain" />
+    <bpmn:sequenceFlow id="a7" sourceRef="pain" targetRef="symptoms" />
+    <bpmn:sequenceFlow id="a8" sourceRef="symptoms" targetRef="note" />
+    <bpmn:sequenceFlow id="a9" sourceRef="note" targetRef="submit" />
+    <bpmn:sequenceFlow id="a10" sourceRef="submit" targetRef="validate" />
+    <bpmn:sequenceFlow id="a11" sourceRef="validate" targetRef="valid" />
+    <bpmn:sequenceFlow id="good" sourceRef="valid" targetRef="save" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">Да</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="invalid" sourceRef="valid" targetRef="error" name="Нет" />
+    <bpmn:sequenceFlow id="retry" sourceRef="error" targetRef="join" />
+    <bpmn:sequenceFlow id="a12" sourceRef="save" targetRef="saved" />
+    <bpmn:sequenceFlow id="saveok" sourceRef="saved" targetRef="update" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">Да</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="failed" sourceRef="saved" targetRef="saveerror" name="Нет" />
+    <bpmn:sequenceFlow id="a13" sourceRef="saveerror" targetRef="failedEnd" />
+    <bpmn:sequenceFlow id="a14" sourceRef="update" targetRef="show" />
+    <bpmn:sequenceFlow id="a15" sourceRef="show" targetRef="finish" />
+    <bpmn:textAnnotation id="fields">
+      <bpmn:text>Интенсивность 1–10; тип: пульсирующая, давящая, стреляющая, распирающая.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="assoc_fields" sourceRef="pain" targetRef="fields" />
+    <bpmn:textAnnotation id="more">
+      <bpmn:text>Симптомы и триггеры выбираются из справочников. Заметка необязательна; зоны боли редактируются отдельно после создания.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="assoc_more" sourceRef="symptoms" targetRef="more" />
+    <bpmn:textAnnotation id="rules">
+      <bpmn:text>Дата и время не в будущем; конец не раньше начала. При продолжающемся приступе дата окончания не сохраняется.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="assoc_rules" sourceRef="validate" targetRef="rules" />
+  </bpmn:process>
+  <bpmn:collaboration id="Collab_AttackDetail">
+    <bpmn:participant id="Pool_AttackDetail" name="Calm" processRef="Process_AttackDetail" />
+  </bpmn:collaboration>
+  <bpmndi:BPMNDiagram id="Diagram_AttackDetail" name="Calm — запись приступа">
+    <bpmndi:BPMNPlane id="Plane_AttackDetail" bpmnElement="Collab_AttackDetail">
+      <bpmndi:BPMNShape id="shape_Pool_AttackDetail" bpmnElement="Pool_AttackDetail" isHorizontal="true">
+        <dc:Bounds x="30" y="80" width="2770" height="1050" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_start" bpmnElement="start">
+        <dc:Bounds x="100" y="300" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="35" y="343" width="166" height="48" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_join" bpmnElement="join" isMarkerVisible="true">
+        <dc:Bounds x="215" y="298" width="40" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_time" bpmnElement="time">
+        <dc:Bounds x="320" y="278" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_active" bpmnElement="active">
+        <dc:Bounds x="650" y="278" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_gate" bpmnElement="gate" isMarkerVisible="true">
+        <dc:Bounds x="1000" y="298" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="940" y="238" width="160" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_endtime" bpmnElement="endtime">
+        <dc:Bounds x="1130" y="170" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_merge" bpmnElement="merge" isMarkerVisible="true">
+        <dc:Bounds x="1480" y="298" width="40" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_pain" bpmnElement="pain">
+        <dc:Bounds x="1600" y="278" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_symptoms" bpmnElement="symptoms">
+        <dc:Bounds x="1940" y="278" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_note" bpmnElement="note">
+        <dc:Bounds x="2280" y="278" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_submit" bpmnElement="submit">
+        <dc:Bounds x="2280" y="500" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_validate" bpmnElement="validate">
+        <dc:Bounds x="1940" y="500" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_valid" bpmnElement="valid" isMarkerVisible="true">
+        <dc:Bounds x="1800" y="520" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1740" y="460" width="160" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_error" bpmnElement="error">
+        <dc:Bounds x="1480" y="620" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_save" bpmnElement="save">
+        <dc:Bounds x="1480" y="500" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_saved" bpmnElement="saved" isMarkerVisible="true">
+        <dc:Bounds x="1320" y="520" width="40" height="40" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1260" y="460" width="160" height="50" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_saveerror" bpmnElement="saveerror">
+        <dc:Bounds x="960" y="620" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_update" bpmnElement="update">
+        <dc:Bounds x="960" y="500" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_show" bpmnElement="show">
+        <dc:Bounds x="620" y="500" width="250" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_finish" bpmnElement="finish">
+        <dc:Bounds x="400" y="522" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="335" y="565" width="166" height="48" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_failedEnd" bpmnElement="failedEnd">
+        <dc:Bounds x="600" y="642" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="535" y="685" width="166" height="48" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_fields" bpmnElement="fields">
+        <dc:Bounds x="1580" y="110" width="365" height="95" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_more" bpmnElement="more">
+        <dc:Bounds x="2020" y="805" width="590" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape_rules" bpmnElement="rules">
+        <dc:Bounds x="960" y="815" width="600" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_a1" bpmnElement="a1">
+        <di:waypoint x="136" y="318" />
+        <di:waypoint x="215" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_a2" bpmnElement="a2">
+        <di:waypoint x="255" y="318" />
+        <di:waypoint x="320" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_a3" bpmnElement="a3">
+        <di:waypoint x="570" y="318" />
+        <di:waypoint x="650" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_a4" bpmnElement="a4">
+        <di:waypoint x="900" y="318" />
+        <di:waypoint x="1000" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_completed" bpmnElement="completed">
+        <di:waypoint x="1020" y="298" />
+        <di:waypoint x="1020" y="210" />
+        <di:waypoint x="1130" y="210" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1050" y="195" width="120" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_ongoing" bpmnElement="ongoing">
+        <di:waypoint x="1040" y="318" />
+        <di:waypoint x="1480" y="318" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1190" y="290" width="160" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_a5" bpmnElement="a5">
+        <di:waypoint x="1380" y="210" />
+        <di:waypoint x="1500" y="210" />
+        <di:waypoint x="1500" y="298" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_a6" bpmnElement="a6">
+        <di:waypoint x="1520" y="318" />
+        <di:waypoint x="1600" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_a7" bpmnElement="a7">
+        <di:waypoint x="1850" y="318" />
+        <di:waypoint x="1940" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_a8" bpmnElement="a8">
+        <di:waypoint x="2190" y="318" />
+        <di:waypoint x="2280" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_a9" bpmnElement="a9">
+        <di:waypoint x="2405" y="358" />
+        <di:waypoint x="2405" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_a10" bpmnElement="a10">
+        <di:waypoint x="2280" y="540" />
+        <di:waypoint x="2190" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_a11" bpmnElement="a11">
+        <di:waypoint x="1940" y="540" />
+        <di:waypoint x="1840" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_good" bpmnElement="good">
+        <di:waypoint x="1800" y="540" />
+        <di:waypoint x="1730" y="540" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1750" y="510" width="40" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_invalid" bpmnElement="invalid">
+        <di:waypoint x="1820" y="560" />
+        <di:waypoint x="1820" y="660" />
+        <di:waypoint x="1730" y="660" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1770" y="610" width="40" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_retry" bpmnElement="retry">
+        <di:waypoint x="1480" y="660" />
+        <di:waypoint x="235" y="660" />
+        <di:waypoint x="235" y="338" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_a12" bpmnElement="a12">
+        <di:waypoint x="1480" y="540" />
+        <di:waypoint x="1360" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_saveok" bpmnElement="saveok">
+        <di:waypoint x="1320" y="540" />
+        <di:waypoint x="1210" y="540" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1240" y="510" width="45" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_failed" bpmnElement="failed">
+        <di:waypoint x="1340" y="560" />
+        <di:waypoint x="1340" y="660" />
+        <di:waypoint x="1210" y="660" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1280" y="610" width="45" height="24" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_a13" bpmnElement="a13">
+        <di:waypoint x="960" y="660" />
+        <di:waypoint x="636" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_a14" bpmnElement="a14">
+        <di:waypoint x="960" y="540" />
+        <di:waypoint x="870" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_a15" bpmnElement="a15">
+        <di:waypoint x="620" y="540" />
+        <di:waypoint x="436" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_assoc_fields" bpmnElement="assoc_fields">
+        <di:waypoint x="1725" y="278" />
+        <di:waypoint x="1725" y="205" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_assoc_more" bpmnElement="assoc_more">
+        <di:waypoint x="2065" y="358" />
+        <di:waypoint x="2065" y="805" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_assoc_rules" bpmnElement="assoc_rules">
+        <di:waypoint x="2060" y="580" />
+        <di:waypoint x="2060" y="740" />
+        <di:waypoint x="1250" y="740" />
+        <di:waypoint x="1250" y="815" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
