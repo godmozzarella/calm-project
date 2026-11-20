@@ -37,9 +37,10 @@ public class RiskPredictionService {
 
 	private static final int MIN_HISTORY_DAYS_FOR_PERSONAL = 30;
 	private static final int MIN_ATTACK_DAYS_FOR_PERSONAL = 5;
+	private static final int HIGH_RISK_THRESHOLD = 65;
 	private static final int FEATURE_SCHEMA_VERSION = 3;
 	private static final int TRAINING_SCHEMA_VERSION = 3;
-	private static final String SCORING_VERSION = "personal-rules-v1";
+	private static final String SCORING_VERSION = "personal-rules-v2";
 	private static final int MOH_THRESHOLD_TRIPTAN_OPIOID = 10;
 	private static final int MOH_THRESHOLD_SIMPLE_NSAID = 15;
 
@@ -153,6 +154,9 @@ public class RiskPredictionService {
 		PersonalCalibration personal = personalCalibration(user, date, w, personalFactors);
 		score += personal.scoreModifier();
 		score = clamp(score);
+		boolean limitedByHistory = score >= HIGH_RISK_THRESHOLD && attackDays.isEmpty()
+				&& !attackRepo.existsByUserIdAndStartDateBefore(userId, date);
+		if (limitedByHistory) score = HIGH_RISK_THRESHOLD - 1;
 
 		String historyLevel = historyLevel(personal.historyDays(), personal.historyAttackDays());
 		RiskPredictionResponse result = new RiskPredictionResponse(
@@ -161,7 +165,7 @@ public class RiskPredictionService {
 				levelOf(score),
 				historyLevel,
 				true,
-				null,
+				limitedByHistory ? "Без записей о приступах до этой даты максимальная оценка — 64 из 100." : null,
 				reasons,
 				personalFactors,
 				new RiskPredictionResponse.RiskInputs(
@@ -404,7 +408,7 @@ public class RiskPredictionService {
 	}
 
 	private static RiskLevel levelOf(int score) {
-		if (score >= 65) return RiskLevel.HIGH;
+		if (score >= HIGH_RISK_THRESHOLD) return RiskLevel.HIGH;
 		if (score >= 35) return RiskLevel.MEDIUM;
 		return RiskLevel.LOW;
 	}

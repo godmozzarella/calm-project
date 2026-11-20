@@ -54,16 +54,12 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 						.requestMatchers(
-								"/auth/login",
-								"/auth/register",
-								"/auth/verify-registration",
-								"/auth/resend-registration-code",
-								"/auth/cancel-registration",
+								"/auth/email/request",
+								"/auth/email/verify",
+								"/auth/email/link",
 								"/auth/cancel-email-change",
-								"/auth/password-reset/request",
-								"/auth/password-reset/confirm",
-                                "/auth/password-reset/verify",
 								"/auth/refresh",
+								"/auth/logout",
 								"/public/**",
 								"/actuator/health",
 								"/actuator/info",

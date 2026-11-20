@@ -17,6 +17,7 @@ const {
 		type={type}
 			onClick={onClick} 
 			{...buttonProps}
+			title={buttonProps.title ?? buttonProps['aria-label'] ?? (typeof children === 'string' ? children : undefined)}
 			className={`${colored ? s.colored : ''} ${className || ''}`}>			
 			{children && <span className={sText ? s.sText : s.mText}>{children}</span>}
 			{icon && <span className={s.icon}>{icon}</span>}

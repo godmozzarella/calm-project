@@ -33,7 +33,7 @@ const EditProfileForm = props => {
 			>
 				<div className={s.header}>
 					<h2 className={s.title}>Редактирование профиля</h2>
-					<button type="button" className={s.close} onClick={onClose} aria-label="Закрыть редактирование профиля" data-help="Закрыть настройки профиля без сохранения изменений.">
+					<button type="button" className={s.close} onClick={onClose} aria-label="Закрыть редактирование профиля" title="Закрыть настройки профиля без сохранения изменений.">
 						<CloseIcon />
 					</button>
 				</div>
@@ -62,7 +62,7 @@ const EditProfileForm = props => {
 						className={s.uploadAvatarInput}
 					/>
 					<label className={s.uploadAvatar} htmlFor="uploadAvatar" role="button" tabIndex={0}
-						aria-label="Загрузить фотографию профиля" data-help="Выбрать фотографию профиля с этого устройства."
+						aria-label="Загрузить фотографию профиля" title="Выбрать фотографию профиля с этого устройства."
 						onKeyDown={event => {
 							if (event.key === 'Enter' || event.key === ' ') {
 								event.preventDefault()
@@ -77,7 +77,7 @@ const EditProfileForm = props => {
 					type="button"
 					className={s.deleteAvatar}
 					onClick={handleAvatarDelete}
-					data-help="Удалить фотографию профиля."
+					title="Удалить фотографию профиля."
 				>
 					Удалить аватар
 				</Button>
@@ -88,10 +88,10 @@ const EditProfileForm = props => {
 					value={editData.name}
 					onChange={handleInputChange}
 					placeholder="Имя"
-					data-help="Укажите имя, которое будет видно в вашем профиле."
+					title="Укажите имя, которое будет видно в вашем профиле."
 				/>
 
-				<Button type="submit" colored data-help="Сохранить изменённые данные профиля.">
+				<Button type="submit" colored title="Сохранить изменённые данные профиля.">
 					Сохранить
 				</Button>
 			</form>

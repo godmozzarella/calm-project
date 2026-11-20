@@ -1,62 +1,60 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
+import { Input } from '@/shared/ui/Input'
 import { adminApi } from '@/shared/api'
+import { notifyRequestError } from '@/shared/lib/notifyError'
 
 import s from './Tab.module.scss'
-import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
 
 const SettingsTab = () => {
 	const [data, setData] = useState(null)
 	const [draft, setDraft] = useState(null)
 	const [loading, setLoading] = useState(false)
 	const [saving, setSaving] = useState(false)
-	const [error, setError] = useState(null)
 	const [savedAt, setSavedAt] = useState(null)
 
-	useEffect(() => {
+	const load = useCallback(() => {
 		setLoading(true)
 		adminApi.getSettings()
 			.then(d => { setData(d); setDraft(d) })
-			.catch(e => setError(e.message))
+			.catch(e => notifyRequestError(e, 'Не удалось загрузить настройки'))
 			.finally(() => setLoading(false))
 	}, [])
+
+	useEffect(() => { load() }, [load])
 
 	const dirty = draft && data && draft.activeProvider !== data.activeProvider
 
 	const handleSave = async () => {
 		setSaving(true)
-		setError(null)
 		try {
 			const updated = await adminApi.updateSettings({ activeProvider: draft.activeProvider })
 			setData(updated)
 			setDraft(updated)
 			setSavedAt(Date.now())
 		} catch (e) {
-			setError(e.message)
+			notifyRequestError(e, 'Не удалось сохранить настройки')
 		} finally {
 			setSaving(false)
 		}
 	}
 
 	if (loading) return <p className={s.muted}>Загрузка…</p>
-	if (error && !data) return <ErrorNotice message={error} title="Не удалось загрузить настройки" />
-	if (!draft) return null
+	if (!draft) return <button title={"Повторить загрузку"} type="button" className={s.btnSmall} onClick={load}>Повторить загрузку</button>
 
 	return (
 		<div className={s.wrap}>
 			<h2 className={s.h2}>Системные настройки</h2>
 
-			<label className={s.fieldInline}>
-				<span>Поставщик прогноза погоды</span>
-				<select
-					className={s.inputNarrow}
+			<div className={s.fieldInline}>
+				<Input as="select" label="Поставщик прогноза погоды" wrapperClassName={s.toolbarField}
 					value={draft.activeProvider}
 					onChange={e => setDraft({ ...draft, activeProvider: e.target.value })}
 				>
 					{draft.availableProviders.map(p => (
 						<option key={p} value={p}>{p}</option>
 					))}
-				</select>
+				</Input>
 				<button
 					type="button"
 					className={s.btn}
@@ -66,9 +64,8 @@ const SettingsTab = () => {
 					{saving ? '…' : 'Сохранить'}
 				</button>
 				{!dirty && savedAt && <span className={s.muted}>Сохранено</span>}
-			</label>
+			</div>
 
-			<ErrorNotice message={error} title="Не удалось сохранить настройки" />
 		</div>
 	)
 }

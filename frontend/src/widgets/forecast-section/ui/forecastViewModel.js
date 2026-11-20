@@ -88,13 +88,9 @@ function plural(value, one, few, many) {
 	return mod10 === 1 && mod100 !== 11 ? one : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14) ? few : many
 }
 
-export const conclusion = (risk, factors, today) => {
-	if (!risk?.dataAvailable) return risk?.message || 'Для выбранного дня оценка пока недоступна.'
-	const day = today ? 'Сегодня' : 'В этот день'
-	const lead = risk.level === 'LOW' ? `${day} оценка риска низкая.` : `${day} оценка риска ${risk.level === 'HIGH' ? 'высокая' : 'повышена'}.`
-	if (!factors.length) return lead
+export const summarizeFactors = factors => {
 	const names = { history: 'недавние приступы', weather: 'погода', magnetic: 'геомагнитная активность' }
-	return `${lead} Главный фактор — ${names[factors[0].key]}${factors[1] ? `, также влияет ${names[factors[1].key]}` : ''}.`
+	return `Главный фактор — ${names[factors[0].key]}${factors[1] ? `, также влияет ${names[factors[1].key]}` : ''}.`
 }
 
 export const helpfulMedication = medications => {

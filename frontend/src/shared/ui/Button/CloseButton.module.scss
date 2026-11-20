@@ -1,0 +1,8 @@
+@use 'app/styles/globals.scss' as *;
+
+.closeButton {
+	@include close-icon-button;
+	background: transparent;
+
+	svg { font-size: 1.2rem; }
+}

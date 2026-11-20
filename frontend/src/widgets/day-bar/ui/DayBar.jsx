@@ -46,9 +46,9 @@ const isSameDay = (a, b) =>
 	a.getMonth() === b.getMonth() &&
 	a.getFullYear() === b.getFullYear()
 
-const DayBar = ({ date, setDate, city, userId }) => {
+const DayBar = ({ date, setDate, city, userId, onInitialReady }) => {
 	const [currentStreak, setCurrentStreak] = useState(0)
-	const [earnedToday, setEarnedToday] = useState(false)
+	const [earnedToday, setEarnedToday] = useState(null)
 	const [flashKey, setFlashKey] = useState(0)
 	const streakRequest = useRef(0)
 	const loadStreak = useCallback(event => {
@@ -61,10 +61,17 @@ const DayBar = ({ date, setDate, city, userId }) => {
 			setCurrentStreak(count)
 			setEarnedToday(event?.detail?.completedToday === true || Boolean(data.today))
 			if(event?.type === SURVEY_COMPLETED) setFlashKey(key=>key+1)
-		}).catch(() => {})
-	}, [userId])
+		}).catch(() => {}).finally(() => {
+			if (request === streakRequest.current) onInitialReady?.('outcome')
+		})
+	}, [userId, onInitialReady])
 	useEffect(() => { loadStreak() }, [loadStreak])
 	useEffect(() => subscribe(SURVEY_COMPLETED, loadStreak), [loadStreak])
+	useEffect(() => {
+		const refreshOnReturn = () => { if (document.visibilityState === 'visible') loadStreak() }
+		document.addEventListener('visibilitychange', refreshOnReturn)
+		return () => document.removeEventListener('visibilitychange', refreshOnReturn)
+	}, [loadStreak])
 	const today = midnight()
 	const isToday = date.getTime() === today.getTime()
 	const weekDays = getWeekDays(date)
@@ -79,7 +86,7 @@ const DayBar = ({ date, setDate, city, userId }) => {
 
 	return (
 		<div className={s.dayBar}>
-			<button className={s.navBtn} onClick={() => shift(-1)} aria-label="Предыдущий день" data-help="Показать записи дневника за предыдущий день.">
+			<button className={s.navBtn} onClick={() => shift(-1)} aria-label="Предыдущий день" title="Показать записи дневника за предыдущий день.">
 				<ChevronLeftIcon />
 			</button>
 
@@ -97,24 +104,27 @@ const DayBar = ({ date, setDate, city, userId }) => {
 					</span>
 				)}
 				{!isToday && (
-					<button className={s.returnBtn} onClick={() => setDate(today)} data-help="Вернуться к записям за сегодня.">
+					<button className={s.returnBtn} onClick={() => setDate(today)} title="Вернуться к записям за сегодня.">
 						<BackIcon style={{ fontSize: '1rem' }} /> к сегодня
 					</button>
 				)}
 			</div>
 
-			<div className={`${s.streak} ${earnedToday ? s.streakEarned : ''} ${flashKey ? s.streakFlashed : ''}`}>
+			<div className={`${s.streak} ${earnedToday ? s.streakEarned : ''} ${earnedToday === false ? s.streakPending : ''} ${earnedToday && flashKey ? s.streakFlashed : ''}`}>
 				<button
 					data-streak-target="true"
 					data-streak-lit={earnedToday}
 					className={s.streakButton}
 					type="button"
-					data-help={`Серия чекина: ${currentStreak} ${dayWord(currentStreak)} подряд. Открыть карточки.`}
+					title={`Серия чекина: ${currentStreak} ${dayWord(currentStreak)} подряд. Открыть карточки.`}
 					aria-label={`Серия чекина: ${currentStreak} ${dayWord(currentStreak)}. Открыть карточки`}
 					onClick={() => emit(OPEN_DAILY_QUESTIONNAIRE)}
 				>
-					<CalmSparkIcon key={`streak-icon-${flashKey}`} className={s.streakIcon} aria-hidden="true" />
-				<strong>{currentStreak}</strong>
+					<span className={s.streakStar} aria-hidden="true">
+						<span key={flashKey} className={s.streakHalo}><CalmSparkIcon /></span>
+						<CalmSparkIcon className={s.streakIcon} />
+					</span>
+					<strong>{currentStreak}</strong>
 				</button>
 			</div>
 
@@ -135,7 +145,7 @@ const DayBar = ({ date, setDate, city, userId }) => {
 							onClick={() => !future && setDate(midnight(d))}
 							disabled={future}
 							aria-label={`${d.getDate()} ${MONTHS[d.getMonth()]}`}
-							data-help={`Показать записи дневника за ${d.getDate()} ${MONTHS[d.getMonth()]}.`}
+							title={`Показать записи дневника за ${d.getDate()} ${MONTHS[d.getMonth()]}.`}
 						>
 							<span className={s.pillName}>{WEEKDAYS_SHORT[d.getDay()]}</span>
 							<span className={s.pillNum}>{d.getDate()}</span>
@@ -149,7 +159,7 @@ const DayBar = ({ date, setDate, city, userId }) => {
 				onClick={() => !isToday && shift(1)}
 				disabled={isToday}
 				aria-label="Следующий день"
-				data-help="Показать записи дневника за следующий день."
+				title="Показать записи дневника за следующий день."
 			>
 				<ChevronRightIcon />
 			</button>

@@ -15,19 +15,23 @@ public class AuthSession {
 	private String userId;
 	@Indexed(unique = true)
 	private String refreshToken;
+	private String loginEmail;
 	private Instant lastActivity;
 	@Indexed(expireAfter = "0s")
 	private Instant expiresAt;
 
 	public AuthSession() {}
 
-	public AuthSession(String userId, Instant now) {
+	public AuthSession(String userId, String email, String hash, Instant now) {
 		this.id = UUID.randomUUID().toString();
 		this.userId = userId;
-		this.refreshToken = UUID.randomUUID().toString();
+		this.refreshToken = hash;
+		this.loginEmail = email;
 		this.lastActivity = now;
-		this.expiresAt = now.plusSeconds(30L * 24 * 3600);
+		this.expiresAt = now.plus(AuthSessionService.IDLE_LIMIT);
 	}
+
+	public String getLoginEmail() { return loginEmail; }
 
 	public String getId() { return id; }
 	public String getUserId() { return userId; }

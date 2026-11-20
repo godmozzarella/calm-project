@@ -25,7 +25,6 @@ updates = {
     "CALM_SMTP_PASS": app_password,
     "CALM_MAIL_FROM": email,
     "CALM_MAIL_FROM_NAME": "Calm",
-    "CALM_SMTP_DEBUG": "false",
 }
 
 existing = env_path.read_text().splitlines() if env_path.exists() else []

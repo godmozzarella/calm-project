@@ -31,6 +31,7 @@ const Footer = () => {
 		} catch { setOpenGuide(getInstallationGuide()) }
 		finally { setInstalling(false) }
 	}
+
 	const openThemeOptions = event => {
 		if (event.target.closest('select')) return
 		const select = themeSelectRef.current
@@ -47,7 +48,7 @@ const Footer = () => {
 		<footer>
 			<div className={s.item1}>
 				<div className={s.logoBlock}>
-					<Link className={s.logo} to="/">Calm</Link>
+					<Link title={"Calm"} className={s.logo} to="/">Calm</Link>
 					<p className={s.slogan}>Отслеживай. Понимай. Живи легче!</p>
 					<p className={s.tagline}>
 						Личный дневник головной боли с аналитикой паттернов и экспортом для врача.
@@ -58,19 +59,19 @@ const Footer = () => {
 					<div className={s.linkCol}>
 						<h4 className={s.colTitle}>Помощь</h4>
 						<ul>
-							<li><button type="button" className={s.textLink} onClick={() => setOpenGuide('faq')}>FAQ</button></li>
-							<li><button type="button" className={s.textLink} onClick={() => setOpenGuide('how-to')}>Как пользоваться</button></li>
-							<li><button type="button" className={s.textLink} onClick={() => setOpenGuide('condition')}>О заболевании</button></li>
-							<li><Link to="/privacy-policy">Политика обработки данных</Link></li>
+							<li><button title={"FAQ"} type="button" className={s.textLink} onClick={() => setOpenGuide('faq')}>FAQ</button></li>
+							<li><button title={"Как пользоваться"} type="button" className={s.textLink} onClick={() => setOpenGuide('how-to')}>Как пользоваться</button></li>
+							<li><button title={"О заболевании"} type="button" className={s.textLink} onClick={() => setOpenGuide('condition')}>О заболевании</button></li>
+							<li><Link title={"Политика обработки данных"} to="/privacy-policy">Политика обработки данных</Link></li>
 						</ul>
 					</div>
 
 					<div className={s.linkCol}>
 						<h4 className={s.colTitle}>Связь</h4>
 						<ul>
-							<li><a href="mailto:calm.notifications.prj@gmail.com">calm.notifications.prj@gmail.com</a></li>
-							<li><a href="mailto:calm.notifications.prj@gmail.com?subject=%D0%9F%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%B0">Поддержка</a></li>
-							<li><a href="mailto:calm.notifications.prj@gmail.com?subject=%D0%A1%D0%BE%D1%82%D1%80%D1%83%D0%B4%D0%BD%D0%B8%D1%87%D0%B5%D1%81%D1%82%D0%B2%D0%BE">Сотрудничество</a></li>
+							<li><a title={"calm.notifications.prj@gmail.com"} href="mailto:calm.notifications.prj@gmail.com">calm.notifications.prj@gmail.com</a></li>
+							<li><a title={"Поддержка"} href="mailto:calm.notifications.prj@gmail.com?subject=%D0%9F%D0%BE%D0%B4%D0%B4%D0%B5%D1%80%D0%B6%D0%BA%D0%B0">Поддержка</a></li>
+							<li><a title={"Сотрудничество"} href="mailto:calm.notifications.prj@gmail.com?subject=%D0%A1%D0%BE%D1%82%D1%80%D1%83%D0%B4%D0%BD%D0%B8%D1%87%D0%B5%D1%81%D1%82%D0%B2%D0%BE">Сотрудничество</a></li>
 						</ul>
 					</div>
 
@@ -91,7 +92,7 @@ const Footer = () => {
 					>
 						Русский
 					</Button>
-					<div className={s.themeSelectWrap} onClick={openThemeOptions}>
+					<div className={s.themeSelectWrap} onClick={openThemeOptions} title="Тема оформления">
 						<select ref={themeSelectRef} className={s.themeSelect} aria-label="Тема оформления" value={themePreference} onChange={event => setThemePreference(event.target.value)}>
 							<option value="auto">Авто</option>
 							<option value="light">Светлая</option>
@@ -105,9 +106,9 @@ const Footer = () => {
 					</p>
 				</div>
 				<ul className={s.socials}>
-					<li><a className={s.socialLink} href="https://t.me/calm_prj" aria-label="Telegram"><TelegramIcon /></a></li>
-					<li><a className={s.socialLink} href="https://www.threads.com/@calm.prj?igshid=NTc4MTIwNjQ2YQ==" aria-label="Threads"><ThreadsIcon /></a></li>
-					<li><a className={s.socialLink} href="https://github.com/godmozzarella/calm-project" aria-label="GitHub"><GitHubIcon /></a></li>
+					<li><a title="Telegram" className={s.socialLink} href="https://t.me/calm_prj" aria-label="Telegram"><TelegramIcon /></a></li>
+					<li><a title="Threads" className={s.socialLink} href="https://www.threads.com/@calm.prj?igshid=NTc4MTIwNjQ2YQ==" aria-label="Threads"><ThreadsIcon /></a></li>
+					<li><a title="GitHub" className={s.socialLink} href="https://github.com/godmozzarella/calm-project" aria-label="GitHub"><GitHubIcon /></a></li>
 				</ul>
 			</div>
 		</footer>

@@ -2,6 +2,9 @@ package com.calm.config;
 
 import com.calm.feature.attack.Attack;
 import com.calm.feature.auth.AuthSession;
+import com.calm.feature.auth.EmailLoginChallenge;
+import com.calm.feature.push.DevicePushSubscription;
+import com.calm.feature.reminder.ReminderAttempt;
 import com.calm.feature.dictionary.DictionaryEntry;
 import com.calm.feature.medication.Medication;
 import com.calm.feature.risk.RiskPredictionRecord;
@@ -35,6 +38,9 @@ public class MongoIndexInitializer {
 	private static final Class<?>[] INDEXED_ENTITIES = {
 			User.class,
 			AuthSession.class,
+			EmailLoginChallenge.class,
+			DevicePushSubscription.class,
+			ReminderAttempt.class,
 			RiskPredictionRecord.class,
 			DailyOutcome.class,
             com.calm.feature.risk.OnsetInputSnapshot.class,

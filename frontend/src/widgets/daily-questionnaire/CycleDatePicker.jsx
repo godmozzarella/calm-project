@@ -30,7 +30,7 @@ export default function CycleDatePicker({ fields, today, onChange, preview = fal
     </div>
     <span className={s.cycleDateStatus}>
       {fields.cycleStart ? `${Number(day)} ${months[Number(month)-1]}` : selected ? 'Проверьте дату' : 'Дата не выбрана'}
-      {selected && <button type="button" onClick={reset}>Сбросить</button>}
+      {selected && <button title={"Сбросить"} type="button" onClick={reset}>Сбросить</button>}
     </span>
   </div>
 }

@@ -1,6 +1,5 @@
 import { EFFECTIVENESS_LABELS } from '@/entities/medication'
-import HeadFront from '@/widgets/attack-zone-section/ui/HeadFront'
-import HeadBack from '@/widgets/attack-zone-section/ui/HeadBack'
+import HeadDiagram from '@/widgets/attack-zone-section/ui/HeadDiagram'
 import s from './PatternsBlock.module.scss'
 
 const formatShare = share => `${Math.round(share * 100)}%`
@@ -84,11 +83,11 @@ const ZonesBlock = ({ zones }) => {
 				<>
 					<div className={s.heads}>
 						<div className={s.head}>
-							<HeadFront zones={zones.colorMap} readOnly />
+							<HeadDiagram zones={zones.colorMap} readOnly />
 							<span className={s.headLabel}>Спереди</span>
 						</div>
 						<div className={s.head}>
-							<HeadBack zones={zones.colorMap} readOnly />
+							<HeadDiagram rear zones={zones.colorMap} readOnly />
 							<span className={s.headLabel}>Сзади</span>
 						</div>
 					</div>

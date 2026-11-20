@@ -3,15 +3,18 @@ import { useEffect, useRef, useState } from 'react'
 import { ATTACK_TYPE_LABELS, intensityColor } from '@/entities/attack'
 import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
 import { localMinute } from '@/shared/lib/localMinute'
-import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
+import { FieldError, Input } from '@/shared/ui/Input'
 import { dictionaryApi } from '@/shared/api'
-import { CloseIcon } from '@/shared/ui/icons'
+import CloseButton from '@/shared/ui/Button/CloseButton'
+import RangeSlider from '@/shared/ui/RangeSlider/RangeSlider'
 import AttackTimeWheels from './AttackTimeWheels'
 import s from './AddAttackForm.module.scss'
 
+const VALIDATION_FIELDS = new Set(['intensity', 'type', 'startDate', 'startTime', 'endDate', 'endTime', 'symptoms', 'triggers', 'note'])
+
 const TYPES = Object.entries(ATTACK_TYPE_LABELS).map(([value, label]) => ({ value, label }))
 
-const AddAttackForm = ({ open, form, error, deleteError, loading, deleting, editing, onClose, setField, toggleArrayField, onSubmit, onSubmitAnother, onDelete, title }) => {
+const AddAttackForm = ({ open, form, error, loading, deleting, editing, onClose, setField, toggleArrayField, onSubmit, onSubmitAnother, onDelete, title }) => {
 	useBodyScrollLock(open)
 	const sheet = useRef(null)
 	const [symptoms, setSymptoms] = useState([])
@@ -31,40 +34,39 @@ const AddAttackForm = ({ open, form, error, deleteError, loading, deleting, edit
 
 	useEffect(() => {
 		if (!open) return
-		const previous=document.activeElement
-		sheet.current?.querySelector('button')?.focus({ preventScroll:true })
-		return () => { if(previous?.isConnected) previous.focus({ preventScroll:true }) }
+		const previous = document.activeElement
+		sheet.current?.focus({ preventScroll: true })
+		return () => { if (previous?.isConnected) previous.focus({ preventScroll: true }) }
 	}, [open])
 
 	if (!open) return null
 
 	const { date: today, time: currentTime } = localMinute()
 	const busy = loading || deleting
+	const fieldError = field => error?.field === field ? error.message : undefined
 
 	return (
 		<div className={s.overlay} onClick={e => e.target === e.currentTarget && onClose()} onKeyDown={e => { if(e.key==='Escape') { e.stopPropagation(); if(!busy) onClose() } }}>
-			<div ref={sheet} className={s.sheet} aria-busy={busy} data-attack-form role="dialog" aria-modal="true" aria-label={title || (editing ? 'Редактировать приступ' : 'Новый приступ')}>
+			<div ref={sheet} className={s.sheet} tabIndex={-1} aria-busy={busy} data-attack-form role="dialog" aria-modal="true" aria-label={title || (editing ? 'Редактировать приступ' : 'Новый приступ')}>
 				<div className={s.handle} />
 
 				<div className={s.header}>
 					<h2 className={s.title}>{title || (editing ? 'Редактировать приступ' : 'Новый приступ')}</h2>
-					<button className={s.closeBtn} onClick={onClose} disabled={busy} aria-label="Закрыть форму приступа" data-help="Закрыть форму записи приступа."><CloseIcon style={{fontSize:'1.2rem'}}/></button>
+					<CloseButton label="Закрыть форму приступа" title="Закрыть форму записи приступа." onClick={onClose} disabled={busy} />
 				</div>
 
 				<div className={s.body}>
-					<ErrorNotice message={error} title="Не удалось сохранить приступ" />
-					<ErrorNotice message={deleteError} title="Не удалось удалить приступ" />
-
+					{error && !VALIDATION_FIELDS.has(error.field) && <FieldError>{error.message}</FieldError>}
 					{/* ── Интенсивность ── */}
 					<section className={s.section}>
 						<span className={s.sectionLabel}>Интенсивность боли</span>
+						<FieldError>{fieldError('intensity')}</FieldError>
 						<div className={s.intensityRow}>
-							<input
-								type="range"
+							<RangeSlider title="Сила боли от 1 до 10"
 								aria-label="Сила боли от 1 до 10"
 								min={1} max={10}
 								value={form.intensity}
-								onChange={e => setField('intensity', Number(e.target.value))}
+								onChange={intensity => setField('intensity', intensity)}
 								className={s.slider}
 							/>
 							<span
@@ -83,6 +85,7 @@ const AddAttackForm = ({ open, form, error, deleteError, loading, deleting, edit
 					{/* ── Тип боли ── */}
 					<section className={s.section}>
 						<span className={s.sectionLabel}>Тип боли</span>
+						<FieldError>{fieldError('type')}</FieldError>
 						<div className={s.chips}>
 							{TYPES.map(({ value, label }) => (
 								<button
@@ -91,7 +94,7 @@ const AddAttackForm = ({ open, form, error, deleteError, loading, deleting, edit
 									onClick={() => setField('type', value)}
 					type="button"
 					aria-pressed={form.type === value}
-					data-help={`Выбрать тип боли «${label}» для этого приступа.`}
+					title={`Выбрать тип боли «${label}» для этого приступа.`}
 								>
 									{label}
 								</button>
@@ -105,31 +108,29 @@ const AddAttackForm = ({ open, form, error, deleteError, loading, deleting, edit
 						<div className={s.timeRow}>
 							<div className={s.timeField}>
 								<span>Начало</span>
-								<input
+								<Input
 									type="date"
-									aria-label="Дата начала приступа"
-									data-help="Укажите день, когда начался приступ."
+									aria-label="Дата начала" error={fieldError('startDate')}
+									title="Укажите день, когда начался приступ."
 									value={form.startDate}
 									max={today}
 									onChange={e => setField('startDate', e.target.value)}
-									className={s.timeInput}
 								/>
-								<AttackTimeWheels key={`start-${form.startDate}`} label="Время начала приступа" value={form.startTime} latestTime={form.startDate === today ? currentTime : null} onChange={value => setField('startTime', value)} />
+								<AttackTimeWheels key={`start-${form.startDate}`} label="Время начала приступа" error={fieldError('startTime')} value={form.startTime} latestTime={form.startDate === today ? currentTime : null} onChange={value => setField('startTime', value)} />
 							</div>
 							{!form.ongoing && (
 								<div className={s.timeField}>
 									<span>Конец</span>
-									<input
+									<Input
 										type="date"
-										aria-label="Дата окончания приступа"
-										data-help="Укажите день, когда приступ закончился."
+										aria-label="Дата окончания" error={fieldError('endDate')}
+										title="Укажите день, когда приступ закончился."
 										value={form.endDate}
 										min={form.startDate}
 										max={today}
 										onChange={e => setField('endDate', e.target.value)}
-										className={s.timeInput}
 									/>
-									<AttackTimeWheels key={`end-${form.endDate}`} label="Время окончания приступа" value={form.endTime} latestTime={form.endDate === today ? currentTime : null} onChange={value => setField('endTime', value)} />
+									<AttackTimeWheels key={`end-${form.endDate}`} label="Время окончания приступа" error={fieldError('endTime')} value={form.endTime} latestTime={form.endDate === today ? currentTime : null} onChange={value => setField('endTime', value)} />
 								</div>
 							)}
 						</div>
@@ -139,7 +140,7 @@ const AddAttackForm = ({ open, form, error, deleteError, loading, deleting, edit
 							role="switch"
 							aria-checked={form.ongoing}
 							aria-label="Приступ продолжается"
-							data-help="Включите, если приступ ещё не закончился. Время окончания можно будет указать позже."
+							title="Включите, если приступ ещё не закончился. Время окончания можно будет указать позже."
 							onClick={() => setField('ongoing', !form.ongoing)}
 						>
 							<span>Приступ продолжается</span>
@@ -152,6 +153,7 @@ const AddAttackForm = ({ open, form, error, deleteError, loading, deleting, edit
 					{/* ── Симптомы ── */}
 					<section className={s.section}>
 						<span className={s.sectionLabel}>Симптомы</span>
+						<FieldError>{fieldError('symptoms')}</FieldError>
 						<div className={s.chips}>
 							{symptoms.map(({ value, label }) => (
 								<button
@@ -160,7 +162,7 @@ const AddAttackForm = ({ open, form, error, deleteError, loading, deleting, edit
 									onClick={() => toggleArrayField('symptoms', value)}
 					type="button"
 					aria-pressed={form.symptoms.includes(value)}
-					data-help={`Отметить симптом «${label}», который был во время приступа.`}
+					title={`Отметить симптом «${label}», который был во время приступа.`}
 								>
 									{label}
 								</button>
@@ -171,6 +173,7 @@ const AddAttackForm = ({ open, form, error, deleteError, loading, deleting, edit
 					{/* ── Триггеры ── */}
 					<section className={s.section}>
 						<span className={s.sectionLabel}>Триггеры</span>
+						<FieldError>{fieldError('triggers')}</FieldError>
 						<div className={s.chips}>
 							{triggers.map(({ value, label }) => (
 								<button
@@ -179,7 +182,7 @@ const AddAttackForm = ({ open, form, error, deleteError, loading, deleting, edit
 									onClick={() => toggleArrayField('triggers', value)}
 					type="button"
 					aria-pressed={form.triggers.includes(value)}
-					data-help={`Отметить возможный провоцирующий фактор «${label}».`}
+					title={`Отметить возможный провоцирующий фактор «${label}».`}
 								>
 									{label}
 								</button>
@@ -189,12 +192,9 @@ const AddAttackForm = ({ open, form, error, deleteError, loading, deleting, edit
 
 					{/* ── Заметка ── */}
 					<section className={s.section}>
-						<span className={s.sectionLabel}>Заметка</span>
-						<textarea
-							className={s.textarea}
-							placeholder="Дополнительные наблюдения..."
-							aria-label="Заметка о приступе"
-							data-help="При желании добавьте личные наблюдения об этом приступе."
+						<Input as="textarea"
+							label="Заметка о приступе" error={fieldError('note')} maxLength={2000}
+							title="При желании добавьте личные наблюдения об этом приступе."
 							value={form.note}
 							onChange={e => setField('note', e.target.value)}
 							rows={3}
@@ -203,16 +203,16 @@ const AddAttackForm = ({ open, form, error, deleteError, loading, deleting, edit
 				</div>
 
 				<div className={s.footer}>
-					<button className={s.submitBtn} onClick={onSubmit} disabled={busy} data-help="Сохранить запись о приступе в дневнике.">
+					<button className={s.submitBtn} onClick={onSubmit} disabled={busy} title="Сохранить запись о приступе в дневнике.">
 						Сохранить приступ
 					</button>
-					{onSubmitAnother && <button className={s.anotherBtn} onClick={onSubmitAnother} disabled={busy}>Сохранить и добавить ещё</button>}
+					{onSubmitAnother && <button title={"Сохранить и добавить ещё"} className={s.anotherBtn} onClick={onSubmitAnother} disabled={busy}>Сохранить и добавить ещё</button>}
 					{editing && <button
 						type="button"
 						className={s.deleteBtn}
 						onClick={onDelete}
 						disabled={busy}
-						data-help="Удалить эту запись о приступе из дневника."
+						title="Удалить эту запись о приступе из дневника."
 					>
 						{deleting ? 'Удаляем приступ…' : 'Удалить приступ'}
 					</button>}

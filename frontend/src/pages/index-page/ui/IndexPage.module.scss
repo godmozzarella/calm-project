@@ -178,12 +178,12 @@ html:has(.indexBody) {
 		position: relative;
 		z-index: 1;
 	}
+}
 
-	> section {
-		background-color: color-mix(in srgb, var(--secondary-color) 48%, transparent);
-		-webkit-backdrop-filter: blur(26px) saturate(145%);
-		backdrop-filter: blur(26px) saturate(145%);
-	}
+.authSection {
+	display: grid;
+	align-items: center;
+	min-height: clamp(24rem, 45svh, 36rem);
 }
 
 .bottomOrb {

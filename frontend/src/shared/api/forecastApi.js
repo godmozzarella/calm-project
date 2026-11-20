@@ -17,8 +17,4 @@ export const forecastApi = {
 
 	reverseGeocode: ({ lat, lon }) =>
 		http.get(`/forecast/reverse-geocode?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`),
-
-	// Принудительная отправка тестового письма себе для проверки SMTP.
-	sendTestNotification: () =>
-		http.post('/forecast/notify-test', {}),
 }

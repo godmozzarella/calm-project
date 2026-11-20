@@ -1,5 +1,72 @@
 @use 'sass:math';
 
+$control-height: 2.65rem;
+$square-icon-size: 2.25rem;
+$field-radius: .75rem;
+
+@mixin borderless-checkbox {
+	appearance: none;
+	display: grid;
+	place-items: center;
+	flex: none;
+	inline-size: 1.25rem;
+	block-size: 1.25rem;
+	margin: 0;
+	border: 0;
+	border-radius: .25rem;
+	background: var(--selection-surface);
+	cursor: inherit;
+
+	&:checked {
+		background: var(--fc-contrast);
+
+		&::after {
+			content: '';
+			inline-size: .35rem;
+			block-size: .65rem;
+			border: solid var(--contrast-button-text);
+			border-width: 0 2px 2px 0;
+			border-radius: 1px;
+			transform: translateY(-1px) rotate(45deg);
+		}
+	}
+
+	&:focus-visible { outline: 2px solid var(--fc-contrast); outline-offset: 2px; }
+	&:disabled { opacity: .55; }
+	@media (forced-colors: active) { appearance: auto; }
+}
+
+@mixin field-border {
+	border: 1px solid var(--field-border-color, var(--quiet-line));
+	border-radius: $field-radius;
+	transition: border-color 180ms ease;
+}
+
+@mixin square-icon-button {
+	display: grid;
+	place-items: center;
+	flex: 0 0 $square-icon-size;
+	width: $square-icon-size;
+	height: $square-icon-size;
+	padding: 0;
+	border: 0;
+	border-radius: .625rem;
+	background: var(--quiet-surface);
+	color: var(--fc-secondary);
+}
+
+@mixin close-icon-button {
+	@include square-icon-button;
+	cursor: pointer;
+	transition: color .15s ease, background-color .15s ease;
+
+	@media (hover: hover) and (pointer: fine) {
+		&:hover:not(:disabled) { background: var(--quiet-surface-raised); color: var(--fc-main); }
+	}
+	&:focus-visible { outline: 2px solid var(--fc-secondary); outline-offset: 2px; }
+	&:disabled { opacity: .55; cursor: default; }
+}
+
 @mixin fluid-text($max: 128, $min: 9) {
 	$maxViewportWidth: 1920;
 	$minViewportWidth: 320;
@@ -44,7 +111,7 @@
 
 @mixin contrast-button {
 	@include button-shine;
-	min-height: 2.65rem;
+	min-height: $control-height;
 	padding: .4rem .8rem;
 	border: 1px solid transparent;
 	border-radius: .75rem;

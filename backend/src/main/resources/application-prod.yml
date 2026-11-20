@@ -11,6 +11,11 @@ spring:
       auto-index-creation: false
 
 calm:
+  auth:
+    secure-cookie: true
+  rate-limit:
+    auth:
+      trust-proxy: true
   jwt:
     secret: ${CALM_JWT_SECRET}
   public-url: ${CALM_PUBLIC_URL}

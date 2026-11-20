@@ -2,21 +2,24 @@
 
 
 .mainPage {
+	--diary-header-top: 1.25rem;
+	--diary-header-height: 2.75rem;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	min-height: 100vh;
 	min-width: 100%;
 	background: transparent;
+	overflow-anchor: none;
     position: relative;
     isolation: isolate;
 }
 
 .icon {
 	background-color: $secondary-color;
-	top: 1.25rem;
+	top: var(--diary-header-top);
 	width: 4rem;
-	height: 2.75rem;
+	height: var(--diary-header-height);
 	color: $fc-main;
 	padding: 0;
 	cursor: pointer;
@@ -45,10 +48,13 @@
 
 
 @media (max-width: 480px) {
+	.mainPage {
+		--diary-header-top: .875rem;
+		--diary-header-height: 2.25rem;
+	}
+
 	.icon {
 		width: 3.125rem;
-		height: 2.25rem;
-		top: 0.875rem;
 	}
 
 	.menu {

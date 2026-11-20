@@ -27,16 +27,7 @@
 }
 
 .addBtn {
-	display: grid;
-	place-items: center;
-	flex: 0 0 2.25rem;
-	width: 2.25rem;
-	height: 2.25rem;
-	background: $quiet-surface;
-	border: 0;
-	border-radius: 0.625rem;
-	color: $fc-secondary;
-	padding: 0;
+	@include square-icon-button;
 	overflow: hidden;
 	cursor: pointer;
 	transition: background-color 0.18s ease, color 0.18s ease;
@@ -231,7 +222,7 @@
 	@media (hover: hover) and (pointer: fine) { &:hover { background: var(--selection-hover); } }
 }
 
-.ratingTrigger[data-effectiveness='1'] { color: #ef4444; }
+.ratingTrigger[data-effectiveness='1'] { color: $error-color; }
 .ratingTrigger[data-effectiveness='2'] { color: #eab308; }
 .ratingTrigger[data-effectiveness='3'] { color: #22c55e; }
 :root[data-theme='light'] .ratingTrigger[data-effectiveness='1'] { color: #b91c1c; }
@@ -287,7 +278,7 @@
 
 :root[data-theme='light'] .effectBtn { background: var(--selection-surface); }
 :root[data-theme='light'] .effectBtn:hover { background: $quiet-surface-raised; }
-.effectBtn[data-effectiveness='1'] { color: #ef4444; }
+.effectBtn[data-effectiveness='1'] { color: $error-color; }
 .effectBtn[data-effectiveness='2'] { color: #eab308; }
 .effectBtn[data-effectiveness='3'] { color: #22c55e; }
 :root[data-theme='light'] .effectBtn[data-effectiveness='1'] { color: #b91c1c; }

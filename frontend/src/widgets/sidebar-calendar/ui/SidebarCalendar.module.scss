@@ -8,7 +8,6 @@
 	width: clamp(300px, 90vw, 360px);
 	height: 100%;
 	background-color: var(--surface-overlay);
-	border-left: 1px solid $quiet-line;
 	display: flex;
 	flex-direction: column;
 	transform: translateX(100%);
@@ -54,32 +53,13 @@
 :root[data-theme='light'] .cycleToggle { background: #e59abd; color: #26131e; }
 .cycleToggle:focus:not(:focus-visible) { outline: none; box-shadow: none; }
 
-.iconBtn {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 2rem;
-	height: 2rem;
-	border-radius: 50%;
-	background: none;
-	border: none;
-	color: $fc-secondary;
-	cursor: pointer;
-	transition: background-color 0.18s ease, color 0.18s ease;
-
-	&:hover {
-		background-color: var(--surface-hover);
-		color: $fc-main;
-		border-radius: 0.75rem;
-	}
-}
-
 /* ── Vertical month list ── */
 .monthList {
 	flex: 1 1 auto;
 	min-height: 0;
 	overflow-y: auto;
 	overscroll-behavior: contain;
+	overflow-anchor: none;
 	scrollbar-width: none;
 	padding: 0 0.75rem 0.5rem;
 	-webkit-overflow-scrolling: touch;
@@ -119,6 +99,7 @@
 
 .historyToggle {
 	display: block;
+	flex-shrink: 0;
 	width: 100%;
 	padding: .6rem .25rem;
 	border: 0;
@@ -189,10 +170,11 @@
 	border: 1px solid transparent;
 	color: $fc-main;
 	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
 	transition: background-color 0.15s ease, border-color 0.15s ease;
 
-	&:hover:not(:disabled) {
-		background-color: var(--selection-hover);
+	@media (hover: hover) {
+		&:hover:not(:disabled) { background-color: var(--selection-hover); }
 	}
 }
 
@@ -240,30 +222,44 @@
 	.cellNum { color: var(--selected-control-fg); }
 }
 
-.cellSelected:hover:not(:disabled) {
-	background-color: var(--selected-control-bg);
+@media (hover: hover) {
+	.cellSelected:hover:not(:disabled) { background-color: var(--selected-control-bg); }
 }
 
 :root[data-theme='light'] .cellToday.cellSelected { background-color: var(--selected-control-bg); }
 
-.cellCycle:not(.cellSelected) { background-color: color-mix(in srgb, #db7ca7 12%, transparent); }
-.cycleHint {margin:.25rem .5rem .65rem;color:$fc-secondary;font-size:11px;line-height:1.4;}
-.cellCycle .cellNum,
-:root[data-theme='light'] .cellToday.cellCycle .cellNum,
-:root:not([data-theme='light']) .cellToday.cellCycle .cellNum { color: #db7ca7; }
-.cellCycleEdit.cellCycle { background: none; }
-.cellCycleEdit { gap: .15rem; }
-.cycleCheckbox {
-	display: grid;
-	place-items: center;
-	width: 17px;
-	height: 17px;
-	border: 1.5px solid #db7ca7;
-	border-radius: .3rem;
-	background: color-mix(in srgb, #db7ca7 8%, transparent);
+@media (hover: none) {
+	.cell { transition: none; }
+	.cellSelected,
+	:root[data-theme='light'] .cellToday.cellSelected {
+		background-color: transparent;
+		.cellNum { color: $fc-contrast; }
+	}
 }
-.cycleCheckboxChecked { background: #db7ca7; }
-.cycleCheckbox svg { width: 13px; height: 13px; color: #fff; }
+
+.cycleHint {
+	margin: .25rem .5rem;
+	color: $fc-secondary;
+	font-size: .75rem;
+	line-height: 1.4;
+}
+
+.cycleStats {
+	margin: .25rem .5rem .6rem;
+	color: $fc-secondary;
+	font-size: .75rem;
+	line-height: 1.4;
+	summary { cursor: pointer; color: $fc-main; }
+	p { margin-top: .25rem; }
+}
+.cellPlanned .cellNum,
+:root:not([data-theme='light']) .cellToday.cellPlanned .cellNum { color: #cf9eba; }
+:root[data-theme='light'] .cellPlanned .cellNum,
+:root[data-theme='light'] .cellToday.cellPlanned .cellNum { color: #88516e; }
+.cellCycle .cellNum,
+:root:not([data-theme='light']) .cellToday.cellCycle .cellNum { color: #db7ca7; }
+:root[data-theme='light'] .cellCycle .cellNum,
+:root[data-theme='light'] .cellToday.cellCycle .cellNum { color: #a72e64; }
 
 .cellNum {
 	@include fluid-text(13, 11);
@@ -498,6 +494,7 @@
 .overlay {
 	position: fixed;
 	inset: 0;
+	touch-action: none;
 	background: rgba(0, 0, 0, 0.5);
 	backdrop-filter: blur(2px);
 	z-index: 999;

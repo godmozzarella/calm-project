@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
+import { Input } from '@/shared/ui/Input'
 
 import { adminApi } from '@/shared/api'
 import { getCurrentUser } from '@/entities/user'
-import { notifyError } from '@/shared/lib/notifyError'
-import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
+import { notifyRequestError } from '@/shared/lib/notifyError'
 
 import s from './Tab.module.scss'
 
@@ -11,17 +11,17 @@ const UsersTab = () => {
 	const [users, setUsers] = useState([])
 	const [q, setQ] = useState('')
 	const [loading, setLoading] = useState(false)
-	const [error, setError] = useState(null)
+	const [loadFailed, setLoadFailed] = useState(false)
 	const [participationByUser, setParticipationByUser] = useState({})
 	const [deletingUserId, setDeletingUserId] = useState(null)
 	const me = getCurrentUser()
 
 	const load = (query = '') => {
 		setLoading(true)
-		setError(null)
+		setLoadFailed(false)
 		adminApi.listUsers(query)
 			.then(setUsers)
-			.catch(e => setError(e.message))
+			.catch(e => { setLoadFailed(true); notifyRequestError(e, 'Не удалось загрузить пользователей') })
 			.finally(() => setLoading(false))
 	}
 
@@ -40,7 +40,7 @@ const UsersTab = () => {
 			const updated = await adminApi.changeRole(user.id, newRole)
 			setUsers(prev => prev.map(u => u.id === updated.id ? updated : u))
 		} catch (e) {
-			notifyError(e.message)
+			notifyRequestError(e)
 		}
 	}
 
@@ -59,7 +59,7 @@ const UsersTab = () => {
 				return next
 			})
 		} catch (e) {
-			notifyError(e.message)
+			notifyRequestError(e)
 		} finally {
 			setDeletingUserId(null)
 		}
@@ -83,27 +83,27 @@ const UsersTab = () => {
 			const updated = await adminApi.setSharedModelParticipationBlocked(user.id, blocked)
 			setParticipationByUser(prev => ({ ...prev, [user.id]: updated }))
 		} catch (e) {
-			notifyError(e.message)
+			notifyRequestError(e)
 		}
 	}
 
 	return (
 		<div className={s.wrap}>
 			<form className={s.toolbar} onSubmit={handleSearch}>
-				<input
+				<Input
 					type="text"
 					value={q}
 					onChange={e => setQ(e.target.value)}
 					placeholder="Поиск по email или имени"
-					className={s.input}
+					wrapperClassName={s.toolbarField}
 				/>
-				<button type="submit" className={s.btn}>Найти</button>
+				<button title={"Найти"} type="submit" className={s.btn}>Найти</button>
 			</form>
 
-			<ErrorNotice message={error} title="Не удалось загрузить пользователей" />
+			{!loading && loadFailed && <button title={"Повторить загрузку"} type="button" className={s.btnSmall} onClick={() => load(q)}>Повторить загрузку</button>}
 			{loading && <p className={s.muted}>Загрузка…</p>}
 
-			{!loading && !error && (
+			{!loading && !loadFailed && (
 				<table className={s.table}>
 					<thead>
 						<tr>

@@ -21,9 +21,8 @@ spring:
     password: ${CALM_SMTP_PASS:}
     properties:
       mail:
-        # Включаем подробный лог SMTP-диалога — попадает в stdout приложения.
-        # Когда почта стабильно работает — можно выключить (CALM_SMTP_DEBUG=false).
-        debug: ${CALM_SMTP_DEBUG:false}
+        # SMTP trace may include one-time login credentials.
+        debug: false
         smtp:
           auth: true
           starttls:
@@ -56,6 +55,8 @@ server:
 
 calm:
   base-url: ${CALM_BASE_URL:http://localhost:8080}
+  auth:
+    secure-cookie: ${CALM_AUTH_SECURE_COOKIE:true}
   public-url: ${CALM_PUBLIC_URL:http://localhost}
   upload-dir: ${CALM_UPLOAD_DIR:./uploads/avatars}
   risk-pilot:
@@ -88,6 +89,12 @@ calm:
   notifications:
     cron: ${CALM_NOTIF_CRON:0 0 8 * * *}
     zone: ${CALM_NOTIF_ZONE:Europe/Moscow}
+  reminders:
+    cron: ${CALM_REMINDERS_CRON:0 * * * * *}
+  push:
+    public-key: ${CALM_PUSH_PUBLIC_KEY:}
+    private-key: ${CALM_PUSH_PRIVATE_KEY:}
+    subject: ${CALM_PUSH_SUBJECT:}
   rate-limit:
     auth:
       # Макс. попыток логина/регистрации с одного IP за window-seconds секунд.

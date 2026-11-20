@@ -1,0 +1,81 @@
+@use 'app/styles/globals.scss' as *;
+
+.range {
+	--thumb-size: 20px;
+	--thumb-border: 0px;
+	-webkit-appearance: none;
+	appearance: none;
+	height: var(--range-height, 4px);
+	border-radius: 2px;
+	border: 0;
+	background: var(--range-background, #{$quiet-surface-raised});
+	outline: none;
+	box-shadow: none;
+	-webkit-tap-highlight-color: transparent;
+	cursor: pointer;
+	padding: var(--range-padding, 0 10px);
+	box-sizing: border-box;
+	accent-color: transparent;
+	touch-action: none;
+	user-select: none;
+
+	@media (any-pointer: coarse) {
+		--thumb-size: 44px;
+		--thumb-border: 12px;
+		height: var(--thumb-size);
+		padding: 0;
+		background: transparent;
+	}
+
+	&:focus,
+	&:focus-visible { outline: none; box-shadow: none; }
+	&::-moz-focus-outer { border: 0; }
+
+	&::-webkit-slider-runnable-track {
+		height: 4px;
+		border-radius: 2px;
+		border: 0;
+		background: var(--range-track, #{$quiet-surface-raised});
+		box-shadow: none;
+	}
+
+	&::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		width: var(--thumb-size);
+		height: var(--thumb-size);
+		box-sizing: border-box;
+		border-radius: 50%;
+		background: var(--range-thumb, #{$fc-contrast}) content-box;
+		cursor: pointer;
+		border: var(--thumb-border) solid transparent;
+		outline: none;
+		box-shadow: none;
+		margin-top: calc((4px - var(--thumb-size)) / 2);
+		transition: transform 0.12s ease;
+
+		&:active { transform: scale(1.15); }
+	}
+
+	&::-moz-range-track {
+		height: 4px;
+		border-radius: 2px;
+		background: var(--range-track, #{$quiet-surface-raised});
+		border: none;
+		box-shadow: none;
+	}
+
+	&::-moz-range-thumb {
+		width: var(--thumb-size);
+		height: var(--thumb-size);
+		box-sizing: border-box;
+		border-radius: 50%;
+		background: var(--range-thumb, #{$fc-contrast}) content-box;
+		cursor: pointer;
+		border: var(--thumb-border) solid transparent;
+		outline: none;
+		box-shadow: none;
+		transition: transform 0.12s ease;
+	}
+
+	&:active::-moz-range-thumb { transform: scale(1.15); }
+}

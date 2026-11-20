@@ -58,8 +58,8 @@ class CycleMarkerServiceTest {
                 .hasMessageContaining("женском поле");
         var future=today.plusDays(14);
         service.put("alice", future, CycleMarker.Kind.DAY, "Europe/Moscow");
-        assertThat(service.list("alice")).containsExactly(new CycleMarkerService.Marker(future,CycleMarker.Kind.DAY));
-        service.remove("alice", future, CycleMarker.Kind.DAY, "Europe/Moscow");
+        assertThat(service.list("alice")).containsExactly(new CycleMarkerService.Marker(future,CycleMarker.Kind.PLANNED));
+        service.remove("alice", future, CycleMarker.Kind.PLANNED, "Europe/Moscow");
         assertThat(service.list("alice")).isEmpty();
         assertThatThrownBy(() -> service.put("alice", today, CycleMarker.Kind.DAY, "bad-zone"))
                 .hasMessageContaining("часовой пояс");

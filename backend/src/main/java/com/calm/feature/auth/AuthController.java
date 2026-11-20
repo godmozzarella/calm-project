@@ -1,92 +1,57 @@
 package com.calm.feature.auth;
 
 import com.calm.feature.auth.dto.AuthResponse;
-import com.calm.feature.auth.dto.LoginRequest;
-import com.calm.feature.auth.dto.RefreshRequest;
-import com.calm.feature.auth.dto.RegisterRequest;
-import com.calm.feature.auth.dto.RegistrationCodeRequest;
-import com.calm.feature.auth.dto.RegistrationResendRequest;
-import com.calm.feature.auth.dto.RegistrationStartedResponse;
-import com.calm.feature.auth.dto.VerifyEmailRequest;
-import com.calm.feature.auth.dto.PasswordResetRequest;
-import com.calm.feature.auth.dto.PasswordResetConfirmRequest;
-import com.calm.feature.auth.dto.PasswordResetVerifyRequest;
 import com.calm.feature.user.AccountSecurityService;
+import com.calm.feature.user.User;
 import com.calm.feature.user.dto.CancelEmailChangeRequest;
 import com.calm.security.AuthenticatedUser;
-import jakarta.validation.Valid;
+import java.time.Duration;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping(value = "/auth", consumes = MediaType.APPLICATION_JSON_VALUE)
 public class AuthController {
-
-	private final AuthService authService;
-	private final AuthSessionService sessionService;
-	private final EmailVerificationService emailVerification;
+	private static final String COOKIE = "calm_session";
+	private final AuthService auth;
+	private final AuthSessionService sessions;
+	private final EmailLoginService login;
 	private final AccountSecurityService accountSecurity;
+	private final boolean secure;
 
-	public AuthController(AuthService authService, AuthSessionService sessionService,
-			EmailVerificationService emailVerification, AccountSecurityService accountSecurity) {
-		this.authService = authService;
-		this.sessionService = sessionService;
-		this.emailVerification = emailVerification;
+	public AuthController(AuthService auth, AuthSessionService sessions, EmailLoginService login,
+			AccountSecurityService accountSecurity,
+			@Value("${calm.auth.secure-cookie:true}") boolean secure) {
+		this.auth = auth;
+		this.sessions = sessions;
+		this.login = login;
 		this.accountSecurity = accountSecurity;
+		this.secure = secure;
 	}
 
-	@PostMapping("/register")
-	public RegistrationStartedResponse register(@Valid @RequestBody RegisterRequest req) {
-		var user = authService.registerPending(req);
-		try {
-			int resendAfterSeconds = emailVerification.startRegistration(user.getId());
-			return new RegistrationStartedResponse(user.getEmail(), resendAfterSeconds);
-		} catch (RuntimeException error) {
-			authService.discardPendingRegistration(user.getId());
-			throw error;
-		}
+	record LoginRequest(String email, String code, String token) {}
+	record LegacyRefresh(String refreshToken) {}
+
+	@PostMapping("/email/request")
+	public ResponseEntity<Void> request(@RequestBody LoginRequest request) {
+		login.send(request.email());
+		return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
 	}
 
-	@PostMapping("/verify-registration")
-	public AuthResponse verifyRegistration(@Valid @RequestBody RegistrationCodeRequest req) {
-		var pending = authService.authenticatePendingRegistration(req.email(), req.password());
-		var verified = emailVerification.verify(pending.getId(), req.code());
-		return authService.issueTokenPair(verified);
+	@PostMapping("/email/verify")
+	public ResponseEntity<AuthResponse> verify(@RequestBody LoginRequest request) {
+		return authenticated(login.verifyCode(request.email(), request.code()));
 	}
 
-	@PostMapping("/resend-registration-code")
-	public ResponseEntity<Void> resendRegistrationCode(@Valid @RequestBody RegistrationResendRequest req) {
-		var pending = authService.authenticatePendingRegistration(req.email(), req.password());
-		emailVerification.sendCode(pending.getId());
-		return ResponseEntity.noContent().build();
-	}
-
-	@PostMapping("/cancel-registration")
-	public ResponseEntity<Void> cancelRegistration(@Valid @RequestBody RegistrationResendRequest req) {
-		var pending = authService.authenticatePendingRegistration(req.email(), req.password());
-		authService.discardPendingRegistration(pending.getId());
-		return ResponseEntity.noContent().build();
-	}
-
-	@PostMapping("/login")
-	public AuthResponse login(@Valid @RequestBody LoginRequest req) {
-		return authService.login(req);
-	}
-
-	@PostMapping("/verify-email")
-	public ResponseEntity<Void> verifyEmail(
-			@Valid @RequestBody VerifyEmailRequest req,
-			@AuthenticationPrincipal AuthenticatedUser principal
-	) {
-		emailVerification.verify(principal.getUserId(), req.code());
-		return ResponseEntity.noContent().build();
-	}
-
-	@PostMapping("/send-verification-code")
-	public ResponseEntity<Void> sendVerificationCode(@AuthenticationPrincipal AuthenticatedUser principal) {
-		emailVerification.sendCode(principal.getUserId());
-		return ResponseEntity.noContent().build();
+	@PostMapping("/email/link")
+	public ResponseEntity<AuthResponse> link(@RequestBody LoginRequest request) {
+		return authenticated(login.verifyLink(request.token()));
 	}
 
 	@PostMapping("/cancel-email-change")
@@ -95,40 +60,54 @@ public class AuthController {
 		return ResponseEntity.noContent().build();
 	}
 
-	@PostMapping("/password-reset/request")
-	public ResponseEntity<Void> requestPasswordReset(@Valid @RequestBody PasswordResetRequest req) {
-		accountSecurity.requestPasswordReset(req.email());
-		return ResponseEntity.noContent().build();
-	}
-
-    @PostMapping("/password-reset/verify")
-    public ResponseEntity<java.util.Map<String, String>> verifyPasswordReset(@Valid @RequestBody PasswordResetVerifyRequest req) {
-        return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore())
-                .body(java.util.Map.of("verificationToken", accountSecurity.verifyPasswordReset(req.email(), req.code())));
-    }
-
-	@PostMapping("/password-reset/confirm")
-	public ResponseEntity<Void> confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmRequest req) {
-		accountSecurity.resetPassword(req.email(), req.verificationToken(), req.newPassword());
-		return ResponseEntity.noContent().build();
-	}
-
 	@PostMapping("/refresh")
-	public AuthResponse refresh(@Valid @RequestBody RefreshRequest req) {
-		return authService.refresh(req);
+	public ResponseEntity<AuthResponse> refresh(@CookieValue(name = COOKIE, required = false) String cookie,
+			@RequestBody LegacyRefresh request) {
+		String replacement = EmailLoginService.randomToken();
+		AuthService.Refreshed refreshed = auth.refresh(cookie, request.refreshToken(), replacement);
+		var result = ResponseEntity.ok().cacheControl(CacheControl.noStore());
+		if (refreshed.migrated()) {
+			result.header(HttpHeaders.SET_COOKIE, cookie(replacement, AuthSessionService.IDLE_LIMIT));
+		}
+		return result.body(refreshed.response());
 	}
 
 	@PostMapping("/logout")
-	public ResponseEntity<Void> logout(@AuthenticationPrincipal AuthenticatedUser principal) {
-		authService.logout(principal.getUserId(), principal.getSessionId());
-		return ResponseEntity.noContent().build();
+	public ResponseEntity<Void> logout(@AuthenticationPrincipal AuthenticatedUser principal,
+			@CookieValue(name = COOKIE, required = false) String cookie) {
+		if (principal != null) sessions.revoke(principal.getSessionId(), principal.getUserId());
+		if (AuthSessionService.validCookie(cookie)) {
+			AuthSession session = sessions.findCookieSession(cookie);
+			if (session != null) sessions.revoke(session.getId(), session.getUserId());
+		}
+		return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, cookie("", Duration.ZERO)).build();
 	}
 
 	@PostMapping("/activity")
-	public ResponseEntity<Void> activity(@AuthenticationPrincipal AuthenticatedUser principal) {
-		if (!sessionService.touch(principal.getSessionId(), principal.getUserId())) {
+	public ResponseEntity<Void> activity(@AuthenticationPrincipal AuthenticatedUser principal,
+			@CookieValue(name = COOKIE, required = false) String cookie) {
+		if (!sessions.touch(principal.getSessionId(), principal.getUserId())) {
 			return ResponseEntity.status(401).build();
 		}
-		return ResponseEntity.noContent().build();
+		var result = ResponseEntity.noContent();
+		if (AuthSessionService.validCookie(cookie)) {
+			AuthSession session = sessions.findCookieSession(cookie);
+			if (session != null && principal.getSessionId().equals(session.getId())) {
+				result.header(HttpHeaders.SET_COOKIE, cookie(cookie, AuthSessionService.IDLE_LIMIT));
+			}
+		}
+		return result.build();
+	}
+
+	private ResponseEntity<AuthResponse> authenticated(User user) {
+		String token = EmailLoginService.randomToken();
+		return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+				.header(HttpHeaders.SET_COOKIE, cookie(token, AuthSessionService.IDLE_LIMIT))
+				.body(auth.login(user, token));
+	}
+
+	private String cookie(String value, Duration age) {
+		return ResponseCookie.from(COOKIE, value).httpOnly(true).secure(secure)
+				.sameSite("Strict").path("/api/auth").maxAge(age).build().toString();
 	}
 }

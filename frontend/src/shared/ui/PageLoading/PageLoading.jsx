@@ -12,7 +12,7 @@ const PageLoading = ({ label = 'Загружаем данные…', onContinue 
 		<div className={s.overlay} role="status" aria-live="polite">
 			<span className={s.spinner} aria-hidden="true" />
 			<span>{slow ? 'Загрузка занимает больше времени…' : label}</span>
-			{slow && onContinue && <button type="button" className={s.continue} onClick={onContinue}>Показать сейчас</button>}
+			{slow && onContinue && <button title={"Показать сейчас"} type="button" className={s.continue} onClick={onContinue}>Показать сейчас</button>}
 		</div>
 	)
 }

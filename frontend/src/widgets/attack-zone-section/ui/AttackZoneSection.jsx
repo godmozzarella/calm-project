@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react'
 import { formatAttackTime, PAIN_ZONE_LABELS, sortAttacksNewest, toZoneMap } from '@/entities/attack'
 import { attackApi } from '@/shared/api'
 import { EditIcon } from '@/shared/ui/icons'
-import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
-import { isCentralError } from '@/shared/lib/isCentralError'
-import HeadFront from './HeadFront'
-import HeadBack  from './HeadBack'
+import { notifyRequestError } from '@/shared/lib/notifyError'
+import HeadDiagram from './HeadDiagram'
 import { subscribe, ATTACKS_CHANGED } from '@/shared/lib/dataEvents'
 import s from './AttackZoneSection.module.scss'
 
@@ -42,7 +40,6 @@ const AttackZoneSection = ({ date, onInitialReady }) => {
 	const [zones,      setZones]      = useState({})     // { zone: 'green'|'yellow'|'red' }
 	const [editing, setEditing] = useState(false)
 	const [saving, setSaving] = useState(false)
-	const [error, setError] = useState('')
 
 	// При смене дня сначала показываем текущий приступ, затем самые свежие.
 	useEffect(() => {
@@ -75,19 +72,17 @@ const AttackZoneSection = ({ date, onInitialReady }) => {
 		setSelectedId(id)
 		setZones(toZoneMap(attacks.find(a => a.id === id)?.painZones))
 		setEditing(false)
-		setError('')
 	}
 
 	const saveZones = async () => {
 		const attack = attacks.find(a => a.id === selectedId)
 		if (!attack || saving) return
 		setSaving(true)
-		setError('')
 		try {
 			await attackApi.update(selectedId, { ...attack, painZones: zones })
 			setEditing(false)
 		} catch (e) {
-			if (!isCentralError(e)) setError(e.message || 'Не удалось сохранить зоны боли.')
+			notifyRequestError(e, 'Не удалось сохранить зоны боли')
 		} finally { setSaving(false) }
 	}
 
@@ -100,11 +95,12 @@ const AttackZoneSection = ({ date, onInitialReady }) => {
 		setZones(next)
 	}
 
-	const removeZone = (e, zone) => {
-		e.stopPropagation()
+	const removeZone = zone => {
 		if (!hasAttacks || !editing) return
-		const { [zone]: _, ...next } = zones
-		setZones(next)
+		setZones(previous => {
+			const { [zone]: _, ...remaining } = previous
+			return remaining
+		})
 	}
 
 	const clearAll = () => {
@@ -115,16 +111,16 @@ const AttackZoneSection = ({ date, onInitialReady }) => {
 	const zoneCount = Object.keys(zones).length
 
 	return (
-		<div className={s.card} data-help="Зоны боли: отметьте на рисунке головы места, где болело во время выбранного приступа.">
-			<div className={s.cardHeader}>
+		<div className={s.card} title="Зоны боли: отметьте на рисунке головы места, где болело во время выбранного приступа.">
+			<div className={s.cardHeader} data-tour="zones">
 				<h2 className={s.title}>Зоны боли</h2>
 				{editing && zoneCount > 0 && (
-					<button className={s.clearBtn} onClick={clearAll} data-help="Убрать все отмеченные зоны боли для выбранного приступа.">Сбросить</button>
+					<button className={s.clearBtn} onClick={clearAll} title="Убрать все отмеченные зоны боли для выбранного приступа.">Сбросить</button>
 				)}
-				{hasAttacks && !editing && <button className={s.editBtn} onClick={() => setEditing(true)} aria-label="Редактировать зоны боли" data-help="Отметить или изменить зоны боли для выбранного приступа."><EditIcon fontSize="small" /></button>}
+				{hasAttacks && !editing && <button className={s.editBtn} onClick={() => setEditing(true)} aria-label="Редактировать зоны боли" title="Отметить или изменить зоны боли для выбранного приступа."><EditIcon fontSize="small" /></button>}
 				{editing && <div className={s.editActions}>
-					<button onClick={() => { setZones(toZoneMap(attacks.find(a => a.id === selectedId)?.painZones)); setEditing(false); setError('') }} disabled={saving} data-help="Отменить изменения зон боли.">Отмена</button>
-					<button onClick={saveZones} disabled={saving} data-help="Сохранить отмеченные зоны боли в записи приступа.">{saving ? 'Сохраняем…' : 'Готово'}</button>
+					<button onClick={() => { setZones(toZoneMap(attacks.find(a => a.id === selectedId)?.painZones)); setEditing(false) }} disabled={saving} title="Отменить изменения зон боли.">Отмена</button>
+					<button onClick={saveZones} disabled={saving} title="Сохранить отмеченные зоны боли в записи приступа.">{saving ? 'Сохраняем…' : 'Готово'}</button>
 				</div>}
 			</div>
 
@@ -146,7 +142,7 @@ const AttackZoneSection = ({ date, onInitialReady }) => {
 									aria-label={`Выбрать приступ: ${fmtAttack(a)}. Интенсивность ${a.intensity} из 10`}
 									className={`${s.attackPill} ${selectedId === a.id ? s.attackPillActive : ''}`}
 									onClick={() => selectAttack(a.id)}
-									data-help="Выбрать приступ, для которого нужно посмотреть или изменить зоны боли."
+									title="Выбрать приступ, для которого нужно посмотреть или изменить зоны боли."
 								>
 									{fmtAttack(a)}
 								</button>
@@ -156,15 +152,14 @@ const AttackZoneSection = ({ date, onInitialReady }) => {
 				)}
 
 				{/* Head visualizations */}
-				<ErrorNotice message={error} title="Не удалось сохранить зоны боли" />
 				<div className={`${s.headsRow} ${!hasAttacks ? s.headsRowMuted : ''}`} aria-disabled={!hasAttacks}>
 					<div className={s.headView}>
-						<HeadFront zones={zones} onToggle={toggleZone} readOnly={!editing} />
+						<HeadDiagram zones={zones} onToggle={toggleZone} readOnly={!editing} />
 						<span className={s.headLabel}>Спереди</span>
 					</div>
 					<div className={s.dividerV} />
 					<div className={s.headView}>
-						<HeadBack zones={zones} onToggle={toggleZone} readOnly={!editing} />
+						<HeadDiagram rear zones={zones} onToggle={toggleZone} readOnly={!editing} />
 						<span className={s.headLabel}>Сзади</span>
 					</div>
 				</div>
@@ -176,18 +171,20 @@ const AttackZoneSection = ({ date, onInitialReady }) => {
 							{Object.entries(zones).map(([zone, color]) => (
 								<button
 									key={zone}
+									type="button"
 									className={`${s.zoneTag} ${s[`zoneTag_${color}`]}`}
-									onClick={() => toggleZone(zone)}
+									onClick={() => removeZone(zone)}
 									disabled={!editing}
-									data-help={editing ? `Изменить силу боли в зоне «${PAIN_ZONE_LABELS[zone]}».` : `Зона боли: ${PAIN_ZONE_LABELS[zone]}.`}
+									title={editing ? `Снять отметку с зоны «${PAIN_ZONE_LABELS[zone]}».` : `Зона боли: ${PAIN_ZONE_LABELS[zone]}.`}
+									aria-label={editing ? `Снять отметку с зоны «${PAIN_ZONE_LABELS[zone]}»` : undefined}
 								>
 									<span className={`${s.zoneDot} ${s[`dot_${color}`]}`} />
 									{PAIN_ZONE_LABELS[zone]}
-									{editing && <span className={s.zoneTagX} onClick={e => removeZone(e, zone)}>✕</span>}
+									{editing && <span className={s.zoneTagX} aria-hidden="true">✕</span>}
 								</button>
 							))}
 						</div>
-						{editing && <p className={s.intensityHint}>Нажмите зону, чтобы изменить интенсивность</p>}
+						{editing && <p className={s.intensityHint}>Нажмите на схему, чтобы изменить интенсивность, или на метку, чтобы снять отметку.</p>}
 					</>
 				) : (
 					<>

@@ -93,7 +93,7 @@ const topFromArrays = (attacks, field, labels, n = 5) => {
 
 /**
  * Частота зон боли по приступам периода + map { zone → 'green'|'yellow'|'red' }
- * для отрисовки готовыми HeadFront/HeadBack.
+ * для отрисовки схемы HeadDiagram.
  *
  * Алгоритм: считаем по `painZones` каждого приступа (внутри атаки зона может быть
  * green/yellow/red, но для агрегата нас интересует факт «зона участвовала» —

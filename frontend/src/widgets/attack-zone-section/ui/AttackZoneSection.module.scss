@@ -21,6 +21,9 @@
 }
 
 .title {
+	display: flex;
+	align-items: center;
+	min-height: $square-icon-size;
 	@include fluid-text(17, 14);
 	font-weight: $fw-semibold;
 	color: $fc-main;
@@ -39,7 +42,14 @@
 	&:hover { color: $fc-secondary; }
 }
 
-.editBtn, .editActions button {
+.editBtn {
+	@include square-icon-button;
+	cursor: pointer;
+
+	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: 2px; }
+}
+
+.editActions button {
 	background: $quiet-surface;
 	border: 0;
 	border-radius: .5rem;
@@ -216,7 +226,7 @@
 }
 .dot_green  { background: rgba(34,  197, 94,  0.85); }
 .dot_yellow { background: rgba(234, 179, 8,   0.85); }
-.dot_red    { background: rgba(239, 68,  68,  0.85); }
+.dot_red    { background: $error-color; }
 
 .zoneTagX {
 	@include fluid-text(9, 8);

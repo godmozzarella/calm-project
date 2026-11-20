@@ -1,15 +1,17 @@
 import { isSessionIdle, clearSessionActivity } from '@/shared/lib/sessionActivity'
+import { getCurrentUser, setCurrentUser } from '@/entities/user'
+import { emit, AUTH_CHANGED } from '@/shared/lib/dataEvents'
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api'
 
 const TOKEN_KEY         = 'calm_token'
 const REFRESH_TOKEN_KEY = 'calm_refresh_token'
+let sessionRevision = 0
 
 export const getToken          = ()    => localStorage.getItem(TOKEN_KEY)
 export const setToken          = token => localStorage.setItem(TOKEN_KEY, token)
-export const clearToken        = ()    => localStorage.removeItem(TOKEN_KEY)
+export const clearToken        = ()    => { sessionRevision += 1; localStorage.removeItem(TOKEN_KEY) }
 export const getRefreshToken   = ()    => localStorage.getItem(REFRESH_TOKEN_KEY)
-export const setRefreshToken   = t     => localStorage.setItem(REFRESH_TOKEN_KEY, t)
 export const clearRefreshToken = ()    => localStorage.removeItem(REFRESH_TOKEN_KEY)
 
 // Access tokens rotate, but a login session keeps the same sessionId.
@@ -28,7 +30,8 @@ const authHeaders = () => {
 }
 
 const jsonHeaders = () => ({ 'Content-Type': 'application/json', ...authHeaders() })
-const isPublicAuthPath = path => ['/auth/login', '/auth/register', '/auth/verify-registration', '/auth/resend-registration-code', '/auth/cancel-registration', '/auth/cancel-email-change', '/auth/password-reset/request', '/auth/password-reset/verify', '/auth/password-reset/confirm', '/auth/refresh'].includes(path)
+const isPublicAuthPath = path => path.startsWith('/auth/email/')
+  || ['/auth/cancel-email-change', '/auth/refresh', '/auth/logout'].includes(path)
 const networkMessage = () => navigator.onLine
   ? 'Не удалось связаться с сервером. Повторите попытку через минуту.'
   : 'Нет подключения к интернету. Проверьте соединение и повторите попытку.'
@@ -39,29 +42,38 @@ const reportNetworkRestored = () => window.dispatchEvent(new Event('calm:network
 // чтобы не было race condition и лишних запросов на /auth/refresh.
 let refreshPromise = null
 
-const tryRefresh = () => {
+const tryRefresh = (allowCookieOnly = false) => {
   if (isSessionIdle()) return Promise.resolve(false)
   if (refreshPromise) return refreshPromise
   const rt = getRefreshToken()
-  if (!rt) return Promise.resolve(false)
+  const identity = sessionIdentity(getToken())
+  const revision = sessionRevision
+  if (!identity && !rt && !allowCookieOnly) return Promise.resolve(false)
 
   refreshPromise = (async () => {
     try {
       const res = await fetch(BASE + '/auth/refresh', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken: rt }),
       })
       reportNetworkRestored()
       if (!res.ok) {
-		if (res.status >= 500) { reportNetworkError(); return null }
+        if (res.status !== 401) { reportNetworkError(); return null }
         // Другая вкладка могла успеть обновить общий refresh-токен.
-        return Boolean(getRefreshToken()) && getRefreshToken() !== rt && !isSessionIdle()
+        return sessionIdentity(getToken()) === identity && getRefreshToken() !== rt && !isSessionIdle()
       }
       const body = await res.json()
-      if (getRefreshToken() !== rt || isSessionIdle()) return false
+      if (typeof body.token !== 'string') return null
+      if (sessionRevision !== revision || sessionIdentity(getToken()) !== identity || isSessionIdle()
+          || (identity && sessionIdentity(body.token) !== identity)) return false
       setToken(body.token)
-      setRefreshToken(body.refreshToken)
+      clearRefreshToken()
+      if (body.user && (!identity || !getCurrentUser())) {
+        setCurrentUser(body.user)
+        emit(AUTH_CHANGED)
+      }
       return true
     } catch {
       reportNetworkError()
@@ -76,12 +88,15 @@ const tryRefresh = () => {
   return refreshPromise
 }
 
+export const restoreSession = () => tryRefresh(true)
+
 const clearSession = () => {
   clearToken()
   clearRefreshToken()
   clearSessionActivity()
   localStorage.removeItem('calm_current_user')
-  window.location.href = '/'
+  sessionStorage.setItem('calm_login_notice', 'Сессия завершена. Войдите снова по почте.')
+  window.location.href = '/#regAndLog'
 }
 
 export const expireSessionIfIdle = () => {
@@ -94,7 +109,7 @@ const send = (path, options) => {
   if (!isPublicAuthPath(path) && expireSessionIfIdle()) {
     return Promise.reject(new Error('Сессия истекла'))
   }
-  return fetch(BASE + path, options)
+  return fetch(BASE + path, { ...options, credentials: 'include' })
     .then(res => { reportNetworkRestored(); return res })
     .catch(error => {
       if (error instanceof TypeError) {
@@ -140,13 +155,18 @@ const handle = async (res, path, retryFn, requestSession) => {
     err.retryAfter = retryAfter
     throw err
   }
-	if (res.status === 413) throw new Error('Файл слишком большой. Максимальный размер — 5 МБ.')
+  if (res.status === 413) {
+    throw Object.assign(new Error('Файл слишком большой. Максимальный размер — 5 МБ.'), { status: 413 })
+  }
   // `error` is usually the generic HTTP title (e.g. "Bad Request"); `message`
   // carries the useful server explanation intended for the user.
   if (!res.ok) {
     const error = new Error(body.message ?? body.error ?? `HTTP ${res.status}`)
     error.status = res.status
-    if (res.status >= 500) {
+    if (res.status === 400 && Array.isArray(body.details) && body.details.length > 0) {
+      error.fieldValidation = body.details
+    }
+    if (res.status >= 500 && !path.startsWith('/auth/email/')) {
       window.dispatchEvent(new CustomEvent('calm:show-error', {
         detail: { title: 'Ошибка сервера', message: error.message },
       }))

@@ -101,6 +101,9 @@ public class AttackService {
 				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Окончание приступа не может быть раньше начала");
 			}
 		}
+		if (req.timezone() != null && (!req.startDate().equals(a.getStartDate()) || !req.startTime().equals(a.getStartTime()))) {
+			a.setReminderStartTimezone(req.timezone());
+		}
         if (locations != null && (a.getEventLocation() == null || !java.util.Objects.equals(a.getStartDate(), req.startDate())
                 || !java.util.Objects.equals(a.getStartTime(), req.startTime()))) {
             a.setEventLocation(locations.capture(a.getUserId(), req.startDate(), req.startTime()));

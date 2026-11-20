@@ -40,8 +40,12 @@ public class QuestionnaireService {
         this.users=users; this.forecasts=forecasts; this.participation=participation; this.clock=clock;
     }
     public record Status(LocalDate date, QuestionnaireProfile profile, DailyQuestionnaire today,
-            int currentStreak, boolean askCycle, boolean askCycleEnd, boolean cycleTodayMarked) {}
+            int currentStreak) {}
     public record Result(DailyQuestionnaire entry, boolean newCompletion, int currentStreak) {}
+    public List<LocalDate> completedDates(String userId) {
+        return entries.findCompletedDates(userId).stream()
+                .map(QuestionnaireRepository.CompletedDate::date).filter(Objects::nonNull).toList();
+    }
     private static ResponseStatusException invalid(String message) { return new ResponseStatusException(HttpStatus.BAD_REQUEST,message); }
     private static ZoneId zone(String timezone) {
         try { return ZoneId.of(timezone); } catch (RuntimeException e) { throw invalid("Укажите корректный часовой пояс"); }
@@ -50,30 +54,18 @@ public class QuestionnaireService {
         var today=clock.instant().atZone(zone(timezone)).toLocalDate();
         var all=entries.findByUserId(userId);
         var profile=profiles.findById(userId).orElse(null);
-        var markers=cycleMarkers.findByUserIdOrderByDateAsc(userId);
-        var selected=CycleMarkerService.knownDays(markers,clock.instant());
         return new Status(today, profile,
-                all.stream().filter(e -> today.equals(e.date())).findFirst().orElse(null), streak(all,today),
-                cycleQuestionRequired(today,profile,markers,selected),cycleEndQuestionRequired(today,profile,markers,selected),selected.containsKey(today));
-    }
-    private static boolean cycleQuestionRequired(LocalDate day, QuestionnaireProfile profile, List<CycleMarker> markers, Map<LocalDate,Instant> selected) {
-        if(profile==null || profile.sex()!=QuestionnaireProfile.Sex.FEMALE || !profile.trackCycle()) return false;
-        if(markers.stream().anyMatch(m -> m.kind()==CycleMarker.Kind.CLOSED && day.equals(m.date()))) return false;
-        return CycleMarkerService.activeStart(day,markers,selected)==null;
-    }
-    private static boolean cycleEndQuestionRequired(LocalDate day, QuestionnaireProfile profile, List<CycleMarker> markers, Map<LocalDate,Instant> selected) {
-        if(profile==null || profile.sex()!=QuestionnaireProfile.Sex.FEMALE || !profile.trackCycle()) return false;
-        if(!selected.containsKey(day) && !selected.containsKey(day.minusDays(1))) return false;
-        var start=CycleMarkerService.activeStart(day,markers,selected);
-        return start!=null && start.isBefore(day);
+                all.stream().filter(e -> today.equals(e.date())).findFirst().orElse(null), streak(all,today));
     }
     public QuestionnaireProfile profile(String userId) { return profiles.findById(userId).orElse(null); }
     public QuestionnaireProfile profile(String userId, QuestionnaireProfile p) {
         if(p.sex()==null || p.age()!=null && (p.age()<1 || p.age()>120)) throw invalid("Проверьте данные профиля");
-        return profiles.save(new QuestionnaireProfile(userId,p.sex(),p.age(),p.trackCycle()));
+        Boolean confirmPlanned = p.confirmPlannedCycle();
+        if (confirmPlanned == null) confirmPlanned = profiles.findById(userId)
+                .map(QuestionnaireProfile::confirmPlannedCycle).orElse(null);
+        return profiles.save(new QuestionnaireProfile(userId,p.sex(),p.age(),p.trackCycle(),confirmPlanned));
     }
-    static void validate(Answers a, LocalDate today, boolean trackCycle) { validate(a,today,trackCycle,trackCycle,false); }
-    static void validate(Answers a, LocalDate today, boolean trackCycle, boolean cycleQuestionRequired, boolean cycleEndQuestionRequired) {
+    static void validate(Answers a, LocalDate today, boolean trackCycle) {
         if(a==null || a.yesterday()==null || a.today()==null || a.medicationYesterday()==null || a.alcoholYesterday()==null)
             throw invalid("Ответьте на все карточки, в том числе «Не помню»");
         if(a.sleepMinutes()!=null && (a.sleepMinutes()<0 || a.sleepMinutes()>1440)
@@ -81,8 +73,6 @@ public class QuestionnaireService {
                 || a.stress()!=null && (a.stress()<0 || a.stress()>10)) throw invalid("Проверьте сон и стресс");
         if((a.sleepMinutes()==null || a.sleepMinutes()==0) && a.sleepQuality()!=null) throw invalid("Качество сна без сна не указывается");
         if(!trackCycle && (a.menstruating()!=null || a.cycleStart()!=null || a.cycleEnded()!=null)) throw invalid("Отслеживание цикла отключено");
-        if(cycleQuestionRequired && a.menstruating()==null) throw invalid("Ответьте на карточку цикла");
-        if(cycleEndQuestionRequired && a.cycleEnded()==null) throw invalid("Ответьте, закончились ли месячные");
         if(a.menstruating()!=null && a.cycleEnded()!=null) throw invalid("Проверьте ответы о цикле");
         if(a.menstruating()==Answer.YES && !today.equals(a.cycleStart())
                 || a.cycleStart()!=null && a.menstruating()!=Answer.YES) throw invalid("Проверьте начало цикла");
@@ -92,12 +82,9 @@ public class QuestionnaireService {
         // Historical diary edits use attack forms. A completed questionnaire belongs to the actual day of attendance.
         if(!today.equals(day)) throw invalid("Наступил новый день. Откройте сегодняшний опрос заново");
         var profile=profiles.findById(userId).orElse(new QuestionnaireProfile(userId,QuestionnaireProfile.Sex.UNSPECIFIED,null,false));
-        var markers=cycleMarkers.findByUserIdOrderByDateAsc(userId);
-        var selected=CycleMarkerService.knownDays(markers,clock.instant());
         var cycleEnabled=profile.trackCycle() && profile.sex()==QuestionnaireProfile.Sex.FEMALE;
-        validate(a,today,cycleEnabled,cycleQuestionRequired(today,profile,markers,selected),cycleEndQuestionRequired(today,profile,markers,selected));
+        validate(a,today,cycleEnabled);
         String id=key(userId,day); boolean created=false;
-        var previous=entries.findById(id).orElse(null);
         for(int attempt=0;attempt<4;attempt++) {
             var old=entries.findById(id).orElse(null);
             if(old!=null && !old.timezone().equals(timezone)) throw invalid("Этот опрос уже начат в другом часовом поясе");
@@ -112,26 +99,6 @@ public class QuestionnaireService {
             try { if(old==null) { entries.insert(entry); created=true; } else entries.save(entry); break; }
             catch(DuplicateKeyException | OptimisticLockingFailureException e) { if(attempt==3) throw e; }
         }
-        if(a.menstruating()==Answer.YES && day.equals(a.cycleStart())) {
-            var markerId=CycleMarker.key(userId,day,CycleMarker.Kind.DAY);
-            if(cycleMarkers.findById(markerId).isEmpty())
-                cycleMarkers.save(new CycleMarker(markerId,userId,day,CycleMarker.Kind.DAY,clock.instant(),"CARD"));
-        }
-        if(a.cycleEnded()==Answer.YES) {
-            var start=CycleMarkerService.activeStart(day,markers,selected);
-            if(start!=null && start.isBefore(day)) {
-                for(var date=start; !date.isAfter(day) && !date.isAfter(start.plusDays(90)); date=date.plusDays(1)) {
-                    var markerId=CycleMarker.key(userId,date,CycleMarker.Kind.DAY);
-                    if(cycleMarkers.findById(markerId).isEmpty())
-                        cycleMarkers.save(new CycleMarker(markerId,userId,date,CycleMarker.Kind.DAY,clock.instant(),"QUESTIONNAIRE_END"));
-                }
-                var closedId=CycleMarker.key(userId,day,CycleMarker.Kind.CLOSED);
-                if(cycleMarkers.findById(closedId).isEmpty())
-                    cycleMarkers.save(new CycleMarker(closedId,userId,day,CycleMarker.Kind.CLOSED,clock.instant()));
-            }
-        }
-        if(previous!=null && previous.answers().cycleEnded()==Answer.YES && a.cycleEnded()!=Answer.YES)
-            cycleMarkers.deleteById(CycleMarker.key(userId,day,CycleMarker.Kind.CLOSED));
         reconcile(userId);
         return new Result(entries.findById(id).orElseThrow(),created,streak(entries.findByUserId(userId),today));
     }
@@ -163,11 +130,13 @@ public class QuestionnaireService {
                     && !t.getStartDate().atTime(t.getStartTime()).atZone(z).toInstant().isAfter(issue)));
         f.put("ongoingAtIssue",recordedOngoing?Integer.valueOf(1):binary(a.ongoing())); f.put("medicationYesterday",binary(a.medicationYesterday()));
         f.put("alcoholYesterday",binary(a.alcoholYesterday()));
-        f.put("sex",profile.sex().name()); f.put("age",profile.age()); f.put("cycleStartedToday",binary(a.menstruating())); f.put("cycleEndedToday",binary(a.cycleEnded()));
-        var lastCycleStart=CycleMarkerService.starts(CycleMarkerService.knownDays(cycleMarkers.findByUserIdOrderByDateAsc(userId),issue))
-                .stream().filter(d -> !d.isAfter(day)).max(Comparator.naturalOrder()).orElse(null);
-        if(a.cycleStart()!=null && (lastCycleStart==null || a.cycleStart().isAfter(lastCycleStart))) lastCycleStart=a.cycleStart();
-        f.put("cycleDay",lastCycleStart==null?null:ChronoUnit.DAYS.between(lastCycleStart,day)+1);
+        f.put("sex",profile.sex().name()); f.put("age",profile.age());
+        var cycle = profile.sex() == QuestionnaireProfile.Sex.FEMALE
+                ? CycleHistory.from(cycleMarkers.findByUserIdOrderByDateAsc(userId), day, issue).latest() : null;
+        f.put("cycleStartedToday", cycle != null && day.equals(cycle.start()) ? Integer.valueOf(1) : binary(a.menstruating()));
+        f.put("cycleEndedToday", cycle != null && day.equals(cycle.end()) && !"AUTO".equals(cycle.endSource())
+                ? Integer.valueOf(1) : binary(a.cycleEnded()));
+        f.put("cycleDay", cycle == null ? null : ChronoUnit.DAYS.between(cycle.start(),day)+1);
         f.put("hourLocal",issue.atZone(z).getHour()+issue.atZone(z).getMinute()/60.0);
         f.put("horizonHours",Duration.between(issue,day.plusDays(1).atStartOfDay(z).toInstant()).toSeconds()/3600.0);
         for(int n:new int[]{3,7,14,30,90}) f.put("episodeStartsLast"+n+"Days",before.stream().filter(t -> !t.getStartDate().isBefore(day.minusDays(n))).count());

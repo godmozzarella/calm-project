@@ -48,21 +48,21 @@ trap '"${auth[@]}" down -v' EXIT
 
 # Exercise the real Spring Boot connection and an authenticated database write.
 "${auth[@]}" up -d --build --wait backend
-# Use an already confirmed legacy account: this integration must not send real email.
-# Registration/code verification is exercised separately by FirstReleaseFlowTest.
+# Seed a disposable legacy session. FirstReleaseFlowTest exercises email delivery and verification.
 "${auth[@]}" exec -T mongo mongosh --quiet \
   --username calm_app --password risk-migration-app-test-only-2026-very-long --authenticationDatabase admin \
   calm_risk_pipeline_test_source --eval '
     if(db.getName()!=="calm_risk_pipeline_test_source")throw new Error("Test database only");
-    db.users.insertOne({email:"migration-pilot@example.test",name:"Migration Pilot",emailVerified:true,role:"USER",
-      passwordHash:"$2y$10$fpMuq3PRtcUxk2tUVZTwO.YtHiPLS.WY/QvURnJ4igIAIzhMCb3Ey"});' > /dev/null
-registration_json="$(curl --silent --show-error --fail \
+    const user = db.users.insertOne({email:"migration-pilot@example.test",name:"Migration Pilot",emailVerified:true,role:"USER"});
+    db.auth_sessions.insertOne({_id:"migration-test-session",userId:user.insertedId.toHexString(),
+      refreshToken:"710d9874-e90c-4eae-b472-4af6cc23ec38",lastActivity:new Date(),expiresAt:new Date(Date.now()+86400000)});' > /dev/null
+session_json="$(curl --silent --show-error --fail \
   --header 'Content-Type: application/json' \
-  --data '{"email":"migration-pilot@example.test","password":"MigrationPassword123!"}' \
-  http://127.0.0.1:18081/api/auth/login)"
-test_user_id="$(printf '%s' "$registration_json" | jq -er '.user.id')"
-test_token="$(printf '%s' "$registration_json" | jq -er '.token')"
-unset registration_json
+  --data '{"refreshToken":"710d9874-e90c-4eae-b472-4af6cc23ec38"}' \
+  http://127.0.0.1:18081/api/auth/refresh)"
+test_user_id="$(printf '%s' "$session_json" | jq -er '.user.id')"
+test_token="$(printf '%s' "$session_json" | jq -er '.token')"
+unset session_json
 
 "${auth[@]}" exec -T -e "CALM_RISK_DELETE_TEST_USER_ID=$test_user_id" mongo mongosh --quiet \
   --username calm_app --password risk-migration-app-test-only-2026-very-long --authenticationDatabase admin \

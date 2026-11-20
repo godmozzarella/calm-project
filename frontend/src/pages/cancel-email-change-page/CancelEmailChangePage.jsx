@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { authApi } from '@/shared/api'
+import { notifyError, notifyRequestError } from '@/shared/lib/notifyError'
 import { Button } from '@/shared/ui/Button'
 import { Header } from '@/widgets/header'
 import { Footer } from '@/widgets/footer'
@@ -18,6 +19,7 @@ const CancelEmailChangePage = () => {
 		const suppliedToken = window.location.hash.slice(1)
 		window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
 		setToken(suppliedToken)
+		if (!suppliedToken) notifyError('Откройте ссылку из письма о смене почты.', 'Ссылка для отмены недействительна')
 	}, [])
 
 	const cancelChange = async () => {
@@ -28,7 +30,7 @@ const CancelEmailChangePage = () => {
 			setMessage('Если запрос на смену почты ещё активен, он отменён. Для аккаунта сохранён прежний адрес.')
 			setToken('')
 		} catch (error) {
-			setMessage(error.message || 'Не удалось обработать запрос. Откройте Calm и проверьте состояние почты в профиле.')
+			notifyRequestError(error, 'Не удалось отменить смену почты', 'Проверьте состояние почты в профиле.')
 		} finally {
 			setBusy(false)
 		}
@@ -48,8 +50,8 @@ const CancelEmailChangePage = () => {
 						<Button type="button" colored disabled={busy} onClick={cancelChange}>
 							{busy ? 'Обрабатываем…' : 'Отменить запрос'}
 						</Button>
-					) : <p className={s.message}>Ссылка недействительна или в ней отсутствует код отмены.</p>}
-					<Link className={s.homeLink} to="/">Вернуться в Calm</Link>
+					) : null}
+					<Link title={"Вернуться в Calm"} className={s.homeLink} to="/">Вернуться в Calm</Link>
 				</section>
 			</main>
 			<Footer />

@@ -31,14 +31,14 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponse> handleBadCreds(BadCredentialsException e) {
 		return ResponseEntity
 				.status(HttpStatus.UNAUTHORIZED)
-				.body(ErrorResponse.of(401, "Unauthorized", "Неверный email или пароль"));
+				.body(ErrorResponse.of(401, "Unauthorized", "Сессия завершена. Войдите снова."));
 	}
 
 	@ExceptionHandler(ResponseStatusException.class)
 	public ResponseEntity<ErrorResponse> handleStatus(ResponseStatusException e) {
 		int status = e.getStatusCode().value();
 		HttpStatus known = HttpStatus.resolve(status);
-		return ResponseEntity.status(e.getStatusCode())
+		return ResponseEntity.status(e.getStatusCode()).headers(e.getHeaders())
 				.body(ErrorResponse.of(status, known == null ? "Request failed" : known.getReasonPhrase(),
 						e.getReason() == null ? "Запрос отклонён" : e.getReason()));
 	}

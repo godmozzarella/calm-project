@@ -14,4 +14,8 @@ public interface EmailService {
 	 * @return исход отправки; исключения провайдера не пробрасываются.
 	 */
 	EmailSendResult send(String to, String subject, String html);
+
+	default EmailSendResult send(String to, String subject, String html, String plain) {
+		return send(to, subject, html);
+	}
 }

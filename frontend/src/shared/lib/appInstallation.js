@@ -6,11 +6,14 @@ let initialized = false
 const listeners = new Set()
 const notify = () => listeners.forEach(listener => listener())
 const subscribe = listener => { listeners.add(listener); return () => listeners.delete(listener) }
+const standaloneMode = '(display-mode: standalone)'
+
+export const isStandaloneApp = () => window.matchMedia(standaloneMode).matches || navigator.standalone === true
 
 export function initializeAppInstallation() {
     if (initialized) return
     initialized = true
-    const standalone = window.matchMedia('(display-mode: standalone)')
+    const standalone = window.matchMedia(standaloneMode)
     installed = standalone.matches || navigator.standalone === true
     standalone.addEventListener('change', event => { installed = event.matches || navigator.standalone === true; notify() })
     window.addEventListener('beforeinstallprompt', event => {

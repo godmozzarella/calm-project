@@ -1,14 +1,10 @@
 import { useState, useRef } from 'react'
 import { attackApi } from '@/shared/api'
-import { isCentralError } from '@/shared/lib/isCentralError'
-
-const now = () => {
-  const d = new Date()
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-}
+import { isFutureLocalMinute, localMinute } from '@/shared/lib/localMinute'
+import { notifyRequestError } from '@/shared/lib/notifyError'
 
 const makeEmpty = date => {
-  const startTime = now()
+  const { time: startTime } = localMinute()
   return {
     intensity: 5,
     type: 'pulsating',
@@ -29,7 +25,6 @@ export const useAddAttack = ({ date, onSuccess }) => {
   const [error,   setError]   = useState('')
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState('')
   const pending = useRef(false)
   const [editingId, setEditingId] = useState(null)
   const [wasOngoing, setWasOngoing] = useState(false)
@@ -39,12 +34,11 @@ export const useAddAttack = ({ date, onSuccess }) => {
     const empty = makeEmpty(typeof initial.startDate === 'string' ? initial.startDate : date)
     if (initial.requireStartTime) empty.startTime = ''
     if (initial.ongoing === true) empty.ongoing = true
-    setDeleteError(''); setEditingId(null); setWasOngoing(false)
+    setEditingId(null); setWasOngoing(false)
     setForm(empty); setError(''); setOpen(true)
   }
   const openEditForm = attack => {
     if (pending.current) return
-    setDeleteError('')
     setEditingId(attack.id)
     setWasOngoing(attack.ongoing)
     setForm({
@@ -65,17 +59,22 @@ export const useAddAttack = ({ date, onSuccess }) => {
   }
   const closeForm = () => { if (!pending.current) setOpen(false) }
 
-  const setField = (field, value) => setForm(prev => {
-    const next = { ...prev, [field]: value }
-    if (field === 'startDate' || field === 'endDate') {
-      const current = new Date()
-      const day = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`
-      const time = `${String(current.getHours()).padStart(2, '0')}:${String(current.getMinutes()).padStart(2, '0')}`
-      if (next.startDate === day && next.startTime > time) next.startTime = time
-      if (next.endDate === day && next.endTime > time) next.endTime = time
-    }
-    return next
-  })
+  const setField = (field, value) => {
+    setError('')
+    setForm(prev => {
+      const next = { ...prev, [field]: value }
+      if (field === 'ongoing' && prev.ongoing && !value && !prev.endTime) {
+        const { date, time } = localMinute()
+        return { ...next, endDate: date, endTime: time }
+      }
+      if (field === 'startDate' || field === 'endDate') {
+        const { date, time } = localMinute()
+        if (next.startDate === date && next.startTime > time) next.startTime = time
+        if (next.endDate === date && next.endTime > time) next.endTime = time
+      }
+      return next
+    })
+  }
 
   const toggleArrayField = (field, value) =>
     setForm(prev => {
@@ -88,28 +87,25 @@ export const useAddAttack = ({ date, onSuccess }) => {
 
   const submit = async () => {
     if (pending.current) return
-    setDeleteError('')
-    if (!form.startTime) { setError('Укажите время начала'); return }
+    if (!form.startTime) { setError({ field: 'startTime', message: 'Укажите время начала' }); return }
 
-    const nowDate  = new Date()
-    const todayStr = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, '0')}-${String(nowDate.getDate()).padStart(2, '0')}`
-    const nowStr   = `${String(nowDate.getHours()).padStart(2, '0')}:${String(nowDate.getMinutes()).padStart(2, '0')}`
+    const current = localMinute()
 
-    if (form.startDate > todayStr || (form.startDate === todayStr && form.startTime > nowStr)) {
-      setError('Начало не может быть в будущем'); return
+    if (isFutureLocalMinute(form.startDate, form.startTime, current)) {
+      setError({ field: 'startDate', message: 'Начало не может быть в будущем' }); return
     }
     if (!form.ongoing && (!form.endDate || form.endDate < form.startDate)) {
-      setError('Укажите дату конца не раньше начала'); return
+      setError({ field: 'endDate', message: 'Укажите дату конца не раньше начала' }); return
     }
     if (wasOngoing && !form.ongoing && !form.endTime) {
-      setError('Укажите время окончания приступа'); return
+      setError({ field: 'endTime', message: 'Укажите время окончания приступа' }); return
     }
     if (!form.ongoing && form.endDate && form.endTime) {
-      if (form.endDate > todayStr || (form.endDate === todayStr && form.endTime > nowStr)) {
-        setError('Конец не может быть в будущем'); return
+      if (isFutureLocalMinute(form.endDate, form.endTime, current)) {
+        setError({ field: 'endTime', message: 'Конец не может быть в будущем' }); return
       }
       if (`${form.endDate}T${form.endTime}` < `${form.startDate}T${form.startTime}`) {
-        setError('Время окончания не может быть раньше начала'); return
+        setError({ field: 'endTime', message: 'Время окончания не может быть раньше начала' }); return
       }
     }
 
@@ -133,7 +129,11 @@ export const useAddAttack = ({ date, onSuccess }) => {
       setOpen(false)
       onSuccess?.(saved)
     } catch (err) {
-      if (!isCentralError(err)) setError(err.message ?? 'Ошибка сохранения')
+      if (err.fieldValidation) {
+        const field = err.fieldValidation[0]?.split(':')[0]
+        setError({ field, message: 'Проверьте значение этого поля.' })
+      }
+      else notifyRequestError(err, 'Не удалось сохранить приступ')
     } finally {
       pending.current = false
       setLoading(false)
@@ -144,19 +144,18 @@ export const useAddAttack = ({ date, onSuccess }) => {
     if (!editingId || pending.current) return
     pending.current = true
     setDeleting(true)
-    setDeleteError('')
     setError('')
     try {
       await attackApi.delete(editingId)
       setOpen(false)
       onSuccess?.()
     } catch (err) {
-      if (!isCentralError(err)) setDeleteError(err.message || 'Не удалось удалить приступ. Попробуйте ещё раз.')
+      notifyRequestError(err, 'Не удалось удалить приступ')
     } finally {
       pending.current = false
       setDeleting(false)
     }
   }
 
-  return { open, form, error, deleteError, loading, deleting, editingId, openForm, openEditForm, closeForm, setField, toggleArrayField, submit, remove }
+  return { open, form, error, loading, deleting, editingId, openForm, openEditForm, closeForm, setField, toggleArrayField, submit, remove }
 }

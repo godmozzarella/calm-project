@@ -2,10 +2,8 @@ package com.calm.feature.user;
 
 import com.calm.common.exception.NotFoundException;
 import com.calm.common.exception.ConflictException;
-import com.calm.feature.auth.AuthSessionRepository;
 import com.calm.feature.user.dto.UpdateUserRequest;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -13,19 +11,15 @@ import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import java.util.Locale;
-import java.util.Optional;
 
 @Service
 public class UserService {
 
 	private final UserRepository repo;
-	private final PasswordEncoder passwordEncoder;
 	private final MongoTemplate mongo;
-	public UserService(UserRepository repo, PasswordEncoder passwordEncoder, AuthSessionRepository sessions, MongoTemplate mongo) {
+	public UserService(UserRepository repo, MongoTemplate mongo) {
 		this.repo = repo;
 		this.mongo = mongo;
-		this.passwordEncoder = passwordEncoder;
 	}
 
 	public User getById(String id) {
@@ -33,63 +27,22 @@ public class UserService {
 				.orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 	}
 
-	public Optional<User> findByEmail(String email) {
-		return repo.findByEmail(normalizeEmail(email));
-	}
+	public User confirmEmailLogin(String email) {
+		Query byEmail = Query.query(Criteria.where("email").is(email));
+		Update verified = new Update().set("emailVerified", true).set("registrationPending", false);
+		var returnNew = FindAndModifyOptions.options().returnNew(true);
+		User existing = mongo.findAndModify(byEmail, verified, returnNew, User.class);
+		if (existing != null) return existing;
 
-	public User create(String email, String name, String rawPassword) {
-        com.calm.security.PasswordPolicy.validate(rawPassword);
-		email = normalizeEmail(email);
-		if (repo.existsByEmail(email)) {
-			throw new ConflictException("Пользователь с таким email уже существует");
-		}
-		User user = new User(email, name, passwordEncoder.encode(rawPassword));
+		User user = new User(email, "", null);
+		user.setEmailVerified(true);
 		try {
-			return repo.save(user);
+			return repo.insert(user);
 		} catch (DuplicateKeyException e) {
-			throw new ConflictException("Пользователь с таким email уже существует");
+			User created = mongo.findAndModify(byEmail, verified, returnNew, User.class);
+			if (created == null) throw e;
+			return created;
 		}
-	}
-
-	public User createPendingRegistration(String email, String name, String rawPassword) {
-        com.calm.security.PasswordPolicy.validate(rawPassword);
-		email = normalizeEmail(email);
-		if (repo.existsByEmail(email)) {
-			throw new ConflictException("Пользователь с таким email уже существует");
-		}
-		User user = new User(email, name, passwordEncoder.encode(rawPassword));
-		user.setRegistrationPending(true);
-		try {
-			return repo.save(user);
-		} catch (DuplicateKeyException e) {
-			throw new ConflictException("Пользователь с таким email уже существует");
-		}
-	}
-
-	public User updatePendingRegistration(String id, String name) {
-		User user = getById(id);
-		if (!user.isRegistrationPending() || user.isEmailVerified()) {
-			throw new ConflictException("Эту регистрацию уже нельзя продолжить");
-		}
-		User updated = mongo.findAndModify(Query.query(Criteria.where("_id").is(id)
-                .and("registrationPending").is(true).and("emailVerified").ne(true)),
-                new Update().set("name", name), FindAndModifyOptions.options().returnNew(true), User.class);
-        if (updated == null) throw new ConflictException("Регистрация уже завершена или отменена");
-        return updated;
-	}
-
-	public void deletePendingRegistration(String id) {
-		User user = getById(id);
-		if (!user.isRegistrationPending() || user.isEmailVerified()) {
-			throw new ConflictException("Эту регистрацию уже нельзя отменить");
-		}
-        Query diary = Query.query(Criteria.where("userId").is(id));
-        if (mongo.exists(diary, com.calm.feature.attack.Attack.class)
-                || mongo.exists(diary, com.calm.feature.medication.Medication.class)) {
-            throw new ConflictException("Аккаунт содержит записи дневника. Завершите подтверждение почты, чтобы сохранить доступ");
-        }
-		mongo.remove(Query.query(Criteria.where("_id").is(id)
-                .and("registrationPending").is(true).and("emailVerified").ne(true)), User.class);
 	}
 
 	public User update(String id, UpdateUserRequest req) {
@@ -159,8 +112,4 @@ public class UserService {
     public void updateAvatar(String id, String url) {
         mongo.updateFirst(Query.query(Criteria.where("_id").is(id)), new Update().set("avatarUrl", url), User.class);
     }
-
-	private static String normalizeEmail(String email) {
-		return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
-	}
 }

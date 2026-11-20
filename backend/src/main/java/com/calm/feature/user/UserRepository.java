@@ -19,11 +19,11 @@ public interface UserRepository extends MongoRepository<User, String> {
 
 	Optional<User> findByEmail(String email);
 	boolean existsByEmail(String email);
-	Optional<User> findByRefreshToken(String refreshToken);
 
 	/** Подписчики на погодные уведомления: задана локация + флаг включён. */
 	@Query("{ 'emailVerified': true, 'notificationsEnabled': true, 'latitude': { $ne: null }, 'longitude': { $ne: null } }")
 	List<User> findEligibleForForecastEmails(Pageable page);
 	long countByEmailVerifiedTrueAndNotificationsEnabledTrue();
 	List<User> findByEmailVerifiedTrueAndNotificationsEnabledTrue(Sort sort);
+	List<User> findByEmailVerifiedTrueAndNotificationsEnabledTrue(Pageable page);
 }

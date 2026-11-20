@@ -1,42 +1,21 @@
 import { useEffect, useState } from 'react'
 import { authApi, userApi } from '@/shared/api'
 import { Button } from '@/shared/ui/Button'
-import { Input } from '@/shared/ui/Input'
+import { FieldError, Input } from '@/shared/ui/Input'
+import { isValidEmail } from '@/shared/lib/validation/email'
 import CodeBoxes from '@/shared/ui/CodeBoxes/CodeBoxes'
-import PasswordStrengthBar from '@/features/auth/ui/PasswordStrengthBar'
-import { isCentralError } from '@/shared/lib/isCentralError'
-import { VisibilityIcon, VisibilityOffIcon } from '@/shared/ui/icons'
+import { notifyRequestError } from '@/shared/lib/notifyError'
 import s from './AccountSecuritySettings.module.scss'
-
-const PasswordToggle = ({ visible, onToggle, label }) => (
-	<button type="button" onClick={onToggle} tabIndex={-1} aria-label={`${visible ? 'Скрыть' : 'Показать'} ${label}`}>
-		{visible ? <VisibilityOffIcon /> : <VisibilityIcon />}
-	</button>
-)
 
 const AccountSecuritySettings = ({ user }) => {
 	const [emailStep, setEmailStep] = useState('closed')
-	const [currentPassword, setCurrentPassword] = useState('')
 	const [newEmail, setNewEmail] = useState('')
 	const [pendingEmail, setPendingEmail] = useState('')
+	const [confirmCurrent, setConfirmCurrent] = useState(false)
 	const [code, setCode] = useState('')
 	const [resendAfter, setResendAfter] = useState(0)
 	const [emailError, setEmailError] = useState('')
-	const [emailCurrentPasswordError, setEmailCurrentPasswordError] = useState('')
 	const [emailBusy, setEmailBusy] = useState(false)
-	const [emailPasswordVisible, setEmailPasswordVisible] = useState(false)
-
-	const [passwordCurrent, setPasswordCurrent] = useState('')
-	const [passwordNew, setPasswordNew] = useState('')
-	const [passwordRepeat, setPasswordRepeat] = useState('')
-	const [passwordCurrentError, setPasswordCurrentError] = useState('')
-	const [passwordNewError, setPasswordNewError] = useState('')
-	const [passwordRepeatError, setPasswordRepeatError] = useState('')
-	const [passwordGeneralError, setPasswordGeneralError] = useState('')
-	const [passwordBusy, setPasswordBusy] = useState(false)
-	const [passwordCurrentVisible, setPasswordCurrentVisible] = useState(false)
-	const [passwordNewVisible, setPasswordNewVisible] = useState(false)
-	const [passwordRepeatVisible, setPasswordRepeatVisible] = useState(false)
 
 	useEffect(() => {
 		if (resendAfter <= 0) return undefined
@@ -44,26 +23,30 @@ const AccountSecuritySettings = ({ user }) => {
 		return () => window.clearTimeout(timer)
 	}, [resendAfter])
 
-	const signOutAfterChange = async message => {
-		authApi.clearLocalSession()
-		window.alert(message)
-		window.location.assign('/')
+	const showCodeStep = status => {
+		setPendingEmail(status.pendingEmail)
+		setConfirmCurrent(status.confirmCurrent)
+		setResendAfter(status.resendAfterSeconds)
+		setCode('')
+		setEmailStep('code')
+	}
+
+	const recoverEmailChange = async () => {
+		try {
+			const status = await userApi.getEmailChangeStatus()
+			if (status.active) showCodeStep(status)
+		} catch { /* Keep the original request's error. */ }
 	}
 
 	const openEmailChange = async () => {
 		setEmailStep('start')
 		setEmailError('')
-		setCurrentPassword('')
 		setEmailBusy(true)
 		try {
 			const status = await userApi.getEmailChangeStatus()
-			if (status.active) {
-				setPendingEmail(status.pendingEmail)
-				setResendAfter(status.resendAfterSeconds)
-				setEmailStep('code')
-			}
+			if (status.active) showCodeStep(status)
 		} catch (error) {
-			if (!isCentralError(error)) setEmailError(error.message || 'Не удалось проверить состояние смены почты.')
+			notifyRequestError(error, 'Не удалось проверить состояние смены почты')
 		} finally {
 			setEmailBusy(false)
 		}
@@ -72,19 +55,18 @@ const AccountSecuritySettings = ({ user }) => {
 	const startEmailChange = async event => {
 		event.preventDefault()
 		if (emailBusy) return
+		if (!isValidEmail(newEmail.trim())) {
+			setEmailError('Проверьте новый адрес почты. Например, name@example.com.')
+			return
+		}
 		setEmailBusy(true)
 		setEmailError('')
-		setEmailCurrentPasswordError('')
 		try {
-			const status = await userApi.startEmailChange(currentPassword, newEmail)
-			setCurrentPassword('')
-			setPendingEmail(status.pendingEmail)
-			setResendAfter(status.resendAfterSeconds)
-			setCode('')
-			setEmailStep('code')
+			showCodeStep(await userApi.startEmailChange(newEmail))
 		} catch (error) {
-			if (error.message === 'Неверный пароль') setEmailCurrentPasswordError('Текущий пароль введён неверно.')
-			else if (!isCentralError(error)) setEmailError(error.message || 'Не удалось начать смену почты.')
+			if (error.status === 400) setEmailError('Проверьте новый адрес почты.')
+			else notifyRequestError(error, 'Не удалось начать смену почты')
+			if (error.status === 503 || error.networkFailure) await recoverEmailChange()
 		} finally {
 			setEmailBusy(false)
 		}
@@ -99,7 +81,7 @@ const AccountSecuritySettings = ({ user }) => {
 			setResendAfter(status.resendAfterSeconds)
 			setCode('')
 		} catch (error) {
-			if (!isCentralError(error)) setEmailError(error.message || 'Не удалось отправить новый код.')
+			notifyRequestError(error, 'Не удалось отправить новый код')
 			if (error.retryAfter) setResendAfter(error.retryAfter)
 		} finally {
 			setEmailBusy(false)
@@ -112,10 +94,18 @@ const AccountSecuritySettings = ({ user }) => {
 		setEmailBusy(true)
 		setEmailError('')
 		try {
-			await userApi.confirmEmailChange(code)
-			await signOutAfterChange('Адрес почты изменён. Войдите в Calm с новым адресом.')
+			const status = await userApi.confirmEmailChange(code)
+			if (status.active) {
+				showCodeStep(status)
+				return
+			}
+			await authApi.logout()
+			window.alert('Адрес почты изменён. Войдите в Calm с новым адресом.')
+			window.location.assign('/#regAndLog')
 		} catch (error) {
-			if (!isCentralError(error)) setEmailError(error.message || 'Не удалось подтвердить новый адрес.')
+			if (error.status === 400 && /(?:код неверный|введите шестизначный)/i.test(error.message)) setEmailError(error.message)
+			else notifyRequestError(error, 'Не удалось подтвердить адрес')
+			if (error.status === 503 || error.networkFailure) await recoverEmailChange()
 		} finally {
 			setEmailBusy(false)
 		}
@@ -131,57 +121,20 @@ const AccountSecuritySettings = ({ user }) => {
 			setPendingEmail('')
 			setCode('')
 			setNewEmail('')
-			setCurrentPassword('')
 		} catch (error) {
-			if (!isCentralError(error)) setEmailError(error.message || 'Не удалось отменить смену почты.')
+			notifyRequestError(error, 'Не удалось отменить смену почты')
 		} finally {
 			setEmailBusy(false)
 		}
 	}
 
-	const changePassword = async event => {
-		event.preventDefault()
-		if (passwordBusy) return
-		setPasswordCurrentError('')
-		setPasswordNewError('')
-		setPasswordRepeatError('')
-		setPasswordGeneralError('')
-		if (!passwordCurrent) {
-			setPasswordCurrentError('Введите текущий пароль.')
-			return
-		}
-		if (!passwordNew) {
-			setPasswordNewError('Введите новый пароль.')
-			return
-		}
-		if (!passwordRepeat) {
-			setPasswordRepeatError('Повторите новый пароль.')
-			return
-		}
-		if (passwordNew !== passwordRepeat) {
-			setPasswordRepeatError('Пароли не совпадают.')
-			return
-		}
-		setPasswordBusy(true)
-		try {
-			await userApi.changePassword(passwordCurrent, passwordNew)
-			await signOutAfterChange('Пароль изменён. Войдите в Calm с новым паролем.')
-		} catch (error) {
-			const message = error.message || 'Не удалось изменить пароль.'
-			if (message === 'Неверный пароль') setPasswordCurrentError('Текущий пароль введён неверно.')
-			else if (message.startsWith('Новый пароль')) setPasswordNewError(message)
-			else if (!isCentralError(error)) setPasswordGeneralError(message)
-		} finally {
-			setPasswordBusy(false)
-		}
-	}
 
 	return (
 		<section className={s.security} aria-label="Безопасность аккаунта">
 			<div className={s.heading}>
 				<h2>Безопасность</h2>
 			</div>
-			<p className={s.headingHint}>Почта и пароль для входа</p>
+			<p className={s.headingHint}>Почта для входа</p>
 			<details className={s.section}>
 				<summary className={s.summary}>
 					<span className={s.summaryText}><strong>Электронная почта</strong><span>{user?.email}</span></span>
@@ -190,48 +143,29 @@ const AccountSecuritySettings = ({ user }) => {
 				{emailStep === 'closed' ? (
 					<Button type="button" colored onClick={openEmailChange} disabled={emailBusy}>Изменить почту</Button>
 				) : emailStep === 'start' ? (
-					<form className={s.form} onSubmit={startEmailChange} autoComplete="off">
-						<p className={s.description}>Подтвердите действие текущим паролем. Пока новый адрес не подтверждён, почта аккаунта останется прежней.</p>
-						<Input id="emailChangeCurrentPassword" name="calm-email-security-check" type={emailPasswordVisible ? 'text' : 'password'} autoComplete="off" readOnly onFocus={event => { event.currentTarget.readOnly = false }} label="Текущий пароль" value={currentPassword} onChange={event => { setCurrentPassword(event.target.value); setEmailCurrentPasswordError('') }} error={emailCurrentPasswordError} rightElement={<PasswordToggle visible={emailPasswordVisible} onToggle={() => setEmailPasswordVisible(value => !value)} label="текущий пароль" />} />
-						<Input id="emailChangeNewAddress" type="email" autoComplete="email" label="Новый адрес" value={newEmail} onChange={event => setNewEmail(event.target.value)} />
-						{emailError && <p className={s.error} role="alert">{emailError}</p>}
+					<form className={s.form} onSubmit={startEmailChange} autoComplete="off" noValidate>
+						<p className={s.description}>Сначала подтвердите текущий адрес, затем новый. До завершения для входа используется текущий адрес.</p>
+						<Input id="emailChangeNewAddress" type="email" autoComplete="email" label="Новый адрес" value={newEmail} required error={emailError} onChange={event => { setNewEmail(event.target.value); setEmailError('') }} />
 						<div className={s.actions}>
 							<Button type="submit" colored disabled={emailBusy}>{emailBusy ? 'Отправляем…' : 'Отправить код'}</Button>
-							<button type="button" className={s.textButton} onClick={() => { setEmailStep('closed'); setEmailError('') }}>Закрыть</button>
+							<button title={"Закрыть"} type="button" className={s.textButton} onClick={() => { setEmailStep('closed'); setEmailError('') }}>Закрыть</button>
 						</div>
 					</form>
 				) : (
 					<form className={s.form} onSubmit={confirmEmailChange}>
-						<p className={s.description}>Код отправлен на <strong>{pendingEmail}</strong>. До подтверждения для входа используется {user?.email}.</p>
-						<label className={s.codeLabel} id="email-change-code-label">Шестизначный код</label>
-						<CodeBoxes code={code} setCode={value => { setCode(value); setEmailError('') }} length={6} labelId="email-change-code-label" inputId="email-change-code" errorId="email-change-code-error" invalid={Boolean(emailError)} disabled={emailBusy} />
-						{emailError && <p className={s.error} id="email-change-code-error" role="alert">{emailError}</p>}
+						<p className={s.description}>Введите код из письма на <strong>{confirmCurrent ? user?.email : pendingEmail}</strong>.</p>
+						<FieldError id="email-change-code-error">{emailError}</FieldError>
+						<CodeBoxes code={code} setCode={value => { setCode(value); setEmailError('') }} length={6} inputId="email-change-code" errorId={emailError ? 'email-change-code-error' : undefined} invalid={Boolean(emailError)} disabled={emailBusy} />
 						<div className={s.actions}>
-							<Button type="submit" colored disabled={emailBusy || code.length !== 6}>{emailBusy ? 'Проверяем…' : 'Подтвердить почту'}</Button>
+							<Button type="submit" colored disabled={emailBusy || code.length !== 6}>{emailBusy ? 'Проверяем…' : confirmCurrent ? 'Подтвердить текущую почту' : 'Подтвердить новый адрес'}</Button>
 							<button type="button" className={s.textButton} onClick={resendCode} disabled={emailBusy || resendAfter > 0}>{resendAfter > 0 ? `Отправить снова через ${resendAfter} сек.` : 'Отправить код снова'}</button>
-							<button type="button" className={s.textButton} onClick={cancelEmailChange} disabled={emailBusy}>Отменить смену</button>
+							<button title={"Отменить смену"} type="button" className={s.textButton} onClick={cancelEmailChange} disabled={emailBusy}>Отменить смену</button>
 						</div>
 					</form>
 				)}
 				</div>
 			</details>
 
-			<details className={s.section}>
-				<summary className={s.summary}>
-					<span className={s.summaryText}><strong>Пароль</strong><span>Изменить пароль для входа</span></span>
-				</summary>
-				<div className={s.sectionBody}>
-				<form className={s.form} onSubmit={changePassword} autoComplete="off">
-					<p className={s.description}>После смены пароля Calm завершит все активные сеансы.</p>
-					<Input id="changePasswordCurrent" name="calm-account-check" type={passwordCurrentVisible ? 'text' : 'password'} autoComplete="off" readOnly onFocus={event => { event.currentTarget.readOnly = false }} label="Текущий пароль" value={passwordCurrent} onChange={event => { setPasswordCurrent(event.target.value); setPasswordCurrentError('') }} error={passwordCurrentError} rightElement={<PasswordToggle visible={passwordCurrentVisible} onToggle={() => setPasswordCurrentVisible(value => !value)} label="текущий пароль" />} />
-					<Input id="changePasswordNew" type={passwordNewVisible ? 'text' : 'password'} autoComplete="new-password" label="Новый пароль" value={passwordNew} onChange={event => { setPasswordNew(event.target.value); setPasswordNewError('') }} error={passwordNewError} rightElement={<PasswordToggle visible={passwordNewVisible} onToggle={() => setPasswordNewVisible(value => !value)} label="новый пароль" />} />
-					<PasswordStrengthBar password={passwordNew} />
-					<Input id="changePasswordRepeat" type={passwordRepeatVisible ? 'text' : 'password'} autoComplete="new-password" label="Повторите новый пароль" value={passwordRepeat} onChange={event => { setPasswordRepeat(event.target.value); setPasswordRepeatError('') }} error={passwordRepeatError} rightElement={<PasswordToggle visible={passwordRepeatVisible} onToggle={() => setPasswordRepeatVisible(value => !value)} label="повтор нового пароля" />} />
-					{passwordGeneralError && <p className={s.error} role="alert">{passwordGeneralError}</p>}
-					<Button type="submit" colored disabled={passwordBusy}>{passwordBusy ? 'Сохраняем…' : 'Изменить пароль'}</Button>
-				</form>
-				</div>
-			</details>
 		</section>
 	)
 }

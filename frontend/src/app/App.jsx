@@ -4,10 +4,10 @@ import AppRouter from '@/app/providers/router/AppRouter'
 import { DictionariesProvider } from '@/shared/lib/dictionaries'
 import { expireSessionIfIdle, getToken, http } from '@/shared/api/httpClient'
 import { touchSession } from '@/shared/lib/sessionActivity'
-import ConnectivityNotice from '@/shared/ui/ConnectivityNotice/ConnectivityNotice'
+import { AUTH_CHANGED } from '@/shared/lib/dataEvents'
 import GlobalErrorNotice from '@/shared/ui/GlobalErrorNotice/GlobalErrorNotice'
+import TouchTooltip from '@/shared/ui/TouchTooltip/TouchTooltip'
 import { ThemeProvider } from '@/app/providers/theme/ThemeProvider'
-import HelpTooltip from '@/shared/ui/HelpTooltip/HelpTooltip'
 
 const App = () => {
 	useEffect(() => {
@@ -24,16 +24,18 @@ const App = () => {
 			}
 		}
 		const onVisible = () => {
-			if (document.visibilityState === 'visible') check()
+			if (document.visibilityState === 'visible') onActivity()
 		}
 
-		check()
+		onVisible()
 		const timer = window.setInterval(check, 15_000)
 		window.addEventListener('pointerdown', onActivity)
 		window.addEventListener('keydown', onActivity)
 		window.addEventListener('wheel', onActivity, { passive: true })
 		window.addEventListener('touchmove', onActivity, { passive: true })
-		window.addEventListener('focus', check)
+		window.addEventListener('focus', onVisible)
+		window.addEventListener('pageshow', onVisible)
+		window.addEventListener(AUTH_CHANGED, onVisible)
 		document.addEventListener('visibilitychange', onVisible)
 		return () => {
 			window.clearInterval(timer)
@@ -41,7 +43,9 @@ const App = () => {
 			window.removeEventListener('keydown', onActivity)
 			window.removeEventListener('wheel', onActivity)
 			window.removeEventListener('touchmove', onActivity)
-			window.removeEventListener('focus', check)
+			window.removeEventListener('focus', onVisible)
+			window.removeEventListener('pageshow', onVisible)
+			window.removeEventListener(AUTH_CHANGED, onVisible)
 			document.removeEventListener('visibilitychange', onVisible)
 		}
 	}, [])
@@ -49,9 +53,8 @@ const App = () => {
 	return (
 		<ThemeProvider>
 		<DictionariesProvider>
-			<ConnectivityNotice />
 			<GlobalErrorNotice />
-			<HelpTooltip />
+			<TouchTooltip />
 			<ScrollToTop />
 			<AppRouter />
 		</DictionariesProvider>

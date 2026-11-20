@@ -6,8 +6,9 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import { MEDICATION_PRESETS } from '@/entities/medication'
 import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
 import { localMinute } from '@/shared/lib/localMinute'
-import { isCentralError } from '@/shared/lib/isCentralError'
-import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
+import { notifyRequestError } from '@/shared/lib/notifyError'
+import { Input } from '@/shared/ui/Input'
+import CloseButton from '@/shared/ui/Button/CloseButton'
 import { useDictionaries } from '@/shared/lib/dictionaries'
 import { medicationApi } from '@/shared/api'
 import { BackIcon } from '@/shared/ui/icons'
@@ -41,8 +42,8 @@ const STEP_TITLES = ['Препарат', 'Дозировка', 'Дата и за
 const itemKey = item => `${item.category}::${item.name}`
 
 /* ── Step 1: выбор препаратов ── */
-const StepSelect = ({ selected, isSelected, toggleItem, clearSelection, editing, personalMedications,
-	onAddPersonal, addingPersonal, onDeletePersonal, deletingPersonalId }) => {
+const StepSelect = ({ selected, isSelected, toggleItem, personalMedications,
+	onAddPersonal, addingPersonal, onDeletePersonal, deletingPersonalId, selectionError }) => {
 	const [customName, setCustomName] = useState('')
 	const [query, setQuery] = useState('')
 	const { medications } = useDictionaries()
@@ -87,12 +88,11 @@ const StepSelect = ({ selected, isSelected, toggleItem, clearSelection, editing,
 
 	return (
 		<div className={`${s.stepBody} ${s.selectStep}`}>
-			<div className={s.searchBox}>
-				<SearchIcon aria-hidden="true" fontSize="small" />
-				<input type="search" aria-label="Поиск препарата" placeholder="Найти препарат" value={query}
-					onChange={event => setQuery(event.target.value)} />
-				{query && <button type="button" aria-label="Очистить поиск" onClick={() => setQuery('')}><CloseIcon fontSize="small" /></button>}
-			</div>
+			<Input type="search" label="Найти препарат" value={query} error={selectionError}
+				onChange={event => setQuery(event.target.value)}
+				rightElement={query
+					? <button title="Очистить поиск" type="button" aria-label="Очистить поиск" onClick={() => setQuery('')}><CloseIcon fontSize="small" /></button>
+					: <SearchIcon aria-hidden="true" fontSize="small" />} />
 			{selected.length > 0 && (
 				<div className={s.selectedSummary}>
 					{selected.map(item => (
@@ -100,7 +100,7 @@ const StepSelect = ({ selected, isSelected, toggleItem, clearSelection, editing,
 							key={itemKey(item)}
 							className={s.selectedChip}
 							onClick={() => toggleItem(item)}
-							data-help={`Убрать препарат «${item.name}» из выбранного приёма.`}
+							title={`Убрать препарат «${item.name}» из выбранного приёма.`}
 							type="button"
 						>
 							{item.name}{item.category && item.category !== 'Другое' ? ` · ${item.category}` : ''}
@@ -108,12 +108,6 @@ const StepSelect = ({ selected, isSelected, toggleItem, clearSelection, editing,
 						</button>
 					))}
 				</div>
-			)}
-
-			{editing && selected.length > 0 && (
-				<button type="button" className={s.clearSelectionBtn} onClick={clearSelection}>
-					Очистить список и выбрать заново
-				</button>
 			)}
 
 			<div className={s.catalogList} aria-label="Список препаратов">
@@ -128,14 +122,14 @@ const StepSelect = ({ selected, isSelected, toggleItem, clearSelection, editing,
 								return <div key={`${group.category}-${item.name}`} className={s.catalogRow}>
 									<button type="button" className={`${s.catalogItem} ${chosen ? s.catalogItemActive : ''}`}
 										onClick={() => toggleItem(fullItem)} aria-pressed={chosen}
-										data-help={`Выбрать препарат «${item.name}» для записи о приёме.`}>
+										title={`Выбрать препарат «${item.name}» для записи о приёме.`}>
 										<span>{item.name}</span>{chosen && <CheckIcon fontSize="small" aria-hidden="true" />}
 									</button>
 									{personal && <button type="button" className={s.personalDelete}
 										aria-label={`Удалить ${item.name} из своих препаратов`}
 										disabled={deletingPersonalId === fullItem.personalMedicationId}
 										onClick={() => onDeletePersonal(fullItem)}
-										data-help="Удалить название препарата из вашего личного списка.">
+										title="Удалить название препарата из вашего личного списка.">
 										<DeleteOutlineIcon fontSize="small" aria-hidden="true" />
 									</button>}
 								</div>
@@ -146,15 +140,13 @@ const StepSelect = ({ selected, isSelected, toggleItem, clearSelection, editing,
 			</div>
 
 			<div className={s.customSection}>
-				<label className={s.customLabel} htmlFor="personal-medication-name">Добавить свой препарат</label>
 				<form className={s.customRow} onSubmit={addCustom}>
-					<input
+					<Input
 						id="personal-medication-name"
 						type="text"
-						aria-label="Название своего препарата"
-						data-help="Название сохраняется в вашем личном списке препаратов."
-						className={s.customInput}
-						placeholder="Название препарата"
+						label="Название своего препарата"
+						title="Название сохраняется в вашем личном списке препаратов."
+						wrapperClassName={s.customField}
 						maxLength={120}
 						value={customName}
 						onChange={e => setCustomName(e.target.value)}
@@ -163,7 +155,7 @@ const StepSelect = ({ selected, isSelected, toggleItem, clearSelection, editing,
 						className={s.customAddBtn}
 						type="submit"
 						disabled={!customName.trim() || addingPersonal}
-						data-help="Сохранить свой препарат и добавить его в этот приём."
+						title="Сохранить свой препарат и добавить его в этот приём."
 					>
 						{addingPersonal ? 'Сохраняем…' : 'Добавить'}
 					</button>
@@ -174,9 +166,9 @@ const StepSelect = ({ selected, isSelected, toggleItem, clearSelection, editing,
 }
 
 /* ── Step 2: дозировки ── */
-const StepDosage = ({ selected, setItemDosage }) => (
+const StepDosage = ({ selected, setItemDosage, error }) => (
 	<div className={s.stepBody}>
-		<p className={s.stepHint}>Укажите дозировку для каждого препарата</p>
+		<h3 className={`${s.sectionLabel} ${s.dosageHeading}`}>Укажите дозировку для каждого препарата</h3>
 		{selected.map(item => (
 			<div key={`${item.category}-${item.name}`} className={s.dosageItem}>
 				<div className={s.dosageMeta}>
@@ -184,19 +176,20 @@ const StepDosage = ({ selected, setItemDosage }) => (
 					<span className={s.dosageCategory}>{item.category}</span>
 				</div>
 				<div className={s.dosageInputWrapper}>
-					<input
+					<Input
 						type="text"
 						inputMode="decimal"
 						aria-label={`Дозировка препарата ${item.name}`}
-						data-help={`Укажите дозировку препарата «${item.name}». Единица измерения показана справа.`}
-						className={s.dosageInput}
-						placeholder={DOSAGE_HINTS[item.category] ?? ''}
+						title={`Укажите дозировку препарата «${item.name}». Единица измерения показана справа.`}
+						label="Дозировка"
+						hint={!item.dosage && DOSAGE_HINTS[item.category] ? `Например, ${DOSAGE_HINTS[item.category]}` : undefined}
+						error={error?.field === 'dosage' && (error.item ? error.item === `${item.category}::${item.name}` : item === selected[0]) ? error.message : undefined}
+						rightElement={<span className={s.dosageUnit}>{DOSAGE_UNITS[item.category] ?? 'мг'}</span>}
 						value={item.dosage}
 						onChange={e =>
 							setItemDosage(item.name, item.category, e.target.value.replace(/[^\d.,]/g, ''))
 						}
 					/>
-					<span className={s.dosageUnit}>{DOSAGE_UNITS[item.category] ?? 'мг'}</span>
 				</div>
 			</div>
 		))}
@@ -204,63 +197,59 @@ const StepDosage = ({ selected, setItemDosage }) => (
 )
 
 /* ── Step 3: дата, приступ, заметка ── */
-const StepMeta = ({ meta, attacks, setMetaField, today, currentTime }) => (
+const StepMeta = ({ meta, attacks, setMetaField, today, currentTime, error }) => {
+	const fieldError = field => error?.field === field ? error.message : undefined
+	return (
 	<div className={s.stepBody}>
 		<div className={s.section}>
 			<span className={s.sectionLabel}>Время приёма</span>
 			<div className={s.timeRow}>
 				<div className={s.timeField}>
-					<input
+					<Input
 						type="date"
-						aria-label="Дата приёма препарата"
-						data-help="Выберите день, когда вы приняли препарат."
+						aria-label="Дата приёма" error={fieldError('date')}
+						title="Выберите день, когда вы приняли препарат."
 						value={meta.date}
 						max={today}
 						onChange={e => setMetaField('date', e.target.value)}
-						className={s.timeInput}
 					/>
-					<AttackTimeWheels key={meta.date} label="Время приёма препарата" value={meta.time} latestTime={meta.date === today ? currentTime : null} onChange={value => setMetaField('time', value)} />
+					<AttackTimeWheels key={meta.date} label="Время приёма препарата" error={fieldError('time')} value={meta.time} latestTime={meta.date === today ? currentTime : null} onChange={value => setMetaField('time', value)} />
 				</div>
 			</div>
 		</div>
 
 		{attacks.length > 0 && (
 			<div className={s.section}>
-				<span className={s.sectionLabel}>Связать с приступом</span>
-				<select
-					className={s.select}
+				<Input as="select" label="Связать с приступом" error={fieldError('attackId')}
 					value={meta.attackId ?? ''}
 					aria-label="Связать препарат с приступом"
-					data-help="Если препарат принят во время приступа, выберите этот приступ. Связь необязательна."
+					title="Если препарат принят во время приступа, выберите этот приступ. Связь необязательна."
 					onChange={e => setMetaField('attackId', e.target.value || null)}
 				>
 					<option value="">Без привязки</option>
 					{attacks.map(a => (
 						<option key={a.id} value={a.id}>{formatAttackOption(a)}</option>
 					))}
-				</select>
+				</Input>
 			</div>
 		)}
 
 		<div className={s.section}>
-			<span className={s.sectionLabel}>Заметка</span>
-			<textarea
-				className={s.textarea}
-				placeholder="Дополнительные наблюдения..."
-				aria-label="Заметка о приёме препарата"
-				data-help="При желании добавьте личные наблюдения о приёме препарата."
+			<Input as="textarea" label="Заметка о приёме" error={fieldError('note')} maxLength={2000}
+				title="При желании добавьте личные наблюдения о приёме препарата."
 				value={meta.note}
 				onChange={e => setMetaField('note', e.target.value)}
 				rows={3}
 			/>
 		</div>
 	</div>
-)
+	)
+}
 
 /* ── Root ── */
 const AddMedicationForm = ({
-	open, step, selected, meta, error, deleteError, attacks, editing, loading, deleting,
-	onClose, toggleItem, isSelected, clearSelection, setItemDosage,
+	open, step, selected, meta, error, attacks, editing, loading, deleting,
+	onClose, toggleItem, isSelected, setItemDosage,
 	setMetaField, onNext, onBack, onSubmit, onDelete,
 }) => {
 	useBodyScrollLock(open)
@@ -271,27 +260,24 @@ const AddMedicationForm = ({
 		const timer = window.setInterval(() => refreshClock(value => value + 1), 15000)
 		return () => window.clearInterval(timer)
 	}, [open])
-	const [personalError, setPersonalError] = useState('')
 	const [addingPersonal, setAddingPersonal] = useState(false)
 	const [deletingPersonalId, setDeletingPersonalId] = useState(null)
 	useEffect(() => {
 		if (!open) { setPersonalMedications([]); return undefined }
 		let active = true
-		setPersonalError('')
 		medicationApi.getPersonal()
 			.then(list => { if (active) setPersonalMedications(list) })
-			.catch(err => { if (active && !isCentralError(err)) setPersonalError('Не удалось загрузить свои препараты') })
+			.catch(err => { if (active) notifyRequestError(err, 'Не удалось загрузить свои препараты') })
 		return () => { active = false }
 	}, [open])
 	const addPersonal = async name => {
 		setAddingPersonal(true)
-		setPersonalError('')
 		try {
 			const saved = await medicationApi.addPersonal(name)
 			setPersonalMedications(previous => [saved, ...previous.filter(item => item.id !== saved.id)])
 			return saved
 		} catch (err) {
-			if (!isCentralError(err)) setPersonalError(err.message || 'Не удалось добавить свой препарат')
+			notifyRequestError(err, 'Не удалось добавить свой препарат')
 			return null
 		} finally {
 			setAddingPersonal(false)
@@ -299,13 +285,12 @@ const AddMedicationForm = ({
 	}
 	const deletePersonal = async item => {
 		setDeletingPersonalId(item.personalMedicationId)
-		setPersonalError('')
 		try {
 			await medicationApi.deletePersonal(item.personalMedicationId)
 			setPersonalMedications(previous => previous.filter(m => m.id !== item.personalMedicationId))
 			if (isSelected(item)) toggleItem(item)
 		} catch (err) {
-			if (!isCentralError(err)) setPersonalError(err.message || 'Не удалось удалить препарат')
+			notifyRequestError(err, 'Не удалось удалить препарат')
 		} finally {
 			setDeletingPersonalId(null)
 		}
@@ -324,7 +309,7 @@ const AddMedicationForm = ({
 				<div className={s.header}>
 					<div className={s.headerTop}>
 						<h2 className={s.title}>{editing ? `Редактировать · ${STEP_TITLES[step - 1]}` : STEP_TITLES[step - 1]}</h2>
-						<button className={s.closeBtn} onClick={onClose} aria-label="Закрыть форму препарата" data-help="Закрыть форму записи препарата.">✕</button>
+						<CloseButton label="Закрыть форму препарата" title="Закрыть форму записи препарата." onClick={onClose} />
 					</div>
 					<div className={s.stepDots}>
 						{[1, 2, 3].map(n => (
@@ -340,32 +325,28 @@ const AddMedicationForm = ({
 				</div>
 
 				<div className={`${s.body} ${step === 1 ? s.bodySelect : ''}`}>
-					<ErrorNotice message={error} title="Не удалось сохранить препарат" />
-					<ErrorNotice message={deleteError} title="Не удалось удалить приём" />
-					<ErrorNotice message={personalError} title="Свои препараты" />
 
 					{step === 1 && (
 						<StepSelect
 							selected={selected}
 							isSelected={isSelected}
 							toggleItem={toggleItem}
-							clearSelection={clearSelection}
-							editing={editing}
 							personalMedications={personalMedications}
 							onAddPersonal={addPersonal}
 							addingPersonal={addingPersonal}
 							onDeletePersonal={deletePersonal}
 							deletingPersonalId={deletingPersonalId}
+							selectionError={error?.field === 'selection' ? error.message : undefined}
 						/>
 					)}
-					{step === 2 && <StepDosage selected={selected} setItemDosage={setItemDosage} />}
-					{step === 3 && <StepMeta meta={meta} attacks={attacksForDate(attacks, meta.date)} setMetaField={setMetaField} today={today} currentTime={currentTime} />}
+					{step === 2 && <StepDosage selected={selected} setItemDosage={setItemDosage} error={error} />}
+					{step === 3 && <StepMeta meta={meta} attacks={attacksForDate(attacks, meta.date)} setMetaField={setMetaField} today={today} currentTime={currentTime} error={error} />}
 				</div>
 
 				<div className={s.footer}>
 					<div className={s.navRow}>
 						{step > 1 && (
-							<button className={s.backBtn} onClick={onBack} disabled={busy} aria-label="Предыдущий шаг" data-help="Вернуться к предыдущему шагу записи препарата.">
+							<button className={s.backBtn} onClick={onBack} disabled={busy} aria-label="Предыдущий шаг" title="Вернуться к предыдущему шагу записи препарата.">
 								<BackIcon style={{ fontSize: '1.25rem' }} />
 							</button>
 						)}
@@ -373,20 +354,20 @@ const AddMedicationForm = ({
 							className={s.nextBtn}
 							onClick={editing || isLastStep ? onSubmit : onNext}
 							disabled={busy}
-							data-help={editing || isLastStep ? 'Сохранить изменения приёма и закрыть форму.' : 'Перейти к следующему шагу записи препарата.'}
+							title={editing || isLastStep ? 'Сохранить изменения приёма и закрыть форму.' : 'Перейти к следующему шагу записи препарата.'}
 						>
 							{loading ? 'Сохраняем…' : editing || isLastStep ? 'Сохранить' : 'Далее'}
 							{!editing && !isLastStep && <BackIcon style={{ fontSize: '1.25rem', transform: 'scaleX(-1)' }} />}
 						</button>
 						{editing && !isLastStep && <button type="button" className={s.forwardBtn}
 							onClick={onNext} disabled={busy} aria-label="Следующий шаг"
-							data-help="Перейти к следующему шагу редактирования приёма.">
+							title="Перейти к следующему шагу редактирования приёма.">
 							<BackIcon style={{ fontSize: '1.25rem', transform: 'scaleX(-1)' }} />
 						</button>}
 					</div>
 					{editing && <button type="button" className={s.deleteBtn}
 						onClick={onDelete} disabled={busy}
-						data-help="Удалить все препараты этого приёма из дневника.">
+						title="Удалить все препараты этого приёма из дневника.">
 						{deleting ? 'Удаляем приём…' : 'Удалить приём'}
 					</button>}
 				</div>

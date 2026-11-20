@@ -1,13 +1,15 @@
-import { http, setToken, setRefreshToken, clearToken, clearRefreshToken } from './httpClient'
+import { http, setToken, clearToken, clearRefreshToken } from './httpClient'
 import { setCurrentUser } from '@/entities/user'
 import { touchSession, clearSessionActivity } from '@/shared/lib/sessionActivity'
+import { clearPendingEmailLogin } from '@/shared/lib/pendingEmailLogin'
 import { emit, AUTH_CHANGED } from '@/shared/lib/dataEvents'
 
-const saveSession = ({ token, refreshToken, user }) => {
+const saveSession = ({ token, user }) => {
   setToken(token)
-  setRefreshToken(refreshToken)
+  clearRefreshToken()
   setCurrentUser(user)
   touchSession()
+  clearPendingEmailLogin()
   emit(AUTH_CHANGED)
   return user
 }
@@ -16,23 +18,16 @@ const clearLocalSession = () => {
 	clearToken()
 	clearRefreshToken()
 	clearSessionActivity()
+	clearPendingEmailLogin()
 	localStorage.removeItem('calm_current_user')
 	emit(AUTH_CHANGED)
 }
 
 export const authApi = {
-  login:    (email, password)       => http.post('/auth/login',    { email, password }).then(saveSession),
-  register: (email, password, name) => http.post('/auth/register', { email, password, name }),
-  verifyRegistration: (email, password, code) => http.post('/auth/verify-registration', { email, password, code }).then(saveSession),
-  resendRegistrationCode: (email, password) => http.post('/auth/resend-registration-code', { email, password }),
-  cancelRegistration: (email, password) => http.post('/auth/cancel-registration', { email, password }),
+  requestEmail: email => http.post('/auth/email/request', { email }),
+  verifyCode: (email, code) => http.post('/auth/email/verify', { email, code }).then(saveSession),
+  verifyLink: token => http.post('/auth/email/link', { token }).then(saveSession),
   cancelEmailChangeByToken: token => http.post('/auth/cancel-email-change', { token }),
-  requestPasswordReset: email => http.post('/auth/password-reset/request', { email }),
-  verifyPasswordReset: (email, code) => http.post('/auth/password-reset/verify', { email, code }),
-  confirmPasswordReset: (email, verificationToken, newPassword) => http.post('/auth/password-reset/confirm', { email, verificationToken, newPassword }),
-  clearLocalSession,
-  verifyEmail: code => http.post('/auth/verify-email', { code }),
-  sendVerificationCode: () => http.post('/auth/send-verification-code', {}),
   logout: async () => {
     try { await http.post('/auth/logout', {}) } catch { /* Удаляем локальную сессию и без связи с сервером. */ }
     clearLocalSession()
