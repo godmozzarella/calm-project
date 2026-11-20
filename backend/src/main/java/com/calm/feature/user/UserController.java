@@ -2,7 +2,6 @@ package com.calm.feature.user;
 
 import com.calm.feature.user.dto.UpdateUserRequest;
 import com.calm.feature.user.dto.UserDto;
-import com.calm.feature.user.dto.ChangePasswordRequest;
 import com.calm.feature.user.dto.StartEmailChangeRequest;
 import com.calm.feature.user.dto.EmailChangeCodeRequest;
 import com.calm.feature.user.dto.EmailChangeStatus;
@@ -40,15 +39,6 @@ public class UserController {
 		return UserDto.from(userService.update(principal.getUserId(), req));
 	}
 
-	@PostMapping("/me/password")
-	public ResponseEntity<Void> changePassword(
-			@AuthenticationPrincipal AuthenticatedUser principal,
-			@RequestBody ChangePasswordRequest req
-	) {
-		accountSecurityService.changePassword(principal.getUserId(), req.currentPassword(), req.newPassword());
-		return ResponseEntity.noContent().build();
-	}
-
 	@GetMapping("/me/email-change")
 	public EmailChangeStatus emailChangeStatus(@AuthenticationPrincipal AuthenticatedUser principal) {
 		return accountSecurityService.getEmailChangeStatus(principal.getUserId());
@@ -59,7 +49,7 @@ public class UserController {
 			@AuthenticationPrincipal AuthenticatedUser principal,
 			@Valid @RequestBody StartEmailChangeRequest req
 	) {
-		return accountSecurityService.startEmailChange(principal.getUserId(), req.currentPassword(), req.newEmail());
+		return accountSecurityService.startEmailChange(principal.getUserId(), req.newEmail());
 	}
 
 	@PostMapping("/me/email-change/resend")
@@ -68,12 +58,11 @@ public class UserController {
 	}
 
 	@PostMapping("/me/email-change/confirm")
-	public ResponseEntity<Void> confirmEmailChange(
+	public EmailChangeStatus confirmEmailChange(
 			@AuthenticationPrincipal AuthenticatedUser principal,
 			@RequestBody EmailChangeCodeRequest req
 	) {
-		accountSecurityService.confirmEmailChange(principal.getUserId(), req.code());
-		return ResponseEntity.noContent().build();
+		return accountSecurityService.confirmEmailChange(principal.getUserId(), req.code());
 	}
 
 	@DeleteMapping("/me/email-change")

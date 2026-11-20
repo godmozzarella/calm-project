@@ -27,16 +27,7 @@
 }
 
 .addBtn {
-	display: grid;
-	place-items: center;
-	flex: 0 0 2.25rem;
-	width: 2.25rem;
-	height: 2.25rem;
-	background: $quiet-surface;
-	border: 0;
-	border-radius: 0.625rem;
-	color: $fc-secondary;
-	padding: 0;
+	@include square-icon-button;
 	overflow: hidden;
 	cursor: pointer;
 	transition: background-color 0.18s ease, color 0.18s ease;

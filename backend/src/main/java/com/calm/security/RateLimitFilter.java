@@ -30,33 +30,28 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
 	private final int maxAttempts;
 	private final long windowMs;
+	private final boolean trustProxy;
 
 	private final ConcurrentHashMap<String, Deque<Long>> buckets = new ConcurrentHashMap<>();
 	private static final int MAX_BUCKETS = 10_000;
 
 	public RateLimitFilter(
 			@Value("${calm.rate-limit.auth.max-attempts:10}") int maxAttempts,
-			@Value("${calm.rate-limit.auth.window-seconds:60}") int windowSeconds
+			@Value("${calm.rate-limit.auth.window-seconds:60}") int windowSeconds,
+			@Value("${calm.rate-limit.auth.trust-proxy:false}") boolean trustProxy
 	) {
 		this.maxAttempts = maxAttempts;
 		this.windowMs = windowSeconds * 1000L;
+		this.trustProxy = trustProxy;
 	}
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		String path = request.getServletPath();
-		return !path.equals("/auth/login") && !path.equals("/auth/register")
-				&& !path.equals("/auth/verify-email") && !path.equals("/auth/send-verification-code")
-				&& !path.equals("/auth/verify-registration") && !path.equals("/auth/resend-registration-code")
-				&& !path.equals("/auth/cancel-registration")
-				&& !path.equals("/auth/cancel-email-change")
-				&& !path.equals("/auth/password-reset/request")
-				&& !path.equals("/auth/password-reset/confirm")
-				&& !path.equals("/auth/password-reset/verify")
-				&& !path.equals("/users/me/password")
-				&& !path.equals("/users/me/email-change")
-				&& !path.equals("/users/me/email-change/resend")
-				&& !path.equals("/users/me/email-change/confirm");
+		return !"POST".equals(request.getMethod()) || !java.util.Set.of(
+				"/auth/email/request", "/auth/email/verify", "/auth/email/link", "/auth/cancel-email-change",
+				"/users/me/email-change", "/users/me/email-change/resend", "/users/me/email-change/confirm"
+		).contains(path);
 	}
 
 	@Override
@@ -100,9 +95,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
 		chain.doFilter(req, res);
 	}
 
-	private static String resolveIp(HttpServletRequest req) {
+	private String resolveIp(HttpServletRequest req) {
 		String forwarded = req.getHeader("X-Forwarded-For");
-		if (forwarded != null && !forwarded.isBlank()) return forwarded.split(",")[0].trim();
+		if (trustProxy && forwarded != null && !forwarded.isBlank()) return forwarded.split(",")[0].trim();
 		return req.getRemoteAddr();
 	}
 }

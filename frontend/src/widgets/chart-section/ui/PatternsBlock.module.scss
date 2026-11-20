@@ -127,7 +127,7 @@
 	vertical-align: middle;
 }
 
-.dotRed    { background: rgba(239, 68, 68, 0.7); }
+.dotRed    { background: $error-color; }
 .dotYellow { background: rgba(234, 179, 8, 0.7); }
 .dotGreen  { background: rgba(34, 197, 94, 0.7); }
 
@@ -198,7 +198,7 @@
 
 :root[data-theme='light'] .medBadge { background: var(--selection-surface); }
 
-.medBadge[data-effectiveness='1'] { color: #ef4444; }
+.medBadge[data-effectiveness='1'] { color: $error-color; }
 .medBadge[data-effectiveness='2'] { color: #eab308; }
 .medBadge[data-effectiveness='3'] { color: #22c55e; }
 :root[data-theme='light'] .medBadge[data-effectiveness='1'] { color: #b91c1c; }

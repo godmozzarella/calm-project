@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { notifyRequestError } from '@/shared/lib/notifyError'
 
 import { ChartSection } from '@/widgets/chart-section'
 import { BackIcon, PrintIcon, FileDownloadIcon } from '@/shared/ui/icons'
@@ -93,6 +94,8 @@ const StatsPage = () => {
 		try {
 			const args = await buildReportArgs()
 			printDashboard(...args)
+		} catch (error) {
+			notifyRequestError(error, 'Не удалось открыть печать')
 		} finally {
 			setPdfLoading(false)
 		}
@@ -104,6 +107,8 @@ const StatsPage = () => {
 		try {
 			const args = await buildReportArgs()
 			await downloadPdf(...args)
+		} catch (error) {
+			notifyRequestError(error, 'Не удалось скачать PDF')
 		} finally {
 			setPdfLoading(false)
 		}

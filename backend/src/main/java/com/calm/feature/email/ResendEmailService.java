@@ -57,6 +57,11 @@ public class ResendEmailService implements EmailService {
 
 	@Override
 	public EmailSendResult send(String to, String subject, String html) {
+		return send(to, subject, html, null);
+	}
+
+	@Override
+	public EmailSendResult send(String to, String subject, String html, String plain) {
 		if (apiKey == null || apiKey.isBlank()) {
 			log.warn("Resend не настроен (CALM_RESEND_API_KEY пуст), письмо не отправлено");
 			return EmailSendResult.FAILED;
@@ -70,6 +75,7 @@ public class ResendEmailService implements EmailService {
 		body.put("to", to);
 		body.put("subject", subject);
 		body.put("html", html);
+		if (plain != null) body.put("text", plain);
 		try {
 			Map<?, ?> response = http.post()
 					.header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)

@@ -64,43 +64,5 @@
 	@include fluid-text(13, 12);
 }
 
-/* ── Tooltip ── */
-.tooltip {
-	position: absolute;
-	bottom: calc(100% - 2.25rem);
-	transform: translateX(-50%);
-	background: var(--surface-overlay);
-	border: 0;
-	border-radius: 0.625rem;
-	padding: 0.5rem 0.75rem;
-	min-width: 9rem;
-	pointer-events: none;
-	z-index: 5;
-	box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.4);
-	white-space: nowrap;
-}
-
-.tooltipDate {
-	@include fluid-text(12, 11);
-	font-weight: $fw-semibold;
-	color: $fc-main;
-	margin-bottom: 0.25rem;
-}
-
-.tooltipRow {
-	display: flex;
-	justify-content: space-between;
-	gap: 0.75rem;
-	@include fluid-text(11, 10);
-	line-height: 1.4;
-}
-
-.tooltipLabel {
-	color: var(--tooltip-label);
-}
-
-.tooltipValue {
-	color: $fc-main;
-	font-weight: $fw-semibold;
-	font-variant-numeric: tabular-nums;
-}
+.chartBar { opacity: .92; }
+.barGroup:hover .chartBar { opacity: 1; }

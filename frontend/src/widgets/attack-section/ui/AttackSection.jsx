@@ -68,7 +68,7 @@ const AttackSection = ({ date, onInitialReady }) => {
 
 	useEffect(() => subscribe(ATTACKS_CHANGED, reload), [reload])
 
-	const { open, form, error, deleteError, loading, deleting, editingId, openForm, openEditForm, closeForm, setField, toggleArrayField, submit, remove } =
+	const { open, form, error, loading, deleting, editingId, openForm, openEditForm, closeForm, setField, toggleArrayField, submit, remove } =
 		useAddAttack({ date, onSuccess: reload })
 	const current = new Date()
 	const todayKey = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`
@@ -95,10 +95,10 @@ const AttackSection = ({ date, onInitialReady }) => {
 
 	return (
 		<>
-			<div className={s.card} onClick={handleCardClick} data-help="Приступы: здесь можно записать новый приступ, а также посмотреть и изменить уже добавленные.">
+			<div id="diary-attacks" className={s.card} onClick={handleCardClick} title="Приступы: здесь можно записать новый приступ, а также посмотреть и изменить уже добавленные.">
 				<div className={s.cardHeader}>
 					<h2 className={s.title}>Приступы</h2>
-					<button type="button" className={s.addBtn} onClick={openNew} disabled={futureDay} aria-label="Добавить приступ" data-help="Добавить приступ за выбранный день: укажите время, силу боли, симптомы и другие подробности.">
+					<button type="button" className={s.addBtn} data-tour="attacks" onClick={openNew} disabled={futureDay} aria-label="Добавить приступ" title="Добавить приступ за выбранный день: укажите время, силу боли, симптомы и другие подробности.">
 						<AddIcon fontSize="small" />
 					</button>
 				</div>
@@ -119,7 +119,7 @@ const AttackSection = ({ date, onInitialReady }) => {
 										tabIndex={finishing[attack.id] ? -1 : 0}
 										aria-label={`Редактировать приступ: ${formatRange(attack)}`}
 										aria-disabled={!!finishing[attack.id]}
-										data-help="Открыть подробности и редактирование этого приступа."
+										title="Открыть подробности и редактирование этого приступа."
 										onClick={event => {
 											event.stopPropagation()
 											if (!pending.current.has(attack.id)) openEditForm(attack)
@@ -173,8 +173,7 @@ const AttackSection = ({ date, onInitialReady }) => {
 										disabled={!!finishing[attack.id]}
 										aria-label={finishing[attack.id] ? 'Сохраняем окончание приступа' : 'Завершить приступ сейчас'}
 										aria-busy={!!finishing[attack.id]}
-										title="Завершить приступ сейчас"
-										data-help="Завершить продолжающийся приступ: дата и время окончания заполнятся текущими."
+										title="Завершить продолжающийся приступ: дата и время окончания заполнятся текущими."
 									>
 										<StopCircleIcon style={{ fontSize: '2rem' }} />
 									</button>}
@@ -189,7 +188,6 @@ const AttackSection = ({ date, onInitialReady }) => {
 				open={open}
 				form={form}
 				error={error}
-				deleteError={deleteError}
 				deleting={deleting}
 				loading={loading}
 				editing={!!editingId}

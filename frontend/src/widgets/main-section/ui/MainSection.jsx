@@ -11,7 +11,7 @@ import { subscribe, DATE_SELECTED } from '@/shared/lib/dataEvents'
 
 import s from './MainSection.module.scss'
 
-const MainSection = ({ user, date, setDate, onOpenLocationModal, onInitialReady, autoOpenQuestionnaire }) => {
+const MainSection = ({ user, date, setDate, onOpenLocationModal, onInitialReady }) => {
 	useEffect(() => subscribe(DATE_SELECTED, e => {
 		const key = e.detail
 		if (typeof key !== 'string') return
@@ -27,8 +27,8 @@ const MainSection = ({ user, date, setDate, onOpenLocationModal, onInitialReady,
 		<main className={s.main}>
 			<h1 className={s.logo}>Calm</h1>
 
-			<DayBar date={date} setDate={setDate} city={user?.city} userId={user?.id} />
-			<DailyQuestionnaire key={user?.id} userId={user?.id} onInitialReady={onInitialReady} autoOpenAllowed={autoOpenQuestionnaire} />
+			<DayBar date={date} setDate={setDate} city={user?.city} userId={user?.id} onInitialReady={onInitialReady} />
+			<DailyQuestionnaire key={user?.id} userId={user?.id} />
 
 			<div className={s.grid}>
 				<div className={s.topRow}>

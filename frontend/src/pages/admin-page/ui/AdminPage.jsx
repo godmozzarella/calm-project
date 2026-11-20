@@ -31,7 +31,7 @@ const AdminPage = () => {
 
 	return (
 		<div className={s.page}>
-			<Link to="/profile" className={s.back}><BackIcon fontSize="small" />К дневнику</Link>
+			<Link title={"К дневнику"} to="/profile" className={s.back}><BackIcon fontSize="small" />К дневнику</Link>
 
 			<h1 className={s.title}>Админ-панель</h1>
 

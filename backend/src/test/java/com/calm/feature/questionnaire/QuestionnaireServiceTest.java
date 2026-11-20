@@ -144,112 +144,15 @@ class QuestionnaireServiceTest {
         assertThat(service.submit("u",DAY.plusDays(1),"Europe/Moscow",endNo).entry().prediction().features())
                 .containsEntry("cycleDay",5L);
     }
-    @Test void firstDayThisMonthSuppressesQuestionAndSurveyYesMarksCalendar() {
+    @Test void revisingSurveyAnswersCannotCreateOrDeleteCalendarMarks() {
         when(profiles.findById("u")).thenReturn(Optional.of(new QuestionnaireProfile("u",QuestionnaireProfile.Sex.FEMALE,null,true)));
-        assertThat(service.status("u","Europe/Moscow").askCycle()).isTrue();
-        var first=new Answers(Answer.NO,Answer.NO,Answer.NO,480,4,0,Answer.NO,Answer.YES,DAY);
-        service.submit("u",DAY,"Europe/Moscow",first);
-        assertThat(cycleSaved.values()).singleElement().satisfies(m -> {
-            assertThat(m.kind()).isEqualTo(CycleMarker.Kind.DAY);
-            assertThat(m.date()).isEqualTo(DAY);
-        });
-        assertThat(service.status("u","Europe/Moscow").askCycle()).isFalse();
-        cycleSaved.clear();
-        assertThat(service.status("u","Europe/Moscow").askCycle()).isTrue();
-        cycleSaved.put(CycleMarker.key("u",DAY,CycleMarker.Kind.DAY),new CycleMarker(CycleMarker.key("u",DAY,CycleMarker.Kind.DAY),"u",DAY,CycleMarker.Kind.DAY,clock.now));
-        clock.now=Instant.parse("2026-11-04T09:00:00Z");
-        assertThat(service.status("u","Europe/Moscow").askCycleEnd()).isTrue();
-        var withoutCard=new Answers(Answer.NO,Answer.NO,Answer.NO,480,4,0,Answer.NO,null,null,Answer.NO);
-        assertThat(service.submit("u",DAY.plusDays(1),"Europe/Moscow",withoutCard).entry().prediction().features())
-                .containsEntry("cycleDay",2L);
-    }
-    @Test void endCardRepeatsWhileDatesAreMarkedThenYesFillsCalendarAndStopsForMonth() {
-        when(profiles.findById("u")).thenReturn(Optional.of(new QuestionnaireProfile("u",QuestionnaireProfile.Sex.FEMALE,null,true)));
-        var start=new Answers(Answer.NO,Answer.NO,Answer.NO,480,4,0,Answer.NO,Answer.YES,DAY);
-        service.submit("u",DAY,"Europe/Moscow",start);
-        assertThat(service.status("u","Europe/Moscow").askCycleEnd()).isFalse();
-        clock.now=Instant.parse("2026-11-04T09:00:00Z");
-        assertThat(service.status("u","Europe/Moscow").askCycleEnd()).isTrue();
-        assertThatThrownBy(() -> service.submit("u",DAY.plusDays(1),"Europe/Moscow",answers(Answer.NO)))
-                .hasMessageContaining("закончились ли месячные");
-        var endNo=new Answers(Answer.NO,Answer.NO,Answer.NO,480,4,0,Answer.NO,null,null,Answer.NO);
-        service.submit("u",DAY.plusDays(1),"Europe/Moscow",endNo);
-        clock.now=Instant.parse("2026-11-05T09:00:00Z");
-        var yesterday=DAY.plusDays(1);
-        var yesterdayId=CycleMarker.key("u",yesterday,CycleMarker.Kind.DAY);
-        cycleSaved.put(yesterdayId,new CycleMarker(yesterdayId,"u",yesterday,CycleMarker.Kind.DAY,clock.now,"CALENDAR"));
-        assertThat(service.status("u","Europe/Moscow").askCycleEnd()).isTrue();
-        var endYes=new Answers(Answer.NO,Answer.NO,Answer.NO,480,4,0,Answer.NO,null,null,Answer.YES);
-        service.submit("u",DAY.plusDays(2),"Europe/Moscow",endYes);
-        assertThat(cycleSaved.values()).extracting(CycleMarker::kind)
-                .contains(CycleMarker.Kind.CLOSED);
-        assertThat(CycleMarkerService.knownDays(new ArrayList<>(cycleSaved.values()),clock.now).keySet())
-                .contains(DAY,DAY.plusDays(1),DAY.plusDays(2));
-        assertThat(service.status("u","Europe/Moscow").askCycleEnd()).isFalse();
-        assertThat(service.status("u","Europe/Moscow").askCycle()).isFalse();
-        clock.now=Instant.parse("2026-11-06T09:00:00Z");
-        assertThat(service.status("u","Europe/Moscow").askCycleEnd()).isFalse();
-        assertThat(service.status("u","Europe/Moscow").askCycle()).isTrue();
-    }
-    @Test void calendarClosureSuppressesEndCardAndRemovingItReopensQuestion() {
-        when(profiles.findById("u")).thenReturn(Optional.of(new QuestionnaireProfile("u",QuestionnaireProfile.Sex.FEMALE,null,true)));
-        var start=DAY.minusDays(2);
-        var startId=CycleMarker.key("u",start,CycleMarker.Kind.DAY);
-        var yesterdayId=CycleMarker.key("u",DAY.minusDays(1),CycleMarker.Kind.DAY);
-        var endId=CycleMarker.key("u",DAY.minusDays(1),CycleMarker.Kind.CLOSED);
-        cycleSaved.put(startId,new CycleMarker(startId,"u",start,CycleMarker.Kind.DAY,clock.now,"CARD"));
-        cycleSaved.put(yesterdayId,new CycleMarker(yesterdayId,"u",DAY.minusDays(1),CycleMarker.Kind.DAY,clock.now,"CALENDAR"));
-        cycleSaved.put(endId,new CycleMarker(endId,"u",DAY.minusDays(1),CycleMarker.Kind.CLOSED,clock.now));
-        assertThat(service.status("u","Europe/Moscow").askCycleEnd()).isFalse();
-        cycleSaved.remove(endId);
-        assertThat(service.status("u","Europe/Moscow").askCycleEnd()).isTrue();
-    }
-    @Test void endCardRequiresMarkYesterdayOrToday() {
-        when(profiles.findById("u")).thenReturn(Optional.of(new QuestionnaireProfile("u",QuestionnaireProfile.Sex.FEMALE,null,true)));
-        var first=DAY.minusDays(1);
-        for(var day:List.of(first,DAY)) {
-            var id=CycleMarker.key("u",day,CycleMarker.Kind.DAY);
-            cycleSaved.put(id,new CycleMarker(id,"u",day,CycleMarker.Kind.DAY,clock.now,"CALENDAR"));
-        }
-        assertThat(service.status("u","Europe/Moscow").askCycleEnd()).isTrue();
-        clock.now=Instant.parse("2026-11-04T09:00:00Z");
-        var status=service.status("u","Europe/Moscow");
-        assertThat(status.askCycle()).isFalse();
-        assertThat(status.askCycleEnd()).isTrue();
-        cycleSaved.remove(CycleMarker.key("u",DAY,CycleMarker.Kind.DAY));
-        assertThat(service.status("u","Europe/Moscow").askCycleEnd()).isFalse();
-        assertThatCode(() -> service.submit("u",DAY.plusDays(1),"Europe/Moscow",answers(Answer.NO)))
-                .doesNotThrowAnyException();
-        var today=DAY.plusDays(1);
-        var id=CycleMarker.key("u",today,CycleMarker.Kind.DAY);
-        cycleSaved.put(id,new CycleMarker(id,"u",today,CycleMarker.Kind.DAY,clock.now,"CALENDAR"));
-        assertThat(service.status("u","Europe/Moscow").askCycleEnd()).isTrue();
-    }
-    @Test void futureCalendarDayDoesNotHideStartQuestionOrBecomePastCycleFeature() {
-        when(profiles.findById("u")).thenReturn(Optional.of(new QuestionnaireProfile("u",QuestionnaireProfile.Sex.FEMALE,null,true)));
-        var future=DAY.plusDays(2);
-        var id=CycleMarker.key("u",future,CycleMarker.Kind.DAY);
-        cycleSaved.put(id,new CycleMarker(id,"u",future,CycleMarker.Kind.DAY,clock.now));
-        assertThat(service.status("u","Europe/Moscow").askCycle()).isTrue();
-        var a=new Answers(Answer.NO,Answer.NO,Answer.NO,480,4,0,Answer.NO,Answer.NO,null);
-        assertThat(service.submit("u",DAY,"Europe/Moscow",a).entry().prediction().features())
-                .containsEntry("cycleDay",null);
-        clock.now=Instant.parse("2026-11-05T09:00:00Z");
-        var markedToday=new Answers(Answer.NO,Answer.NO,Answer.NO,480,4,0,Answer.NO,null,null);
-        assertThat(service.submit("u",future,"Europe/Moscow",markedToday).entry().prediction().features())
-                .containsEntry("cycleDay",1L);
-    }
-    @Test void startQuestionRepeatsUntilConfirmedAndManualTodayStillAsksEndTomorrow() {
-        when(profiles.findById("u")).thenReturn(Optional.of(new QuestionnaireProfile("u",QuestionnaireProfile.Sex.FEMALE,null,true)));
-        assertThat(service.status("u","Europe/Moscow").askCycle()).isTrue();
-        service.submit("u",DAY,"Europe/Moscow",new Answers(Answer.NO,Answer.NO,Answer.NO,480,4,0,Answer.NO,Answer.NO,null));
-        clock.now=Instant.parse("2026-11-04T09:00:00Z");
-        assertThat(service.status("u","Europe/Moscow").askCycle()).isTrue();
-        var id=CycleMarker.key("u",DAY.plusDays(1),CycleMarker.Kind.DAY);
-        cycleSaved.put(id,new CycleMarker(id,"u",DAY.plusDays(1),CycleMarker.Kind.DAY,clock.now,"CALENDAR"));
-        assertThat(service.status("u","Europe/Moscow").askCycle()).isFalse();
-        clock.now=Instant.parse("2026-11-05T09:00:00Z");
-        assertThat(service.status("u","Europe/Moscow").askCycleEnd()).isTrue();
+        var legacyAnswer = new Answers(Answer.NO,Answer.NO,Answer.NO,480,4,0,Answer.NO,Answer.YES,DAY);
+        service.submit("u",DAY,"Europe/Moscow",legacyAnswer);
+        assertThat(cycleSaved).isEmpty();
+        var endId = CycleMarker.key("u",DAY,CycleMarker.Kind.CLOSED);
+        cycleSaved.put(endId, new CycleMarker(endId,"u",DAY,CycleMarker.Kind.CLOSED,clock.now,"CALENDAR"));
+        service.submit("u",DAY,"Europe/Moscow",answers(Answer.NO));
+        assertThat(cycleSaved).containsKey(endId);
     }
     @Test void retrospectivelyEnteredStartIsNotAvailableToEarlierPrediction() {
         when(profiles.findById("u")).thenReturn(Optional.of(new QuestionnaireProfile("u",QuestionnaireProfile.Sex.FEMALE,null,true)));

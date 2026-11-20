@@ -118,7 +118,7 @@ const FooterHelpSheet = ({ topic, onClose }) => {
 		<div className={s.overlay} onClick={event => { if (event.target === event.currentTarget) onClose(null) }}>
 			<section ref={dialogRef} className={s.sheet} role="dialog" aria-modal="true" aria-labelledby="footer-guide-title" tabIndex={-1}>
 				<div className={s.handle} aria-hidden="true" />
-				<button ref={closeButtonRef} type="button" className={s.closeButton} onClick={() => onClose(null)} aria-label="Закрыть памятку">
+				<button title="Закрыть памятку" ref={closeButtonRef} type="button" className={s.closeButton} onClick={() => onClose(null)} aria-label="Закрыть памятку">
 					<CloseIcon aria-hidden="true" />
 				</button>
 				<div className={s.content}>

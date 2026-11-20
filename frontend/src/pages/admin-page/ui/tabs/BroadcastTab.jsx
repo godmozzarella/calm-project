@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { adminApi } from '@/shared/api'
-import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
+import { Input } from '@/shared/ui/Input'
+import { notifyError, notifyRequestError } from '@/shared/lib/notifyError'
 
 import s from './Tab.module.scss'
 import b from './BroadcastTab.module.scss'
@@ -24,7 +25,7 @@ const BroadcastTab = () => {
 			const audience = await adminApi.getBroadcastAudience()
 			setRecipientCount(audience.recipientCount)
 		} catch (err) {
-			setError(err.message ?? 'Не удалось загрузить список получателей')
+			notifyRequestError(err, 'Не удалось загрузить список получателей')
 		} finally {
 			setLoadingAudience(false)
 		}
@@ -37,7 +38,7 @@ const BroadcastTab = () => {
 		setError('')
 		setResult(null)
 		if (!subject.trim() || !message.trim()) {
-			setError('Заполните тему и текст письма.')
+			setError(!subject.trim() ? 'subject' : 'message')
 			return
 		}
 		setLoadingAudience(true)
@@ -45,7 +46,7 @@ const BroadcastTab = () => {
 			const audience = await adminApi.getBroadcastAudience()
 			setRecipientCount(audience.recipientCount)
 			if (audience.recipientCount === 0) {
-				setError('Пока нет пользователей с подтверждённой почтой и включёнными уведомлениями.')
+				notifyError('Пока нет пользователей с подтверждённой почтой и включёнными уведомлениями.', 'Рассылка не отправлена')
 				return
 			}
 			const draft = JSON.stringify([subject.trim(), message.trim(), audience.recipientCount])
@@ -60,7 +61,7 @@ const BroadcastTab = () => {
 				expectedRecipientCount: audience.recipientCount,
 			})
 		} catch (err) {
-			setError(err.message ?? 'Не удалось проверить список получателей')
+			notifyRequestError(err, 'Не удалось проверить список получателей')
 		} finally {
 			setLoadingAudience(false)
 		}
@@ -73,6 +74,7 @@ const BroadcastTab = () => {
 		try {
 			const sent = await adminApi.sendBroadcast(confirmation)
 			setResult(sent)
+			if (sent.failedCount > 0) notifyError(`Писем не доставлено: ${sent.failedCount}.`, 'Рассылка завершилась с ошибками')
 			attempt.current = null
 			setConfirmation(null)
 			try {
@@ -81,7 +83,7 @@ const BroadcastTab = () => {
 			} catch { /* Отправка уже завершилась; не выдаём обновление счётчика за её ошибку. */ }
 		} catch (err) {
 			setConfirmation(null)
-			setError(err.message ?? 'Не удалось отправить рассылку')
+			notifyRequestError(err, 'Не удалось отправить рассылку')
 			try {
 				const audience = await adminApi.getBroadcastAudience()
 				setRecipientCount(audience.recipientCount)
@@ -102,45 +104,25 @@ const BroadcastTab = () => {
 				<p className={s.muted}>
 					Получателей: <strong>{loadingAudience && recipientCount === null ? 'считаем…' : recipientCount ?? '—'}</strong>
 				</p>
-				<button type="button" className={s.btnSmall} onClick={refreshAudience} disabled={loadingAudience || sending}>
+				<button title={"Обновить"} type="button" className={s.btnSmall} onClick={refreshAudience} disabled={loadingAudience || sending}>
 					Обновить
 				</button>
 			</div>
 
-			<ErrorNotice message={error} title="Рассылка не отправлена" />
 			{result && (
 				<p className={b.result} role="status">
 					Отправлено: {result.sentCount} из {result.recipientCount}.
-					{result.failedCount > 0 && ` Не удалось отправить: ${result.failedCount}.`}
 				</p>
 			)}
 
-			<form className={s.formStack} onSubmit={requestConfirmation}>
-				<label className={s.field}>
-					<span>Тема письма</span>
-					<input
-						type="text"
-						className={s.input}
-						maxLength={160}
-						value={subject}
-						onChange={event => setSubject(event.target.value)}
-						placeholder="Короткая тема сообщения"
-						required
-					/>
-				</label>
-				<label className={s.field}>
-					<span>Текст письма</span>
-					<textarea
-						className={`${s.input} ${b.messageInput}`}
-						rows={7}
-						maxLength={10000}
-						value={message}
-						onChange={event => setMessage(event.target.value)}
-						placeholder="Напишите сообщение обычным текстом"
-						required
-					/>
-					<span className={b.counter}>{message.length}/10000</span>
-				</label>
+			<form className={s.formStack} onSubmit={requestConfirmation} noValidate>
+				<Input type="text" label="Тема письма" maxLength={160} value={subject}
+					onChange={event => { setSubject(event.target.value); setError('') }}
+					error={error === 'subject' ? 'Укажите тему письма.' : undefined} required />
+				<Input as="textarea" label="Текст письма" rows={7} maxLength={10000}
+					value={message} onChange={event => { setMessage(event.target.value); setError('') }}
+					error={error === 'message' ? 'Напишите текст письма.' : undefined}
+					hint={`${message.length}/10000`} required />
 				<button
 					type="submit"
 					className={s.btn}
@@ -163,7 +145,7 @@ const BroadcastTab = () => {
 							<p>{confirmation.message}</p>
 						</div>
 						<div className={b.confirmActions}>
-							<button type="button" className={s.btnSmall} onClick={() => setConfirmation(null)} disabled={sending}>
+							<button title={"Вернуться к письму"} type="button" className={s.btnSmall} onClick={() => setConfirmation(null)} disabled={sending}>
 								Вернуться к письму
 							</button>
 							<button type="button" className={s.btn} onClick={confirmSend} disabled={sending}>

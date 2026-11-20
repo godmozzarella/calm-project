@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { medicationApi } from '@/shared/api'
+import { notifyError, notifyRequestError } from '@/shared/lib/notifyError'
 import { isCentralError } from '@/shared/lib/isCentralError'
 import { generateId } from '@/shared/lib/generateId'
 import { isFutureLocalMinute, localMinute } from '@/shared/lib/localMinute'
@@ -15,14 +16,13 @@ export const useAddMedication = ({ date, attacks = [], onSuccess }) => {
   const [selected, setSelected]  = useState([])
   const [meta,     setMetaState] = useState(() => makeMeta(date))
   const [error,    setError]     = useState('')
-  const [deleteError, setDeleteError] = useState('')
   const [loading,  setLoading]   = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [editingIntake, setEditingIntake] = useState(null)
   const [draftIntakeId, setDraftIntakeId] = useState(null)
   const [linkChoiceTouched, setLinkChoiceTouched] = useState(false)
 
-  const openForm  = () => { setEditingIntake(null); setLinkChoiceTouched(false); setDraftIntakeId(generateId()); setStep(1); setSelected([]); setMetaState(makeMeta(date, defaultAttackId(attacks, date))); setError(''); setDeleteError(''); setOpen(true) }
+  const openForm  = () => { setEditingIntake(null); setLinkChoiceTouched(false); setDraftIntakeId(generateId()); setStep(1); setSelected([]); setMetaState(makeMeta(date, defaultAttackId(attacks, date))); setError(''); setOpen(true) }
   const openEditForm = (med, medications) => {
     const members = intakeMembers(med, medications)
     setEditingIntake(members)
@@ -38,7 +38,6 @@ export const useAddMedication = ({ date, attacks = [], onSuccess }) => {
     })))
     setMetaState({ date: med.date, time: med.time?.slice(0, 5) ?? '', attackId: med.attackId, note: med.note ?? '' })
     setError('')
-    setDeleteError('')
     setOpen(true)
   }
   const closeForm = () => setOpen(false)
@@ -61,14 +60,16 @@ export const useAddMedication = ({ date, attacks = [], onSuccess }) => {
   }
 
   const isSelected = item => selected.some(s => itemKey(s) === itemKey(item))
-  const clearSelection = () => { setSelected([]); setError('') }
 
-  const setItemDosage = (name, category, dosage) =>
+  const setItemDosage = (name, category, dosage) => {
+    setError('')
     setSelected(prev =>
       prev.map(s => s.name === name && s.category === category ? { ...s, dosage } : s)
     )
+  }
 
   const setMetaField = (field, value) => {
+    setError('')
     if (field === 'attackId') setLinkChoiceTouched(true)
     setMetaState(prev => {
       if (field !== 'date') return { ...prev, [field]: value }
@@ -85,11 +86,11 @@ export const useAddMedication = ({ date, attacks = [], onSuccess }) => {
 
   const nextStep = () => {
     if (step === 1) {
-      if (selected.length === 0) { setError('Выберите хотя бы один препарат'); return }
+      if (selected.length === 0) { setError({ field: 'selection', message: 'Выберите хотя бы один препарат' }); setStep(1); return }
       setError(''); setStep(2)
     } else if (step === 2) {
       const empty = selected.find(s => !s.dosage?.trim())
-      if (empty && !editingIntake) { setError(`Укажите дозировку для "${empty.name}"`); return }
+      if (empty && !editingIntake) { setError({ field: 'dosage', item: itemKey(empty), message: `Укажите дозировку для «${empty.name}»` }); return }
       setError(''); setStep(3)
     }
   }
@@ -98,10 +99,10 @@ export const useAddMedication = ({ date, attacks = [], onSuccess }) => {
 
   const submit = async () => {
     if (loading || deleting) return
-    if (selected.length === 0) { setError('Выберите хотя бы один препарат'); return }
-    if (!meta.time) { setError('Укажите время приёма'); return }
-    if (!meta.date) { setError('Укажите дату приёма'); return }
-    if (isFutureLocalMinute(meta.date, meta.time)) { setError('Время приёма не может быть в будущем'); return }
+    if (selected.length === 0) { setError({ field: 'selection', message: 'Выберите хотя бы один препарат' }); setStep(1); return }
+    if (!meta.time) { setError({ field: 'time', message: 'Укажите время приёма' }); setStep(3); return }
+    if (!meta.date) { setError({ field: 'date', message: 'Укажите дату приёма' }); setStep(3); return }
+    if (isFutureLocalMinute(meta.date, meta.time)) { setError({ field: 'time', message: 'Время приёма не может быть в будущем' }); setStep(3); return }
 
     setLoading(true)
     setError('')
@@ -167,7 +168,13 @@ export const useAddMedication = ({ date, attacks = [], onSuccess }) => {
       setOpen(false)
       onSuccess?.()
     } catch (err) {
-      if (!isCentralError(err)) setError(`Не удалось полностью сохранить приём: ${err.message ?? 'ошибка'}. Повторите сохранение с тем же составом.`)
+      if (err.fieldValidation) {
+        const field = err.fieldValidation[0]?.split(':')[0].split('.').at(-1)
+        const target = ['note', 'date', 'time', 'attackId'].includes(field) ? field : field === 'dosage' ? 'dosage' : 'selection'
+        setError({ field: target, message: 'Проверьте значение этого поля.' })
+        setStep(target === 'selection' ? 1 : target === 'dosage' ? 2 : 3)
+      }
+      else notifyRequestError(err, 'Не удалось полностью сохранить приём', 'Повторите сохранение с тем же составом.')
     } finally {
       setLoading(false)
     }
@@ -176,7 +183,6 @@ export const useAddMedication = ({ date, attacks = [], onSuccess }) => {
   const remove = async () => {
     if (!editingIntake?.length || loading || deleting) return
     setDeleting(true)
-    setDeleteError('')
     try {
       const results = await Promise.allSettled(editingIntake.map(medication => medicationApi.delete(medication.id)))
       const remaining = editingIntake.filter((_, index) => results[index].status === 'rejected')
@@ -184,9 +190,8 @@ export const useAddMedication = ({ date, attacks = [], onSuccess }) => {
       if (remaining.length) {
         setEditingIntake(remaining)
         setSelected(previous => previous.filter(item => remaining.some(medication => medication.id === item.sourceId)))
-        if (!results.some(result => result.status === 'rejected' && isCentralError(result.reason))) setDeleteError(remaining.length === editingIntake.length
-          ? 'Не удалось удалить приём. Попробуйте ещё раз.'
-          : 'Часть препаратов удалена. Повторите удаление оставшихся.')
+        if (remaining.length < editingIntake.length) notifyError('Часть препаратов удалена. Повторите удаление оставшихся.', 'Приём удалён частично')
+        else if (!results.some(result => result.status === 'rejected' && isCentralError(result.reason))) notifyError('Попробуйте ещё раз.', 'Не удалось удалить приём')
       } else {
         setOpen(false)
       }
@@ -196,9 +201,9 @@ export const useAddMedication = ({ date, attacks = [], onSuccess }) => {
   }
 
   return {
-    open, step, selected, meta, error, deleteError, loading, deleting, editingIntake,
+    open, step, selected, meta, error, loading, deleting, editingIntake,
     openForm, openEditForm, closeForm,
-    toggleItem, isSelected, clearSelection, setItemDosage,
+    toggleItem, isSelected, setItemDosage,
     setMetaField, nextStep, prevStep, submit, remove,
   }
 }

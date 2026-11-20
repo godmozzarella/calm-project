@@ -45,5 +45,5 @@ export const intensityColor = v => {
 	if (v <= 3) return '#22c55e'
 	if (v <= 5) return '#eab308'
 	if (v <= 7) return '#f97316'
-	return '#ef4444'
+	return 'var(--error-color)'
 }

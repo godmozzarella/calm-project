@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 
 import { SidebarProfile } from '@/widgets/sidebar-profile'
@@ -9,21 +9,24 @@ import { Button } from '@/shared/ui/Button'
 import { CalendarMonthIcon, MenuIcon } from '@/shared/ui/icons'
 import { getCurrentUser, setCurrentUser } from '@/entities/user'
 import { userApi, getToken, riskApi } from '@/shared/api'
+import { notifyRequestError } from '@/shared/lib/notifyError'
 import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
+import { resetViewportScroll } from '@/shared/lib/resetViewportScroll'
 import PageLoading from '@/shared/ui/PageLoading/PageLoading'
 import { LocationOnboarding } from '@/features/onboarding-location'
 import AutoLocationCheck from '@/features/onboarding-location/ui/AutoLocationCheck'
 import DiaryProfileOnboarding from '@/features/onboarding-location/ui/DiaryProfileOnboarding'
 import welcomeStyles from '@/features/onboarding-location/ui/DiaryProfileOnboarding.module.scss'
 import { questionnaireApi } from '@/shared/api/questionnaireApi'
-import { emit, subscribe, OPEN_DAILY_QUESTIONNAIRE, SURVEY_CLOSED, SURVEY_COMPLETED } from '@/shared/lib/dataEvents'
 import ConsentPrompt from '@/features/shared-model-consent/ui/ConsentPrompt'
+import DiaryTour from './DiaryTour'
 
 import s from './MainPage.module.scss'
 
 const MainPage = () => {
 	const location = useLocation()
 	const navigate = useNavigate()
+	const reminder = new URLSearchParams(location.search).get('reminder')
 	const [openMenu, setOpenMenu] = useState(() => location.state?.openMenu === true)
 	const [openCalendar, setOpenCalendar] = useState(false)
 	const [diaryDate, setDiaryDate] = useState(midnight)
@@ -39,12 +42,11 @@ const MainPage = () => {
 	})
 	const [profileOnboarding, setProfileOnboarding] = useState('loading')
 	const [profileCheck, setProfileCheck] = useState(0)
-	const [suppressAutoSurvey, setSuppressAutoSurvey] = useState(false)
-	const [deferConsent, setDeferConsent] = useState(false)
-	const [openSurveyFromOnboarding, setOpenSurveyFromOnboarding] = useState(false)
 	const [consentPrompt, setConsentPrompt] = useState(null)
+	const [consentCheckedFor, setConsentCheckedFor] = useState(null)
 	const [consentSaving, setConsentSaving] = useState(false)
-	const [consentError, setConsentError] = useState('')
+	const [tourPendingFor, setTourPendingFor] = useState(null)
+	const [tourRequested, setTourRequested] = useState(false)
 	const [readyParts, setReadyParts] = useState({})
 	const [showBeforeReady, setShowBeforeReady] = useState(false)
 	const markReady = useCallback(part => setReadyParts(previous =>
@@ -52,29 +54,37 @@ const MainPage = () => {
 	const diaryReady = ['attacks', 'medications', 'zones', 'forecast', 'chart', 'outcome']
 		.every(part => readyParts[part])
 	const diaryVisible = diaryReady || showBeforeReady
-	useBodyScrollLock(openMenu || openCalendar || !diaryVisible)
+	const tourOpen = sessionVerified && diaryVisible && profileOnboarding === 'done' &&
+		!showLocationOnboarding && !openMenu && !openCalendar && !consentPrompt && !consentSaving &&
+		(tourRequested || (tourPendingFor === user?.id && consentCheckedFor === user?.id))
+	useBodyScrollLock(!diaryVisible)
+	useBodyScrollLock(openMenu || openCalendar, { freezePosition: true })
 
-	// On mobile browsers the route can inherit the guest page's scroll while the diary
-	// is loading under an overflow lock. Reset again after the lock is released.
-	useEffect(() => {
-		if (!diaryVisible || location.state?.scrollToChart) return undefined
-		const root = document.documentElement
-		const body = document.body
-		const resetScroll = () => {
-			window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-			root.scrollTop = 0
-			body.scrollTop = 0
-		}
+	// Reset after the diary can render, including when Safari restores the page from its cache.
+	useLayoutEffect(() => {
+		if (!diaryVisible || location.state?.scrollToChart || location.state?.reminderHandled || reminder === 'attack' || reminder === 'cards') return undefined
+		let resetFrame = 0
 		let settleFrame = 0
-		const resetFrame = window.requestAnimationFrame(() => {
-			resetScroll()
-			settleFrame = window.requestAnimationFrame(resetScroll)
-		})
-		return () => {
+		const cancelReset = () => {
 			window.cancelAnimationFrame(resetFrame)
 			window.cancelAnimationFrame(settleFrame)
 		}
-	}, [diaryVisible, location.state?.scrollToChart])
+		const reset = () => {
+			cancelReset()
+			resetViewportScroll()
+			resetFrame = window.requestAnimationFrame(() => {
+				resetViewportScroll()
+				settleFrame = window.requestAnimationFrame(resetViewportScroll)
+			})
+		}
+		const onPageShow = event => { if (event.persisted) reset() }
+		reset()
+		window.addEventListener('pageshow', onPageShow)
+		return () => {
+			cancelReset()
+			window.removeEventListener('pageshow', onPageShow)
+		}
+	}, [diaryVisible, location.state?.scrollToChart, location.state?.reminderHandled, reminder])
 
 	useEffect(() => {
 		if (location.state?.openMenu !== true) return
@@ -113,7 +123,9 @@ const MainPage = () => {
 		let active = true
 		const refreshPrompt = () => {
 			riskApi.getParticipation().then(status => {
-				if (active) setConsentPrompt(current => {
+				if (!active) return
+				setConsentCheckedFor(user.id)
+				setConsentPrompt(current => {
 					if (!status.showConsentPrompt) return null
 					if (current?.currentConsentVersion === status.currentConsentVersion &&
 						current?.currentConsentDigest === status.currentConsentDigest) return current
@@ -137,7 +149,6 @@ const MainPage = () => {
 	const decideParticipation = async participate => {
 		if (!consentPrompt || consentSaving) return
 		setConsentSaving(true)
-		setConsentError('')
 		try {
 			if (participate) {
 				await riskApi.joinSharedModelPilot(consentPrompt.currentConsentVersion, consentPrompt.currentConsentDigest)
@@ -151,23 +162,28 @@ const MainPage = () => {
 				setConsentPrompt(latest.showConsentPrompt ? latest : null)
 				if (!latest.showConsentPrompt) return
 			} catch { /* Keep the original save error visible. */ }
-			setConsentError(error.message || 'Не удалось сохранить решение. Попробуйте ещё раз.')
+			notifyRequestError(error, 'Не удалось сохранить решение')
 		} finally {
 			setConsentSaving(false)
 		}
 	}
 
 	useEffect(() => {
-		const stopDeferring = () => setDeferConsent(false)
-		const unsubscribeClosed = subscribe(SURVEY_CLOSED, stopDeferring)
-		const unsubscribeCompleted = subscribe(SURVEY_COMPLETED, stopDeferring)
-		return () => { unsubscribeClosed(); unsubscribeCompleted() }
-	}, [])
-	useEffect(() => {
-		if (!openSurveyFromOnboarding || profileOnboarding !== 'done' || !diaryVisible) return
-		emit(OPEN_DAILY_QUESTIONNAIRE)
-		setOpenSurveyFromOnboarding(false)
-	}, [openSurveyFromOnboarding, profileOnboarding, diaryVisible])
+		if (!sessionVerified || !diaryVisible || profileOnboarding !== 'done' || showLocationOnboarding || consentPrompt || tourOpen) return
+		if (reminder !== 'cards' && reminder !== 'attack') return
+		if (reminder === 'attack') {
+			setDiaryDate(midnight())
+			document.getElementById('diary-attacks')?.scrollIntoView({ block: 'start' })
+		} else {
+			document.querySelector('[data-streak-target]')?.scrollIntoView({ block: 'center' })
+		}
+		const search = new URLSearchParams(location.search)
+		search.delete('reminder')
+		navigate({ pathname: location.pathname, search: search.toString(), hash: location.hash }, {
+			replace: true,
+			state: { ...location.state, reminderHandled: true },
+		})
+	}, [reminder, sessionVerified, diaryVisible, profileOnboarding, showLocationOnboarding, consentPrompt, tourOpen, location, navigate])
 
 	useEffect(() => {
 		if (!sessionVerified || !user?.id) return undefined
@@ -175,7 +191,14 @@ const MainPage = () => {
 		questionnaireApi.getProfile().then(profile => {
 			if (!active) return
 			setProfileOnboarding(profile ? 'done' : 'open')
-		}).catch(() => { if (active) setProfileOnboarding('error') })
+			try {
+				if (profile && localStorage.getItem(`calm:diary-tour-pending:${user.id}`) === '1') setTourPendingFor(user.id)
+			} catch { /* The tour can still be started from the menu. */ }
+		}).catch(error => {
+			if (!active) return
+			setProfileOnboarding('error')
+			notifyRequestError(error, 'Не удалось загрузить настройку дневника')
+		})
 		return () => { active = false }
 	}, [sessionVerified, user?.id, profileCheck])
 
@@ -187,20 +210,24 @@ const MainPage = () => {
 		}
 	}, [user, onboardingDismissed, profileOnboarding])
 
-	const completeOnboarding = async choice => {
+	const completeOnboarding = () => {
 		if (user.latitude == null || user.longitude == null) {
 			try { localStorage.setItem(`calm:location-later:${user.id}`, '1') } catch { /* Continue with this session. */ }
 		}
-		if (choice === 'skip') {
-			setSuppressAutoSurvey(true)
-			try {
-				const status = await questionnaireApi.status()
-				localStorage.setItem(`calm:survey-auto-opened:${user.id}`, status.date)
-			} catch { /* The current page still respects the skip choice. */ }
-		} else { setDeferConsent(true); setOpenSurveyFromOnboarding(true) }
 		setOnboardingDismissed(true)
 		setShowLocationOnboarding(false)
 		setProfileOnboarding('done')
+	}
+
+	const queueTour = () => {
+		setTourPendingFor(user.id)
+		try { localStorage.setItem(`calm:diary-tour-pending:${user.id}`, '1') } catch { /* Continue in this session. */ }
+	}
+
+	const closeTour = () => {
+		setTourRequested(false)
+		setTourPendingFor(null)
+		try { localStorage.removeItem(`calm:diary-tour-pending:${user.id}`) } catch { /* Continue in this session. */ }
 	}
 
 	if (!hasToken) {
@@ -219,15 +246,16 @@ const MainPage = () => {
 				className={`${s.icon} ${s.menu}`}
 				icon={<MenuIcon />}
 				aria-label="Открыть меню"
-				data-help="Открыть меню профиля, настроек и статистики."
+				title="Открыть меню профиля, настроек и статистики."
 				onClick={() => setOpenMenu(prev => !prev)}
 			/>
 
 			<Button
 				className={`${s.icon} ${s.calendar}`}
 				icon={<CalendarMonthIcon />}
+				data-tour="calendar"
 				aria-label="Открыть календарь"
-				data-help="Открыть календарь и выбрать день дневника."
+				title="Открыть календарь и выбрать день дневника."
 				onClick={() => setOpenCalendar(prev => !prev)}
 			/>
 
@@ -236,6 +264,7 @@ const MainPage = () => {
 				setOpenMenu={setOpenMenu}
 				user={user}
 				setUser={setUser}
+				onStartTour={() => { setOpenMenu(false); setTourRequested(true) }}
 			/>
 
 			<SidebarCalendar
@@ -249,20 +278,18 @@ const MainPage = () => {
 				date={diaryDate}
 				setDate={setDiaryDate}
 				onInitialReady={markReady}
-				autoOpenQuestionnaire={sessionVerified && diaryVisible && !suppressAutoSurvey && !deferConsent && profileOnboarding === 'done' && !showLocationOnboarding && !consentPrompt}
 				onOpenLocationModal={() => {
 					setOnboardingDismissed(false)
 					setShowLocationOnboarding(true)
 				}}
 			/>
 
-			{profileOnboarding === 'open' && <DiaryProfileOnboarding user={user} setUser={setUser} onComplete={completeOnboarding} />}
+			{profileOnboarding === 'open' && <DiaryProfileOnboarding user={user} setUser={setUser} onProfileSaved={queueTour} onComplete={completeOnboarding} />}
 			{profileOnboarding === 'error' && <div className={welcomeStyles.backdrop}>
-				<section className={welcomeStyles.panel} role="alert" aria-labelledby="welcome-error-title">
+				<section className={welcomeStyles.panel} aria-labelledby="welcome-retry-title">
 					<div className={welcomeStyles.nextStep}>
-						<h2 id="welcome-error-title">Не удалось загрузить настройку дневника</h2>
-						<p>Проверьте соединение и повторите попытку.</p>
-						<button type="button" className={welcomeStyles.primary} onClick={() => { setProfileOnboarding('loading'); setProfileCheck(value => value + 1) }}>Повторить</button>
+						<h2 id="welcome-retry-title">Настройка дневника</h2>
+						<button title={"Повторить"} type="button" className={welcomeStyles.primary} onClick={() => { setProfileOnboarding('loading'); setProfileCheck(value => value + 1) }}>Повторить</button>
 					</div>
 				</section>
 			</div>}
@@ -275,11 +302,11 @@ const MainPage = () => {
 				setUser={setUser}
 			/>
 			<ConsentPrompt
-				status={profileOnboarding === 'done' && !showLocationOnboarding && !deferConsent ? consentPrompt : null}
+				status={profileOnboarding === 'done' && !showLocationOnboarding ? consentPrompt : null}
 				saving={consentSaving}
-				error={consentError}
 				onDecide={decideParticipation}
 			/>
+			{tourOpen && <DiaryTour onClose={closeTour} />}
 		</div>
 	)
 }

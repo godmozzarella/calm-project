@@ -20,6 +20,7 @@ public class User {
 
 	private String name;
 
+	// Устаревшие поля сохраняются для обратимого перехода с парольной авторизации.
 	private String passwordHash;
 	private boolean emailVerified;
 	private String emailVerificationCodeHash;
@@ -28,6 +29,7 @@ public class User {
 	private int emailVerificationAttempts;
 
 	/** Temporary state for a separately verified email change. */
+	private String pendingEmailChangeStage;
 	private String pendingEmailChangeAddress;
 	private String pendingEmailChangeCodeHash;
 	private Instant pendingEmailChangeExpiresAt;
@@ -37,7 +39,7 @@ public class User {
 	private String pendingEmailChangeCancelTokenHash;
 	private Instant pendingEmailChangeCancelExpiresAt;
 
-	/** One-time password recovery state. */
+	/** Устаревшее состояние восстановления пароля, используется только при откате. */
 	private String passwordResetCodeHash;
 	private String passwordResetTokenHash;
 	private Instant passwordResetExpiresAt;
@@ -113,6 +115,8 @@ public class User {
 	public void setEmailVerificationSentAt(Instant sentAt) { this.emailVerificationSentAt = sentAt; }
 	public int getEmailVerificationAttempts() { return emailVerificationAttempts; }
 	public void setEmailVerificationAttempts(int attempts) { this.emailVerificationAttempts = attempts; }
+	public String getPendingEmailChangeStage() { return pendingEmailChangeStage; }
+	public void setPendingEmailChangeStage(String stage) { pendingEmailChangeStage = stage; }
 	public String getPendingEmailChangeAddress() { return pendingEmailChangeAddress; }
 	public void setPendingEmailChangeAddress(String value) { this.pendingEmailChangeAddress = value; }
 	public String getPendingEmailChangeCodeHash() { return pendingEmailChangeCodeHash; }

@@ -10,7 +10,8 @@
     (testMode ? 'shared-model-pilot-v2' : '')
   const consentDigest = process.env.CALM_RISK_CONSENT_DIGEST || (testMode ? 'a'.repeat(64) : '')
   const featureSchemaVersion = 3
-  const scoringVersion = 'personal-rules-v1'
+  const scoringVersion = 'personal-rules-v2'
+  const scoringVersions = ['personal-rules-v1', scoringVersion]
   const trainingUri = process.env.CALM_TRAINING_MONGO_URI
   const pseudonymKey = process.env.CALM_TRAINING_HMAC_KEY
   const rebuildConfirmed = process.env.CALM_TRAINING_REBUILD_CONFIRM === 'YES'
@@ -236,7 +237,7 @@
         locationGrid: locationGrid(snapshot.locationKey), historyDetails: snapshot.historyDetails ?? null,
         snapshotTiming: preDay ? 'PRE_DAY' : capturedAt && timezone ? 'LATE' : 'UNKNOWN',
         completePreDay: preDay && Boolean(locationGrid(snapshot.locationKey)) &&
-          snapshot.scoringVersion === scoringVersion && validHistoryFeatures(snapshot.features) &&
+          scoringVersions.includes(snapshot.scoringVersion) && validHistoryFeatures(snapshot.features) &&
           validHistoryDetails(snapshot.historyDetails),
         prediction: { score: snapshot.baselineScore ?? null, level: snapshot.baselineLevel ?? null,
           scoringVersion: snapshot.scoringVersion ?? null, features: snapshot.features ?? {} },
@@ -490,6 +491,7 @@
     consentDigest,
     featureSchemaVersion,
     scoringVersion,
+    scoringVersions,
     outcomeDefinition: 'attack-present-anytime-v1',
     detailSchemaVersion: 2,
     exampleCount: examples.length,

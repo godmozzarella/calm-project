@@ -1,0 +1,69 @@
+@use 'app/styles/globals.scss' as *;
+
+.overlay {
+	position: fixed;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	max-width: none;
+	max-height: none;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+	background: transparent;
+	color: $fc-main;
+
+	&::backdrop { background: transparent; }
+	&:not(:has(.highlight)) { background: rgb(0 0 0 / .65); }
+}
+
+.highlight {
+	position: absolute;
+	border-radius: .75rem;
+	box-shadow: 0 0 0 200vmax rgb(0 0 0 / .65), 0 0 0 2px $fc-contrast;
+	pointer-events: none;
+}
+
+.panel {
+	position: absolute;
+	inset-inline: 0;
+	top: var(--panel-offset, 1rem);
+	width: min(calc(100% - 2rem), 24rem);
+	max-height: calc(100% - var(--panel-offset, 1rem) - 1rem);
+	overflow: auto;
+	margin-inline: auto;
+	padding: 1rem;
+	border-radius: 1rem;
+	background: var(--surface-strong);
+	box-shadow: 0 .5rem 2rem rgb(0 0 0 / .35);
+
+	&:focus { outline: none; }
+	h2 { margin-block: .3rem .45rem; font-size: 1.2rem; font-weight: $fw-semibold; }
+	p { line-height: 1.45; }
+}
+
+.panelAbove {
+	top: auto;
+	bottom: var(--panel-offset);
+}
+
+.progress { color: $fc-secondary; font-size: .8rem; }
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: .375rem;
+	margin-top: .85rem;
+}
+
+.secondary {
+	min-height: $control-height;
+	padding: .4rem .65rem;
+	background: var(--quiet-surface-raised);
+	border-radius: .75rem;
+	color: $fc-main;
+
+	&:focus-visible { outline: 2px solid $fc-contrast; }
+}

@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 
+import { FieldError } from '@/shared/ui/Input'
 import SleepWheel from '@/widgets/daily-questionnaire/SleepWheel'
 
 import s from './AddAttackForm.module.scss'
@@ -12,7 +13,8 @@ const parseTime = value => {
 const pad = value => String(value).padStart(2, '0')
 const validPart = (value, max) => /^\d{1,2}$/.test(value) && Number(value) <= max
 
-const AttackTimeWheels = ({ label, value, onChange, latestTime = null }) => {
+const AttackTimeWheels = ({ label, error, value, onChange, latestTime = null }) => {
+	const errorId = useId()
 	const [parts, setParts] = useState(() => parseTime(value))
 	const partsRef = useRef(parts)
 	const now = useState(() => new Date())[0]
@@ -32,11 +34,14 @@ const AttackTimeWheels = ({ label, value, onChange, latestTime = null }) => {
 		onChange(validPart(updated.hours, maxHours) && validPart(updated.minutes, minuteLimit) ? `${pad(updated.hours)}:${pad(updated.minutes)}` : '')
 	}
 
-	return <div className={s.timeWheels} aria-label={label}>
+	return <>
+		<div className={s.timeWheels} role="group" aria-label={label} aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined}>
 		<SleepWheel label={`${label}: часы`} unit="часы" min={0} max={maxHours} initial={initialHours} value={parts.hours} onChange={hours => update('hours', hours)} />
 		<span className={s.timeSeparator} aria-hidden="true">:</span>
 		<SleepWheel label={`${label}: минуты`} unit="минуты" min={0} max={maxMinutes} initial={initialMinutes} value={parts.minutes} onChange={minutes => update('minutes', minutes)} />
-	</div>
+		</div>
+		<FieldError id={errorId}>{error}</FieldError>
+	</>
 }
 
 export default AttackTimeWheels

@@ -19,7 +19,6 @@
   max-height: min(760px, calc(100dvh - 32px));
   min-height: 0;
   overflow: hidden;
-  border: 1px solid $quiet-line;
   border-radius: 24px;
   background: $block-color;
   color: $fc-main;
@@ -97,51 +96,20 @@
     font-weight: $fw-semibold;
     span { margin-left: 5px; color: $fc-secondary; font-size: 12px; font-weight: $fw-medium; }
   }
-  input[type='number'], input[type='search'], select {
-    display: block;
-    width: 100%;
-    min-width: 0;
-    height: 48px;
-    min-height: 48px;
-    max-height: 48px;
-    padding: 0 13px;
-    border: 1px solid $quiet-line;
-    border-radius: 11px;
-    background: $quiet-surface;
-    color: $fc-main;
-    font: inherit;
-    font-size: 16px;
-    outline: none;
-    &:focus-visible { border-color: $fc-contrast; box-shadow: none; }
-  }
-  select { padding-right: 40px; appearance: none; -webkit-appearance: none; }
-  input::placeholder { color: $fc-secondary; opacity: .85; }
-}
-
-.selectWrap {
-  position: relative;
-  width: 100%;
-  min-width: 0;
-  > span { position: absolute; top: 50%; right: 16px; transform: translateY(-58%); color: $fc-secondary; font-size: 20px; line-height: 1; pointer-events: none; }
 }
 
 .fieldHint { margin: 0; color: $fc-secondary; font-size: 12px; line-height: 1.4; }
 
 .cycleOption {
-  position: relative;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
   padding: 14px;
-  border: 1px solid $quiet-line;
   border-radius: 12px;
   background: $quiet-surface;
   cursor: pointer;
-  input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-  .checkboxVisual { display: grid; flex: none; place-items: center; width: 19px; height: 19px; margin-top: 1px; border: 1.5px solid #db7ca7; border-radius: .3rem; background: color-mix(in srgb, #db7ca7 8%, transparent); }
-  .checkboxChecked { background: #db7ca7; }
-  .checkboxVisual svg { width: 14px; height: 14px; color: #fff; }
-  &:focus-within .checkboxVisual { border-color: $fc-contrast; }
+  input { @include borderless-checkbox; }
   .cycleText { display: grid; min-width: 0; gap: 4px; line-height: 1.35; }
   strong { color: $fc-main; font-size: 14px; font-weight: $fw-semibold; }
   small { color: $fc-secondary; font-size: 12px; }
@@ -156,7 +124,6 @@
   overflow-y: auto;
   margin: 0;
   padding: 4px;
-  border: 1px solid $quiet-line;
   border-radius: 11px;
   background: $block-color;
   list-style: none;
@@ -214,7 +181,6 @@
   display: grid;
   gap: 8px;
   padding: 13px;
-  border: 1px solid $quiet-line;
   border-radius: 11px;
   background: $quiet-surface;
   p { margin: 0; color: $fc-secondary; font-size: 12px; line-height: 1.4; }
@@ -229,8 +195,7 @@
   border-top: 1px solid $quiet-line;
   background: $block-color;
 }
-.error { margin: 0; color: $error-color; font-size: 12px; line-height: 1.4; }
-.primary, .secondary {
+.primary {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -245,19 +210,11 @@
   cursor: pointer;
   &:disabled { opacity: .55; cursor: default; }
   &:focus-visible { outline: 2px solid $fc-contrast; outline-offset: 2px; }
-}
-.primary {
   border: 0;
   background: $fc-contrast;
   color: var(--contrast-button-text);
   &:hover:not(:disabled) { filter: brightness(1.08); }
   svg { flex: none; font-size: 20px; }
-}
-.secondary {
-  border: 1px solid $quiet-line;
-  background: $quiet-surface;
-  color: $fc-main;
-  &:hover { background: $quiet-surface-raised; }
 }
 
 @media (max-width: 540px) {

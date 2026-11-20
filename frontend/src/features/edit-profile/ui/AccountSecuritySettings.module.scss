@@ -68,11 +68,6 @@
 	> button { width: 100%; }
 }
 
-.security [role='group'] [aria-hidden='true'] > span {
-	border: 0;
-	background: $quiet-surface-raised;
-}
-
 .description {
 	margin: 0;
 	font-size: .75rem;
@@ -91,7 +86,6 @@
 }
 
 .actions { gap: .5rem; }
-.codeLabel { font-size: .75rem; font-weight: $fw-semibold; }
 
 .textButton {
 	min-height: 2.5rem;

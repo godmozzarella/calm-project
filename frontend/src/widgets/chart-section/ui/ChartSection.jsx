@@ -67,7 +67,7 @@ const ChartSection = ({ showPatterns = true, statsLink = false, onInitialReady }
 								onClick={() => setMetric(o.value)}
 								role="tab"
 								aria-selected={metric === o.value}
-								data-help={`Показать на графике показатель «${o.label}».`}
+								title={`Показать на графике показатель «${o.label}».`}
 							>
 								{o.label}
 							</button>
@@ -81,14 +81,14 @@ const ChartSection = ({ showPatterns = true, statsLink = false, onInitialReady }
 								onClick={() => setPeriod(o.value)}
 								role="tab"
 								aria-selected={period === o.value}
-								data-help={`Показать данные на графике за период «${o.label}».`}
+								title={`Показать данные на графике за период «${o.label}».`}
 							>
 								{o.label}
 							</button>
 						))}
 					</div>
 					{statsLink && (
-						<Link to="/stats" state={{ from: 'diary' }} className={s.statsLink} data-help="Открыть подробную статистику ваших записей дневника.">
+						<Link to="/stats" state={{ from: 'diary' }} className={s.statsLink} title="Открыть подробную статистику ваших записей дневника.">
 							Подробная статистика
 							<OpenInNewIcon style={{ fontSize: '0.875rem' }} />
 						</Link>

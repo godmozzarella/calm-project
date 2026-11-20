@@ -6,39 +6,45 @@ import { StatsPage } from '@/pages/stats-page'
 import { AdminPage } from '@/pages/admin-page'
 import ProtectedRoute from '@/app/providers/router/ProtectedRoute'
 import AdminRoute from '@/app/providers/router/AdminRoute'
-import VerifyEmailPage from '@/pages/verify-email-page/VerifyEmailPage'
+import SessionEntry from '@/app/providers/router/SessionEntry'
+import { isStandaloneApp } from '@/shared/lib/appInstallation'
+import { readPendingEmailLogin } from '@/shared/lib/pendingEmailLogin'
+import EmailLoginPage from '@/features/auth/ui/EmailLoginPage'
 import PrivacyPolicyPage from '@/pages/privacy-policy-page/PrivacyPolicyPage'
 import CancelEmailChangePage from '@/pages/cancel-email-change-page/CancelEmailChangePage'
 
 const AppRouter = () => {
+	const home = isStandaloneApp() && !readPendingEmailLogin()
+		? <SessionEntry openDiary><IndexPage /></SessionEntry>
+		: <IndexPage />
 	return (
 		<Routes>
-			<Route path="/" element={<IndexPage />} />
+			<Route path="/" element={home} />
 			<Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-			<Route path="/verify-email" element={<VerifyEmailPage />} />
+			<Route path="/email-login" element={<EmailLoginPage />} />
 			<Route path="/cancel-email-change" element={<CancelEmailChangePage />} />
 			<Route
 				path="/profile"
 				element={
-					<ProtectedRoute>
-						<MainPage />
-					</ProtectedRoute>
+					<SessionEntry key="profile">
+						<ProtectedRoute><MainPage /></ProtectedRoute>
+					</SessionEntry>
 				}
 			/>
 			<Route
 				path="/stats"
 				element={
-					<ProtectedRoute>
-						<StatsPage />
-					</ProtectedRoute>
+					<SessionEntry key="stats">
+						<ProtectedRoute><StatsPage /></ProtectedRoute>
+					</SessionEntry>
 				}
 			/>
 			<Route
 				path="/admin"
 				element={
-					<AdminRoute>
-						<AdminPage />
-					</AdminRoute>
+					<SessionEntry key="admin">
+						<AdminRoute><AdminPage /></AdminRoute>
+					</SessionEntry>
 				}
 			/>
 			<Route path="*" element={<div>404 Not found</div>} />

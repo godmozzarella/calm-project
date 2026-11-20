@@ -90,22 +90,6 @@
 	color: $fc-main;
 }
 
-.closeBtn {
-	background: none;
-	border: none;
-	color: $fc-secondary;
-	cursor: pointer;
-	@include fluid-text(16, 14);
-	padding: 0.25rem 0.5rem;
-	border-radius: 0.5rem;
-	transition: color 0.15s ease, background-color 0.15s ease;
-
-	&:hover {
-		color: $fc-main;
-		background: var(--surface-hover);
-	}
-}
-
 /* ── Scrollable body ── */
 .body {
 	overflow-y: auto;
@@ -121,7 +105,10 @@
 	&::-webkit-scrollbar { display: none; }
 }
 
-.bodySelect { overflow: hidden; }
+.bodySelect {
+	overflow: hidden;
+	padding-top: .5rem;
+}
 
 /* ── Section ── */
 .section {
@@ -140,7 +127,7 @@
 	font-weight: $fw-semibold;
 	letter-spacing: 0.07em;
 	text-transform: uppercase;
-	color: var(--fc-secondary);
+	color: var(--form-heading-color);
 }
 
 /* ── Preset groups ── */
@@ -365,7 +352,9 @@
 	color: $error-color;
 	cursor: pointer;
 	@include fluid-text(14, 12);
-	&:hover:not(:disabled) { background: color-mix(in srgb, #{$error-color} 10%, var(--surface-strong)); }
+	@media (hover: hover) and (pointer: fine) {
+		&:hover:not(:disabled) { background: $quiet-surface-raised; }
+	}
 	&:disabled { opacity: 0.45; cursor: wait; }
 	&:focus-visible { outline: 2px solid $error-color; outline-offset: 2px; }
 }
@@ -452,12 +441,6 @@
 	&:focus-within { outline: none; border-color: color-mix(in srgb, var(--fc-contrast) 30%, transparent); box-shadow: none; }
 }
 
-.stepHint {
-	@include fluid-text(12, 11);
-	color: var(--fc-secondary);
-	margin: 0;
-}
-
 /* ── Scrollable catalog (step 1) ── */
 .catalogList {
 	flex: 1;
@@ -470,6 +453,10 @@
 }
 
 .categoryGroup { padding: 0.2rem 0 0.7rem; }
+.categoryGroup:first-child {
+	padding-top: 0;
+	.categoryHeader { margin-top: 0; }
+}
 
 .categoryHeader {
 	display: flex;
@@ -571,16 +558,6 @@
 
 :root[data-theme='light'] .selectedChip:hover { background: var(--selected-control-bg); }
 
-.clearSelectionBtn {
-	align-self: flex-start;
-	border: 0;
-	background: transparent;
-	color: $fc-contrast;
-	text-decoration: underline;
-	cursor: pointer;
-	@include fluid-text(12, 11);
-}
-
 /* ── Custom medication input (step 1) ── */
 .customSection {
 	flex: 0 0 auto;
@@ -589,46 +566,17 @@
 	background: var(--surface-strong);
 }
 
-.customLabel {
-	display: block;
-	margin-bottom: 0.4rem;
-	color: $fc-secondary;
-	@include fluid-text(12, 11);
-	font-weight: $fw-semibold;
-}
-
 .customRow {
 	display: flex;
 	gap: 0.5rem;
 	align-items: center;
 }
 
-.customInput {
-	flex: 1;
-	background: var(--surface-hover);
-	border: 1px solid var(--surface-hover);
-	border-radius: 0.75rem;
-	color: $fc-main;
-	padding: 0.5rem 0.75rem;
-	font: inherit;
-	font-size: 16px;
-	min-width: 0;
-	height: 2.75rem;
-	box-sizing: border-box;
-	box-shadow: none;
-	transition: border-color 0.15s ease;
-
-	&::placeholder { color: color-mix(in srgb, var(--fc-secondary) 55%, transparent); }
-
-	&:focus {
-		outline: none;
-		border-color: color-mix(in srgb, var(--fc-contrast) 30%, transparent);
-	}
-}
+.customField { flex: 1; }
 
 .customAddBtn {
 	flex-shrink: 0;
-	height: 2.75rem;
+	height: $control-height;
 	padding: 0.5rem 0.9rem;
 	border-radius: 0.75rem;
 	border: 0;
@@ -647,6 +595,10 @@
 }
 
 /* ── Dosage list (step 2) ── */
+.dosageHeading {
+	margin-block: .5rem;
+}
+
 .dosageItem {
 	display: flex;
 	align-items: center;
@@ -680,39 +632,15 @@
 }
 
 .dosageInputWrapper {
-	display: flex;
-	align-items: center;
-	gap: 0.4rem;
-	flex-shrink: 0;
-}
-
-.dosageInput {
-	background: var(--surface-hover);
-	border: 1px solid var(--surface-hover);
-	border-radius: 0.75rem;
-	color: $fc-main;
-	padding: 0.45rem 0.65rem;
-	font-size: 16px;
-	width: 80px;
-	height: 2.75rem;
-	box-sizing: border-box;
-	box-shadow: none;
-	text-align: right;
-	transition: border-color 0.15s ease;
-
-	&::placeholder { color: color-mix(in srgb, var(--fc-secondary) 55%, transparent); }
-
-	&:focus {
-		outline: none;
-		border-color: color-mix(in srgb, var(--fc-contrast) 30%, transparent);
-	}
+	flex: 0 1 12rem;
+	min-width: min(45%, 7rem);
 }
 
 .dosageUnit {
 	@include fluid-text(12, 11);
 	color: var(--fc-secondary);
 	white-space: nowrap;
-	min-width: 1.8rem;
+	text-align: end;
 }
 
 /* ── Nav buttons ── */

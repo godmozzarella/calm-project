@@ -4,6 +4,7 @@
 	color-scheme: dark;
 	--fc-logo: var(--fc-contrast);
 	--fc-main: #f3f4f5;
+	--form-heading-color: #fff;
 	--fc-secondary: #babec2;
 	--fc-subtle: #9da1a5;
 	--fc-contrast: #65b8ec;
@@ -21,7 +22,8 @@
 	--selected-control-bg: #303337;
 	--selected-control-fg: var(--fc-main);
 	--toggle-thumb: #f5f6f8;
-	--error-color: rgba(239, 100, 100, 1);
+	--error-color: #ff626a;
+	--error-contrast: #101113;
 	--success-color: rgba(34, 197, 94, 1);
 	--warning-color: rgba(234, 179, 8, 1);
 	--surface-overlay: rgba(16, 17, 19, .98);
@@ -34,22 +36,21 @@
 	--chart-badge-bg: rgba(30, 32, 35, .95);
 	--chart-badge-line: rgba(255, 255, 255, .15);
 	--head-idle: rgba(255, 255, 255, .04);
-	--head-idle-line: rgba(255, 255, 255, .09);
 	--head-idle-hover: rgba(255, 255, 255, .13);
-	--head-idle-hover-line: rgba(255, 255, 255, .18);
 	--head-base: #303337;
 	--head-ear: #383b3f;
-	--head-line: rgba(101, 184, 236, .22);
 	--head-feature: rgba(243, 244, 245, .16);
 	--chart-grid: rgba(255, 255, 255, .05);
 	--chart-base: rgba(255, 255, 255, .1);
 	--chart-label: rgba(186, 190, 194, .65);
-	--tooltip-label: var(--chart-label);
 }
 
 :root[data-theme='light'] {
 	color-scheme: light;
+	--error-color: #c32238;
+	--error-contrast: #fff;
 	--fc-main: #1c1e21;
+	--form-heading-color: #000;
 	--fc-secondary: #5b6066;
 	--fc-subtle: #666b70;
 	--fc-contrast: #1479b8;
@@ -74,16 +75,20 @@
 	--chart-badge-bg: #ffffff;
 	--chart-badge-line: rgba(20, 23, 27, .2);
 	--head-idle: rgba(28, 30, 33, .05);
-	--head-idle-line: rgba(28, 30, 33, .18);
 	--head-idle-hover: rgba(28, 30, 33, .1);
-	--head-idle-hover-line: rgba(28, 30, 33, .28);
 	--head-base: #e4e6e9;
 	--head-ear: #dadddf;
-	--head-line: rgba(20, 121, 184, .35);
 	--head-feature: rgba(28, 30, 33, .2);
 	--chart-grid: rgba(20, 23, 27, .08);
 	--chart-base: rgba(20, 23, 27, .18);
 	--chart-label: #696e75;
+}
+
+:root.theme-changing,
+:root.theme-changing *,
+:root.theme-changing *::before,
+:root.theme-changing *::after {
+	transition: none !important;
 }
 
 * {
@@ -99,6 +104,14 @@ button,
 a,
 [role='button'] {
 	-webkit-tap-highlight-color: transparent !important;
+}
+
+@media (any-pointer: coarse) {
+	:is(button, a[href], summary, [role='button'], [role='switch']):is([title], [aria-label]) {
+		-webkit-touch-callout: none;
+		-webkit-user-select: none;
+		user-select: none;
+	}
 }
 
 body {

@@ -12,10 +12,14 @@
 }
 
 .logo {
+	display: grid;
+	place-items: center;
+	height: var(--diary-header-height);
+	margin-top: var(--diary-header-top);
 	font-family: 'LilyScriptOne', cursive;
 	@include fluid-text(32, 24);
 	color: $fc-logo;
-	padding: 1.25rem 0 0;
+	line-height: 1;
 }
 
 /* ── Outer grid wrapper ── */

@@ -61,18 +61,18 @@ const Header = () => {
 
 	return (
 		<header className={`${s.header} ${hidden ? s.hidden : ''}`} inert={hidden}>
-			<Link className={s.logo} to="/">
+			<Link title={"Calm"} className={s.logo} to="/">
 				Calm
 			</Link>
 			<nav>
 				<span className={s.tagline}>
-					<a href="#for_who" onClick={event => navigateToSection(event, 'for_who')}>Для кого</a>
-					<a href="#about" onClick={event => navigateToSection(event, 'about')}>Как пользоваться</a>
-					<a href="#data-protection" onClick={event => navigateToSection(event, 'data-protection')}>Данные под защитой</a>
-					<a href="#contacts" onClick={event => navigateToSection(event, 'contacts')}>Контакты</a>
+					<a title={"Для кого"} href="#for_who" onClick={event => navigateToSection(event, 'for_who')}>Для кого</a>
+					<a title={"Как пользоваться"} href="#about" onClick={event => navigateToSection(event, 'about')}>Как пользоваться</a>
+					<a title={"Данные под защитой"} href="#data-protection" onClick={event => navigateToSection(event, 'data-protection')}>Данные под защитой</a>
+					<a title={"Контакты"} href="#contacts" onClick={event => navigateToSection(event, 'contacts')}>Контакты</a>
 				</span>
 				<div className={s.mobileNavigation} ref={mobileNavigationRef}>
-					<button
+					<button title={mobileMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
 						type="button"
 						className={s.mobileMenuButton}
 						aria-label={mobileMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
@@ -83,10 +83,10 @@ const Header = () => {
 						{mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
 					</button>
 					{mobileMenuOpen && <div id="calm-mobile-navigation" className={s.mobileDropdown}>
-						<a href="#for_who" onClick={event => navigateToSection(event, 'for_who')}>Для кого</a>
-						<a href="#about" onClick={event => navigateToSection(event, 'about')}>Как пользоваться</a>
-						<a href="#data-protection" onClick={event => navigateToSection(event, 'data-protection')}>Данные под защитой</a>
-						<a href="#contacts" onClick={event => navigateToSection(event, 'contacts')}>Контакты</a>
+						<a title={"Для кого"} href="#for_who" onClick={event => navigateToSection(event, 'for_who')}>Для кого</a>
+						<a title={"Как пользоваться"} href="#about" onClick={event => navigateToSection(event, 'about')}>Как пользоваться</a>
+						<a title={"Данные под защитой"} href="#data-protection" onClick={event => navigateToSection(event, 'data-protection')}>Данные под защитой</a>
+						<a title={"Контакты"} href="#contacts" onClick={event => navigateToSection(event, 'contacts')}>Контакты</a>
 					</div>}
 				</div>
 

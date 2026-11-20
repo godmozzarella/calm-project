@@ -44,9 +44,9 @@ const MedicationSection = ({ date, onInitialReady }) => {
 	}, [reload])
 
 	const {
-		open, step, selected, meta, error, deleteError, loading, deleting, editingIntake,
+		open, step, selected, meta, error, loading, deleting, editingIntake,
 		openForm, openEditForm, closeForm,
-		toggleItem, isSelected, clearSelection, setItemDosage,
+		toggleItem, isSelected, setItemDosage,
 		setMetaField, nextStep, prevStep, submit, remove,
 	} = useAddMedication({ date, attacks, onSuccess: reload })
 
@@ -67,10 +67,10 @@ const MedicationSection = ({ date, onInitialReady }) => {
 
 	return (
 		<>
-			<div className={s.card} onClick={handleCardClick} data-help="Препараты: здесь можно записать приём лекарства и позже оценить, помогло ли оно.">
+			<div className={s.card} onClick={handleCardClick} title="Препараты: здесь можно записать приём лекарства и позже оценить, помогло ли оно.">
 				<div className={s.cardHeader}>
 					<h2 className={s.title}>Препараты</h2>
-					<button type="button" className={s.addBtn} onClick={openForm} aria-label="Добавить препарат" data-help="Записать препарат, который вы приняли в выбранный день, его дозировку и время приёма.">
+					<button type="button" className={s.addBtn} data-tour="medications" onClick={openForm} aria-label="Добавить препарат" title="Записать препарат, который вы приняли в выбранный день, его дозировку и время приёма.">
 						<AddIcon fontSize="small" />
 					</button>
 				</div>
@@ -98,7 +98,7 @@ const MedicationSection = ({ date, onInitialReady }) => {
 										<button type="button" className={s.medCardOpen}
 											onClick={() => openEditForm(first, intake.medications)}
 											aria-label={`Редактировать приём: ${intake.medications.map(item => item.name).join(', ')}, ${shortDate(first.date)} ${formatAttackTime(first.time)}`}
-											data-help="Открыть редактирование этого приёма препаратов." />
+											title="Открыть редактирование этого приёма препаратов." />
 										<div className={s.medTop}>
 											<div className={s.medMeta}>
 												<span className={s.medDate}>{shortDate(first.date)}</span>
@@ -112,7 +112,7 @@ const MedicationSection = ({ date, onInitialReady }) => {
 													<div key={med.id} className={s.medicationItem}>
 														<div className={s.medicationRow}>
 															<span className={s.medName}>{med.name}{med.dosage ? ` - ${med.dosage}` : ''}</span>
-															<button type="button" className={s.ratingTrigger}
+															<button title={`${med.name}: ${med.effectiveness ? EFFECTIVENESS_LABELS[med.effectiveness] : 'Оценить'}`} type="button" className={s.ratingTrigger}
 																data-effectiveness={med.effectiveness ?? undefined}
 																aria-expanded={ratingOpenId === med.id}
 																aria-label={`${med.name}: ${med.effectiveness ? EFFECTIVENESS_LABELS[med.effectiveness] : 'Оценить'}`}
@@ -126,7 +126,7 @@ const MedicationSection = ({ date, onInitialReady }) => {
 																	data-effectiveness={value}
 																	aria-pressed={med.effectiveness === value}
 																	onClick={() => handleEffectiveness(med.id, value)}
-																	data-help={`Оценить действие препарата «${med.name}»: ${EFFECTIVENESS_LABELS[value]}. Повторный выбор снимет оценку.`}>
+																	title={`Оценить действие препарата «${med.name}»: ${EFFECTIVENESS_LABELS[value]}. Повторный выбор снимет оценку.`}>
 																	{EFFECTIVENESS_LABELS[value]}
 																</button>
 															))}
@@ -155,7 +155,6 @@ const MedicationSection = ({ date, onInitialReady }) => {
 				selected={selected}
 				meta={meta}
 				error={error}
-				deleteError={deleteError}
 				loading={loading}
 				deleting={deleting}
 				editing={!!editingIntake}
@@ -163,7 +162,6 @@ const MedicationSection = ({ date, onInitialReady }) => {
 				onClose={closeForm}
 				toggleItem={toggleItem}
 				isSelected={isSelected}
-				clearSelection={clearSelection}
 				setItemDosage={setItemDosage}
 				setMetaField={setMetaField}
 				onNext={nextStep}

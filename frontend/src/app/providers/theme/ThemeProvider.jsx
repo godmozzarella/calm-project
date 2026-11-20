@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { ThemeContext } from './themeContext'
 
 const THEME_KEY = 'calm_theme'
@@ -24,8 +24,22 @@ export const ThemeProvider = ({ children }) => {
 		return () => mediaQuery.removeEventListener('change', updateSystemTheme)
 	}, [])
 
-	useEffect(() => {
-		document.documentElement.dataset.theme = theme
+	useLayoutEffect(() => {
+		const root = document.documentElement
+		if (root.dataset.theme === theme) return
+
+		root.classList.add('theme-changing')
+		root.dataset.theme = theme
+		// Paint the new palette before restoring transitions for user interactions.
+		let restoreFrame
+		const paintFrame = requestAnimationFrame(() => {
+			restoreFrame = requestAnimationFrame(() => root.classList.remove('theme-changing'))
+		})
+		return () => {
+			cancelAnimationFrame(paintFrame)
+			cancelAnimationFrame(restoreFrame)
+			root.classList.remove('theme-changing')
+		}
 	}, [theme])
 
 	useEffect(() => {

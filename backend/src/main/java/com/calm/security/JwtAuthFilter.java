@@ -54,10 +54,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 				chain.doFilter(req, res);
 				return;
 			}
-			// Admin rights can be revoked while an access token is still valid.
-			// Confirm the current database role before granting an admin request.
-			if ("ADMIN".equals(role) && users.findById(userId)
-					.map(user -> user.getRole() != Role.ADMIN).orElse(true)) {
+			// An email change or admin demotion takes effect even for an outstanding JWT.
+			if (users.findById(userId).map(user -> !java.util.Objects.equals(email, user.getEmail())
+					|| ("ADMIN".equals(role) && user.getRole() != Role.ADMIN)).orElse(true)) {
 				SecurityContextHolder.clearContext();
 				chain.doFilter(req, res);
 				return;

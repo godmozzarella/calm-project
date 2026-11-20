@@ -10,11 +10,9 @@ const PAD_T = 22  // под badge с count
 const PAD_B = 28  // под X-подписи
 const MIN_W = 280
 
-const TOOLTIP_W = 200 // приблизительная ширина для clamp
-
 const COUNT_COLOR = 'var(--fc-contrast)'
 
-const formatTooltipDate = bucket => {
+const formatBucketDate = bucket => {
 	if (bucket.fromKey === bucket.toKey) {
 		const [y, m, d] = bucket.fromKey.split('-')
 		return `${Number(d)}.${m}.${y}`
@@ -27,7 +25,6 @@ const formatTooltipDate = bucket => {
 const BarChart = ({ buckets, metric, onBarClick }) => {
 	const wrapRef = useRef(null)
 	const [w, setW] = useState(MIN_W)
-	const [hover, setHover] = useState(null)
 	const hasBuckets = buckets.length > 0
 
 	useLayoutEffect(() => {
@@ -62,23 +59,6 @@ const BarChart = ({ buckets, metric, onBarClick }) => {
 	const showXLabels = w >= 420 && barW >= 16
 	const labelIdx = showXLabels ? pickLabelIndices(buckets.length) : new Set()
 
-	// геометрия tooltip — pixel left + transform, clamp к границам контейнера
-	let tooltipLeft = 0
-	let tooltipTransform = 'translateX(-50%)'
-	if (hover !== null) {
-		const cx = PAD_L + barW * hover + barW / 2
-		const half = TOOLTIP_W / 2
-		if (cx - half < 4) {
-			tooltipLeft = 4
-			tooltipTransform = 'translateX(0)'
-		} else if (cx + half > w - 4) {
-			tooltipLeft = w - 4
-			tooltipTransform = 'translateX(-100%)'
-		} else {
-			tooltipLeft = cx
-			tooltipTransform = 'translateX(-50%)'
-		}
-	}
 
 	return (
 		<div ref={wrapRef} className={s.wrap}>
@@ -122,8 +102,6 @@ const BarChart = ({ buckets, metric, onBarClick }) => {
 					return (
 						<g
 							key={b.key}
-							onMouseEnter={() => setHover(i)}
-							onMouseLeave={() => setHover(null)}
 							onClick={() => b.dateKey && onBarClick?.(b.dateKey)}
 							onKeyDown={event => {
 								if (b.dateKey && (event.key === 'Enter' || event.key === ' ')) {
@@ -133,10 +111,15 @@ const BarChart = ({ buckets, metric, onBarClick }) => {
 							}}
 							role={b.dateKey ? 'button' : undefined}
 							tabIndex={b.dateKey ? 0 : undefined}
-							aria-label={b.dateKey ? `Открыть дневник за ${formatTooltipDate(b)}` : undefined}
-							data-help={b.dateKey ? `Открыть записи дневника за ${formatTooltipDate(b)}.` : undefined}
+							aria-label={b.dateKey ? `Открыть дневник за ${formatBucketDate(b)}. Приступов: ${b.count}` : undefined}
 							className={`${s.barGroup} ${b.dateKey ? s.clickable : ''}`}
 						>
+							<title>{[
+								formatBucketDate(b),
+								`Приступов: ${b.count}`,
+								!isEmpty && `Макс. интенсивность: ${b.maxIntensity}/10`,
+								b.dateKey && 'Открыть записи дневника за этот день',
+							].filter(Boolean).join('\n')}</title>
 							<rect
 								x={x - barGap / 2}
 								y={PAD_T}
@@ -161,7 +144,7 @@ const BarChart = ({ buckets, metric, onBarClick }) => {
 									height={Math.max(barH, minDot)}
 									rx={2}
 									fill={fill}
-									opacity={hover === i ? 1 : 0.92}
+									className={s.chartBar}
 								/>
 							)}
 
@@ -215,29 +198,6 @@ const BarChart = ({ buckets, metric, onBarClick }) => {
 				})}
 			</svg>
 
-			{hover !== null && (
-				<div
-					className={s.tooltip}
-					style={{ left: `${tooltipLeft}px`, transform: tooltipTransform }}
-				>
-					<div className={s.tooltipDate}>{formatTooltipDate(buckets[hover])}</div>
-					<div className={s.tooltipRow}>
-						<span className={s.tooltipLabel}>Приступов:</span>
-						<span className={s.tooltipValue}>{buckets[hover].count}</span>
-					</div>
-					{buckets[hover].count > 0 && (
-						<div className={s.tooltipRow}>
-							<span className={s.tooltipLabel}>Макс. интенсивность:</span>
-							<span
-								className={s.tooltipValue}
-								style={{ color: intensityColor(buckets[hover].maxIntensity) }}
-							>
-								{buckets[hover].maxIntensity}/10
-							</span>
-						</div>
-					)}
-				</div>
-			)}
 		</div>
 	)
 }

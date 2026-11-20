@@ -2,35 +2,27 @@ import { useEffect, useState } from 'react'
 
 import { riskApi } from '@/shared/api'
 import { emit, subscribe, ATTACKS_CHANGED, OUTCOMES_CHANGED } from '@/shared/lib/dataEvents'
-import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
-import { isCentralError } from '@/shared/lib/isCentralError'
+import { notifyRequestError } from '@/shared/lib/notifyError'
 import s from './DailyOutcome.module.scss'
 
 const DailyOutcome = ({ date, isToday, onInitialReady }) => {
 	const [outcomes, setOutcomes] = useState({})
 	const [busyDates, setBusyDates] = useState({})
-	const [errors, setErrors] = useState({})
 	const outcome = outcomes[date] ?? null
 	const busy = !!busyDates[date]
-	const error = errors[date] || ''
 
 	useEffect(() => {
 		let active = true
 		let request = 0
 		const reload = () => {
 			const current = ++request
-			setErrors(previous => {
-				if (!previous[date]) return previous
-				const next = { ...previous }
-				delete next[date]
-				return next
-			})
+
 			return riskApi.getOutcome(date)
 				.then(result => {
 					if (active && current === request) setOutcomes(previous => ({ ...previous, [date]: result.status }))
 				})
 				.catch(error => {
-					if (active && current === request && !isCentralError(error)) setErrors(previous => ({ ...previous, [date]: 'Не удалось загрузить отметку.' }))
+					if (active && current === request) notifyRequestError(error, 'Не удалось загрузить отметку')
 				})
 		}
 		reload().then(() => { if (active) onInitialReady?.('outcome') })
@@ -41,12 +33,7 @@ const DailyOutcome = ({ date, isToday, onInitialReady }) => {
 	const toggle = async () => {
 		if (busy || !outcome || outcome === 'ATTACK_STARTED') return
 		setBusyDates(previous => ({ ...previous, [date]: true }))
-		setErrors(previous => {
-			if (!previous[date]) return previous
-			const next = { ...previous }
-			delete next[date]
-			return next
-		})
+
 		try {
 			const result = outcome === 'NO_ATTACK_STARTED'
 				? await riskApi.clearOutcome(date)
@@ -54,7 +41,7 @@ const DailyOutcome = ({ date, isToday, onInitialReady }) => {
 			setOutcomes(previous => ({ ...previous, [date]: result.status }))
 			emit(OUTCOMES_CHANGED)
 		} catch (e) {
-			if (!isCentralError(e)) setErrors(previous => ({ ...previous, [date]: e.message || 'Не удалось изменить отметку.' }))
+			notifyRequestError(e, 'Не удалось изменить отметку')
 			try {
 				const latest = await riskApi.getOutcome(date)
 				setOutcomes(previous => ({ ...previous, [date]: latest.status }))
@@ -82,14 +69,13 @@ const DailyOutcome = ({ date, isToday, onInitialReady }) => {
 				role="switch"
 				aria-label="Новых приступов не было"
 				aria-checked={checked}
-				data-help="Отметьте, если за выбранный день не началось новых приступов. Продолжение приступа с прошлого дня не мешает поставить отметку. Итог закрывается в полночь; запись можно исправить позже."
+				title="Отметьте, если за выбранный день не началось новых приступов. Продолжение приступа с прошлого дня не мешает поставить отметку. Итог закрывается в полночь; запись можно исправить позже."
 				className={`${s.toggle} ${checked ? s.toggleOn : ''}`}
 				onClick={toggle}
 				disabled={busy || blocked}
 			>
 				<span className={s.thumb} aria-hidden="true" />
 			</button>}
-			{error && <ErrorNotice message={error} title="Не удалось обновить отметку" className={s.error} />}
 		</section>
 	)
 }

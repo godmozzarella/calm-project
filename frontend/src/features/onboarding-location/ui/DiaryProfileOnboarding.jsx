@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import MyLocationRoundedIcon from '@mui/icons-material/MyLocationRounded'
-import CheckIcon from '@mui/icons-material/Check'
+import { Input } from '@/shared/ui/Input'
+import { userApi } from '@/shared/api'
+import { setCurrentUser } from '@/entities/user'
 import { questionnaireApi } from '@/shared/api/questionnaireApi'
 import { emit, PROFILE_CHANGED } from '@/shared/lib/dataEvents'
 import { useBodyScrollLock } from '@/shared/lib/useBodyScrollLock'
-import { isCentralError } from '@/shared/lib/isCentralError'
+import { notifyRequestError } from '@/shared/lib/notifyError'
 import { useLocationOnboarding } from '../model/useLocationOnboarding'
 import s from './DiaryProfileOnboarding.module.scss'
 
-export default function DiaryProfileOnboarding({ user, setUser, onComplete }) {
+export default function DiaryProfileOnboarding({ user, setUser, onProfileSaved, onComplete }) {
   const [step, setStep] = useState('details')
+  const [nickname, setNickname] = useState(user?.name || '')
   const [age, setAge] = useState('')
   const [sex, setSex] = useState('UNSPECIFIED')
   const [trackCycle, setTrackCycle] = useState(false)
@@ -19,7 +22,7 @@ export default function DiaryProfileOnboarding({ user, setUser, onComplete }) {
   const [cityDeferred, setCityDeferred] = useState(false)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
-  const { results, searching, geoLocating, error: locationError, search, useGeolocation: locateByBrowser, save: saveLocation } = useLocationOnboarding({ setUser })
+  const { results, resultQuery, searching, geoLocating, search, useGeolocation: locateByBrowser, save: saveLocation } = useLocationOnboarding({ setUser })
   useBodyScrollLock(true)
 
   useEffect(() => {
@@ -40,33 +43,44 @@ export default function DiaryProfileOnboarding({ user, setUser, onComplete }) {
 
   const saveDetails = async () => {
     if (saving) return
+    const name = nickname.trim()
+    if (name.length > 64) {
+      setFormError({ field: 'nickname', message: 'Никнейм должен быть не длиннее 64 символов.' })
+      return
+    }
     const parsedAge = age.trim() === '' ? null : Number(age)
     if (parsedAge !== null && (!Number.isInteger(parsedAge) || parsedAge < 1 || parsedAge > 120)) {
-      setFormError('Укажите возраст от 1 до 120 лет или оставьте поле пустым.')
+      setFormError({ field: 'age', message: 'Укажите возраст от 1 до 120 лет или оставьте поле пустым.' })
       return
     }
     if (!selectedCity && !cityDeferred) {
-      setFormError('Выберите город из списка, определите его автоматически или укажите позже.')
+      setFormError({ field: 'city', message: 'Выберите город из списка, определите его автоматически или укажите позже.' })
       return
     }
     setSaving(true)
     setFormError('')
     try {
       if (!cityDeferred && selectedCity?.latitude != null && selectedCity?.longitude != null) await saveLocation(selectedCity)
+      if (name && name !== user?.name) {
+        const updated = await userApi.updateMe({ name })
+        setCurrentUser(updated)
+        setUser(updated)
+      }
       await questionnaireApi.profile({ sex, age: parsedAge, trackCycle: sex === 'FEMALE' && trackCycle })
       if (cityDeferred) {
         try { localStorage.setItem(`calm:location-later:${user.id}`, '1') } catch { /* This page still respects the choice. */ }
       }
       emit(PROFILE_CHANGED)
-      setStep('survey')
+      onProfileSaved()
+      setStep('done')
     } catch (error) {
-      if (!isCentralError(error)) setFormError(error.message || 'Не удалось сохранить информацию')
+      notifyRequestError(error, 'Не удалось сохранить информацию')
     } finally {
       setSaving(false)
     }
   }
 
-  const pageTitle = step === 'details' ? 'Настроим ваш дневник' : step === 'survey' ? 'Несколько карточек о вашем дне' : 'Опрос подождёт'
+  const pageTitle = step === 'details' ? 'Настроим ваш дневник' : 'Дневник настроен'
 
   return <div className={s.backdrop}>
     <section className={s.panel} role="dialog" aria-modal="true" aria-labelledby="welcome-title">
@@ -78,46 +92,41 @@ export default function DiaryProfileOnboarding({ user, setUser, onComplete }) {
       </header>
       <div className={s.content}>
         <div className={s.intro}>
-          <p className={s.eyebrow}>{step === 'details' ? 'Первый вход · 1 из 2' : step === 'survey' ? 'Следующий шаг · 2 из 2' : 'Готово'}</p>
+          <p className={s.eyebrow}>{step === 'details' ? 'Первый вход · 1 из 2' : 'Готово'}</p>
           <h2 id="welcome-title">{pageTitle}</h2>
           {step === 'details' && <p>Пара ответов поможет настроить дневник. Город нужен для прогноза погоды. Всё можно изменить позже.</p>}
-          {step === 'survey' && <p>Короткий опрос поможет сохранить самочувствие за сегодня. Вы можете ответить сейчас или позже.</p>}
-          {step === 'skipped' && <p>Вы можете пройти опрос позже: нажмите на плашку ежедневного опроса в дневнике.</p>}
+          {step === 'done' && <p>Чтобы открыть ежедневные карточки, нажмите на звезду серии рядом с датой.</p>}
         </div>
         {step === 'details' && <div className={s.form}>
-          <div className={s.field}>
-            <label htmlFor="welcome-age">Возраст <span>необязательно</span></label>
-            <input id="welcome-age" type="number" inputMode="numeric" min="1" max="120" placeholder="Сколько вам лет" value={age} disabled={saving}
-              onChange={event => { setAge(event.target.value); setFormError('') }} />
-          </div>
-          <div className={s.field}>
-            <label htmlFor="welcome-sex">Пол</label>
-            <div className={s.selectWrap}>
-              <select id="welcome-sex" value={sex} disabled={saving} onChange={event => {
-                setSex(event.target.value)
-                if (event.target.value !== 'FEMALE') setTrackCycle(false)
-              }}>
-                <option value="UNSPECIFIED">Не указывать</option><option value="FEMALE">Женский</option>
-                <option value="MALE">Мужской</option><option value="OTHER">Другой</option>
-              </select>
-              <span aria-hidden="true">⌄</span>
-            </div>
-          </div>
-          {sex === 'FEMALE' && <label className={s.cycleOption}>
-            <input type="checkbox" checked={trackCycle} disabled={saving} onChange={event => setTrackCycle(event.target.checked)} />
-            <span className={`${s.checkboxVisual} ${trackCycle ? s.checkboxChecked : ''}`} aria-hidden="true">{trackCycle && <CheckIcon />}</span>
+          <Input id="welcome-nickname" autoComplete="nickname" label="Отображаемый никнейм" maxLength={64}
+            value={nickname} disabled={saving} error={formError?.field === 'nickname' ? formError.message : undefined}
+            onChange={event => { setNickname(event.target.value); setFormError('') }} />
+          <Input id="welcome-age" type="number" inputMode="numeric" min="1" max="120" label="Возраст" hint="Можно не указывать"
+            value={age} disabled={saving} error={formError?.field === 'age' ? formError.message : undefined}
+            onChange={event => { setAge(event.target.value); setFormError('') }} />
+          <Input as="select" id="welcome-sex" label="Пол" value={sex} disabled={saving} onChange={event => {
+            setSex(event.target.value)
+            if (event.target.value !== 'FEMALE') setTrackCycle(false)
+          }}>
+            <option value="UNSPECIFIED">Не указывать</option>
+            <option value="FEMALE">Женский</option>
+            <option value="MALE">Мужской</option>
+          </Input>
+          {sex === 'FEMALE' && <label className={s.cycleOption} title="Вопросы о менструации">
             <span className={s.cycleText}><strong>Спрашивать о менструации?</strong><small>Добавим вопросы о начале и завершении в ежедневные карточки.</small></span>
+            <input type="checkbox" checked={trackCycle} disabled={saving} onChange={event => setTrackCycle(event.target.checked)} />
           </label>}
           <div className={s.field}>
-            {cityDeferred ? <span className={s.fieldTitle}>Город</span> : <label htmlFor="welcome-city">Город</label>}
+            {cityDeferred && <span className={s.fieldTitle}>Город</span>}
             {cityDeferred ? <div className={s.laterCard}>
               <p>Укажете позже в профиле. До этого прогноз погоды будет недоступен.</p>
-              <button type="button" onClick={() => setCityDeferred(false)}>Выбрать город сейчас</button>
+              <button title={"Выбрать город сейчас"} type="button" onClick={() => setCityDeferred(false)}>Выбрать город сейчас</button>
             </div> : <>
-              <input id="welcome-city" type="search" autoComplete="address-level2" placeholder="Начните вводить город" value={cityQuery} disabled={saving}
+              <Input id="welcome-city" type="search" autoComplete="address-level2" label="Город" value={cityQuery} disabled={saving || geoLocating}
+                error={formError?.field === 'city' ? formError.message : undefined}
                 onChange={event => { setCityQuery(event.target.value); setSelectedCity(null); setFormError('') }} />
-              {searching && <p className={s.fieldHint} role="status">Ищем город…</p>}
-              {!selectedCity && results.length > 0 && <ul className={s.results}>{results.map((place, index) => <li key={`${place.latitude}-${place.longitude}-${index}`}>
+              {!selectedCity && searching && resultQuery === cityQuery.trim() && <p className={s.fieldHint} role="status">Ищем город…</p>}
+              {!selectedCity && resultQuery === cityQuery.trim() && results.length > 0 && <ul className={s.results}>{results.map((place, index) => <li key={`${place.latitude}-${place.longitude}-${index}`}>
                 <button type="button" onClick={() => { setSelectedCity(place); setCityQuery([place.name, place.country].filter(Boolean).join(', ')); setFormError('') }}>
                   <strong>{place.name}</strong><span>{[place.admin, place.country].filter(Boolean).join(', ')}</span>
                 </button>
@@ -126,23 +135,18 @@ export default function DiaryProfileOnboarding({ user, setUser, onComplete }) {
               <button type="button" className={s.geolocate} disabled={saving || geoLocating} onClick={detectCity}>
                 <MyLocationRoundedIcon fontSize="small" />{geoLocating ? 'Определяем город…' : 'Определить автоматически'}
               </button>
-              <button type="button" className={s.deferCity} disabled={saving || geoLocating} onClick={() => { setCityDeferred(true); setSelectedCity(null); setFormError('') }}>Укажу город позже</button>
+              <button title={"Укажу город позже"} type="button" className={s.deferCity} disabled={saving || geoLocating} onClick={() => { setCityDeferred(true); setSelectedCity(null); setFormError('') }}>Укажу город позже</button>
             </>}
           </div>
         </div>}
       </div>
       <footer className={s.footer}>
         {step === 'details' && <>
-          {(formError || (!cityDeferred && locationError)) && <p role="alert" className={s.error}>{formError || locationError}</p>}
           <button type="button" className={s.primary} disabled={saving || geoLocating} onClick={saveDetails}>
             {saving ? 'Сохраняем…' : <>Подтвердить и далее <ArrowForwardRoundedIcon /></>}
           </button>
         </>}
-        {step === 'survey' && <>
-          <button type="button" className={s.primary} onClick={() => onComplete('survey')}>Перейти к карточкам <ArrowForwardRoundedIcon /></button>
-          <button type="button" className={s.secondary} onClick={() => setStep('skipped')}>Пропустить опрос</button>
-        </>}
-        {step === 'skipped' && <button type="button" className={s.primary} onClick={() => onComplete('skip')}>Перейти в дневник <ArrowForwardRoundedIcon /></button>}
+        {step === 'done' && <button type="button" className={s.primary} onClick={onComplete}>Перейти в дневник <ArrowForwardRoundedIcon /></button>}
       </footer>
     </section>
   </div>

@@ -1,149 +1,232 @@
 @use 'app/styles/globals.scss' as *;
 
-/* ── поле: label + input + error/hint ── */
 .field {
-	display: flex;
-	flex-direction: column;
-	gap: 0.3rem;
+	display: grid;
+	gap: .4rem;
 	width: 100%;
+	min-width: 0;
+}
+
+.inputRow {
+	--field-label-size: .9375rem;
+	--field-label-scale: .85;
+	position: relative;
+	min-width: 0;
+
+	&:focus-within { --field-border-color: #{$fc-contrast}; }
+
+	&:has(.input[aria-invalid='true']) { --field-border-color: #{$error-color}; }
+
+	&:has(> select)::after {
+		content: '';
+		position: absolute;
+		inset-inline-end: .85rem;
+		inset-block-start: calc(($control-height - 1rem) / 2);
+		width: 1rem;
+		height: 1rem;
+		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23858b95' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'/%3E%3C/svg%3E") center / contain no-repeat;
+		pointer-events: none;
+	}
+}
+
+.input {
+	@include field-border;
+	display: block;
+	width: 100%;
+	min-width: 0;
+	height: $control-height;
+	margin: 0;
+	padding: .35rem 1.1rem;
+	outline: none;
+	appearance: none;
+	-webkit-appearance: none;
+	background: $quiet-surface;
+	background-clip: padding-box;
+	color: $fc-main;
+	font-family: 'Roboto', Arial, sans-serif;
+	font-weight: $fw-medium;
+	@include fluid-text(15, 13);
+	&::placeholder { color: transparent; }
+	&::-webkit-search-cancel-button { display: none; }
+	&::-webkit-date-and-time-value { text-align: start; }
+	&:is(:autofill, :-webkit-autofill, :-moz-autofill) {
+		background-color: $quiet-surface !important;
+		// The inset shadow covers the padding box. Keep autofill paint out of the transparent border.
+		background-clip: padding-box !important;
+		box-shadow: inset 0 0 0 100vmax $quiet-surface !important;
+		-webkit-text-fill-color: $fc-main !important;
+		caret-color: $fc-main;
+		filter: none;
+
+		@supports (-webkit-touch-callout: none) {
+			// On iOS, keep the field's prior background when Safari applies its autofill color.
+			transition: background-color 1s step-end 86400s;
+		}
+
+		@media (forced-colors: active) {
+			-webkit-text-fill-color: FieldText !important;
+			caret-color: FieldText;
+			transition: none;
+		}
+	}
+}
+
+textarea.input {
+	height: auto;
+	min-height: 5rem;
+	padding-block: .7rem;
+	resize: none;
+}
+
+.input[type='date'] {
+	display: flex;
+	align-items: center;
+	padding-block: 0;
+	line-height: 1.25;
+
+	&::-webkit-date-and-time-value { margin-block: 0; }
+	&::-webkit-datetime-edit { padding-block: 0; }
+}
+
+.dateControl {
+	position: relative;
+	z-index: 1;
+	opacity: 0;
+	cursor: pointer;
+
+	&::-webkit-calendar-picker-indicator {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		margin: 0;
+		padding: 0;
+		cursor: pointer;
+	}
+}
+
+.dateDisplay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: .5rem;
+	pointer-events: none;
+
+	span {
+		min-width: 0;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	svg {
+		flex-shrink: 0;
+		font-size: 1.2rem;
+		color: $fc-secondary;
+	}
+}
+
+.inputRow:has(> .label) {
+	&::before {
+		@include field-border;
+		content: '';
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	.input {
+		border: 0;
+		border-radius: 0;
+		// Clip the rectangular input after the browser background and inset shadow are painted.
+		clip-path: inset(1px round calc($field-radius - 1px));
+	}
+}
+
+select.input {
+	padding-inline-end: 2.1rem;
+}
+
+.border {
+	@include field-border;
+	position: absolute;
+	inset: 0;
+	min-inline-size: 0;
+	margin: 0;
+	padding: 0 .85rem;
+	visibility: hidden;
+	pointer-events: none;
+
+	legend {
+		block-size: 0;
+		max-inline-size: 100%;
+		padding: 0;
+		white-space: nowrap;
+		visibility: hidden;
+		line-height: 0;
+		font-size: calc(var(--field-label-size) * var(--field-label-scale));
+	}
+
+	span { padding-inline: .25rem; }
 }
 
 .label {
-	@include fluid-text(13, 11);
-	font-weight: $fw-medium;
+	position: absolute;
+	inset-inline-start: .85rem;
+	top: calc($control-height / 2);
+	max-inline-size: calc(100% - 2.8rem);
+	padding-inline: .25rem;
+	overflow: hidden;
 	color: $fc-secondary;
-	padding-left: 0.75rem;
-	letter-spacing: 0.02em;
-	transition: color 0.2s ease;
+	font-size: var(--field-label-size);
+	line-height: 1;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	transform: translateY(-50%);
+	transform-origin: left center;
+	transition: top 180ms ease, transform 180ms ease;
+	cursor: text;
 }
 
-.fieldError .label {
-	color: $error-color;
+.inputRow:has(.label):is([data-float], :focus-within, :has(.input:not(:placeholder-shown))) {
+	&::before { visibility: hidden; }
+	.label { top: 0; transform: translateY(-50%) scale(var(--field-label-scale)); }
+	.border { visibility: visible; }
 }
 
-/* ── строка input + иконка справа ── */
-.inputRow {
-	position: relative;
-	width: 100%;
-}
+.withRight { padding-inline-end: 3rem; }
 
-/* ── базовый input ── */
-input {
-	display: block;
-	padding: 0.7rem 1.1rem;
-	border-radius: 0.75rem;
-	@include fluid-text(15, 13);
-	font-family: 'Roboto', Arial, sans-serif;
-	font-weight: $fw-medium;
-	background-color: $quiet-surface;
-	color: $fc-main;
-	border: 1.5px solid $quiet-line;
-	outline: none;
-	width: 100%;
-	transition:
-		border-color 0.2s ease,
-		box-shadow 0.2s ease,
-		background-color 0.2s ease;
-
-	&::placeholder {
-		color: color-mix(in srgb, var(--fc-secondary) 40%, transparent);
-	}
-
-	&:focus {
-		border-color: $contrast-color;
-		background-color: $quiet-surface-raised;
-		box-shadow: none;
-	}
-
-	&:-webkit-autofill,
-	&:-webkit-autofill:hover,
-	&:-webkit-autofill:focus,
-	&:-webkit-autofill:active {
-		-webkit-box-shadow: 0 0 0 1000px $quiet-surface inset !important;
-		-webkit-text-fill-color: $fc-main !important;
-		caret-color: $fc-main;
-		transition: background-color 99999s ease-out 0s;
-	}
-}
-
-input[type='email'] {
-	appearance: none;
-	-webkit-appearance: none;
-	-moz-appearance: textfield;
-}
-
-// iOS Safari automatically zooms the page when an input uses text smaller than 16px.
-@media (max-width: 640px) {
-	input { font-size: 16px; }
-}
-
-/* ── ошибка — переопределяет через JS-класс ── */
-.inputError {
-	border-color: $error-color !important;
-	box-shadow: none !important;
-
-	&:focus {
-		border-color: $error-color;
-		box-shadow: none !important;
-	}
-}
-
-/* ── padding для иконки справа ── */
-.withRight {
-	padding-right: 2.8rem;
-}
-
-/* ── правый элемент (toggle пароля) ── */
 .rightElement {
 	position: absolute;
-	right: 0.85rem;
-	top: 50%;
-	transform: translateY(-50%);
+	inset-inline-end: .8rem;
+	top: calc($control-height / 2);
 	display: flex;
 	align-items: center;
+	transform: translateY(-50%);
+	color: $fc-secondary;
+	pointer-events: none;
 
-	button {
-		background: none;
-		border: none;
-		padding: 0;
-		display: flex;
-		align-items: center;
-		color: $fc-secondary;
-		cursor: pointer;
-		outline: none;
-		transition: color 0.2s ease;
-
-		svg {
-			font-size: 1.15rem;
-		}
-
-		&:hover {
-			color: $fc-main;
-		}
-	}
+	button { pointer-events: auto; width: 2rem; height: 2rem; padding: 0; color: inherit; }
 }
 
-/* ── тексты под полем ── */
 .errorText {
-	@include fluid-text(12, 10);
+	margin: 0;
 	color: $error-color;
-	padding-left: 0.75rem;
-	animation: slideDown 0.18s ease;
+	font-size: .8125rem;
+	line-height: 1.4;
 }
 
 .hintText {
 	@include fluid-text(12, 10);
 	color: $fc-secondary;
-	padding-left: 0.75rem;
 }
 
-@keyframes slideDown {
-	from {
-		opacity: 0;
-		transform: translateY(-4px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
+@media (max-width: 640px) {
+	.input { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.input, .label, .border, .inputRow::before { transition: none; }
 }

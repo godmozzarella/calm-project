@@ -41,12 +41,12 @@ class AuthSessionServiceTest {
 	}
 
 	@Test
-	void refreshRotatesTokenWithoutExtendingActivity() {
+	void legacyMigrationHashesReplacementWithoutExtendingActivity() {
 		AuthSessionService service = new AuthSessionService(repository, mongoTemplate);
 		when(mongoTemplate.findAndModify(any(Query.class), any(Update.class),
 				any(FindAndModifyOptions.class), eq(AuthSession.class))).thenReturn(null);
 
-		assertThat(service.refresh("old-token")).isNull();
+		assertThat(service.migrate("old-token", "new-cookie-token")).isNull();
 
 		ArgumentCaptor<Query> query = ArgumentCaptor.forClass(Query.class);
 		ArgumentCaptor<Update> update = ArgumentCaptor.forClass(Update.class);
@@ -57,6 +57,7 @@ class AuthSessionServiceTest {
 		assertThat((Document) filter.get("lastActivity")).containsKey("$gt");
 		assertThat((Document) filter.get("expiresAt")).containsKey("$gt");
 		Document changes = (Document) update.getValue().getUpdateObject().get("$set");
-		assertThat(changes).containsKeys("refreshToken", "expiresAt").doesNotContainKey("lastActivity");
+		assertThat(changes).containsOnlyKeys("refreshToken");
+		assertThat(changes.getString("refreshToken")).startsWith("sha256:").doesNotContain("new-cookie-token");
 	}
 }

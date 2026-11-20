@@ -48,7 +48,7 @@ const IndexPage = () => {
 	}, [])
 
 	return (
-		<div className={s.indexBody} data-disable-help-tooltip>
+		<div className={s.indexBody}>
 			<div className={s.ambientLayer} aria-hidden="true">
 				<BlueOrb className={s.ambientOrbOne} />
 				<BlueOrb className={s.ambientOrbTwo} />
@@ -129,14 +129,9 @@ const IndexPage = () => {
 				<BlueOrb className={s.bottomOrb} />
 				<Section
 					id="regAndLog"
-					title={
-						<>
-							Используй <span className={s.inTextLogo}>Calm</span> прямо сейчас!
-						</>
-					}
-					colored
+					className={s.authSection}
 				>
-					<AuthForm />
+					<AuthForm title={<>Используй <span className={s.inTextLogo}>Calm</span> уже сейчас!</>} />
 				</Section>
 
 				<Footer />

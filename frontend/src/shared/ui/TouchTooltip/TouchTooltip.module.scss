@@ -1,0 +1,19 @@
+@use 'app/styles/globals.scss' as *;
+
+.bubble {
+	position: fixed;
+	inset: auto;
+	z-index: 12000;
+	margin: 0;
+	max-width: min(18rem, calc(100vw - 1rem));
+	padding: .45rem .65rem;
+	border: 0;
+	border-radius: .5rem;
+	background: $quiet-surface-raised;
+	color: $fc-main;
+	box-shadow: 0 .25rem 1rem rgb(0 0 0 / 24%);
+	font-size: .8125rem;
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+	pointer-events: none;
+}

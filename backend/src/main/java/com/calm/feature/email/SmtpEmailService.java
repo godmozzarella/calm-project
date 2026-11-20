@@ -44,24 +44,30 @@ public class SmtpEmailService implements EmailService {
 
 	@Override
 	public EmailSendResult send(String to, String subject, String html) {
+		return send(to, subject, html, null);
+	}
+
+	@Override
+	public EmailSendResult send(String to, String subject, String html, String plain) {
 		if (username == null || username.isBlank()) {
 			log.warn("SMTP не настроен (CALM_SMTP_USER пуст), письмо не отправлено");
 			return EmailSendResult.FAILED;
 		}
 		try {
 			MimeMessage msg = mailSender.createMimeMessage();
-			MimeMessageHelper helper = new MimeMessageHelper(msg, false, StandardCharsets.UTF_8.name());
+			MimeMessageHelper helper = new MimeMessageHelper(msg, plain != null, StandardCharsets.UTF_8.name());
 			helper.setFrom(new InternetAddress(fromAddress, fromName, StandardCharsets.UTF_8.name()));
 			helper.setTo(to);
 			helper.setSubject(subject);
-			helper.setText(html, true);
+			if (plain == null) helper.setText(html, true);
+			else helper.setText(plain, html);
 			mailSender.send(msg);
 			log.info("Письмо отправлено по SMTP");
 			return EmailSendResult.SENT;
 		} catch (Exception e) {
 			Throwable root = e;
 			while (root.getCause() != null) root = root.getCause();
-			log.warn("SMTP: ошибка отправки ({}): {}", root.getClass().getSimpleName(), root.getMessage());
+			log.warn("SMTP: ошибка отправки ({})", root.getClass().getSimpleName());
 			return EmailSendResult.FAILED;
 		}
 	}

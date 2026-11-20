@@ -142,9 +142,6 @@
 	color: $fc-secondary;
 	white-space: nowrap;
 
-	&:has(.streakButton:focus-visible) { outline: 2px solid $fc-secondary; outline-offset: 2px; }
-
-	.streakIcon { color: $fc-main;  }
 	strong { color: $fc-main; font-weight: $fw-semibold;line-height:1; }
 }
 
@@ -153,7 +150,6 @@
 	display: inline-flex;
 	align-items: center;
 	gap: .3rem;
-	@include fluid-text(42, 28);
 	padding: 0;
 	border: 0;
 	background: transparent;
@@ -162,19 +158,68 @@
 	cursor: pointer;
 	-webkit-tap-highlight-color: transparent;
 
-	.streakIcon, strong { font-size: inherit; }
+	svg, strong { font-size: inherit; }
 
 	&:focus { outline: none; }
 	&:focus-visible { outline: none; }
+
+	@media (hover: hover) {
+		&:focus-visible strong { text-decoration: underline; text-underline-offset: .2em; }
+	}
 }
 
-.streakEarned .streakIcon {color:$fc-contrast;}
-.streakFlashed .streakIcon {animation:streakGlow 1.25s ease-out;}
-@keyframes streakGlow {
-  0%,100% {filter:drop-shadow(0 0 0 transparent);}
-  35% {filter:drop-shadow(0 0 .6rem color-mix(in srgb,var(--fc-contrast) 85%,transparent));}
+@media (width > 768px) {
+	.streakButton { @include fluid-text(20, 15); }
 }
-@media(prefers-reduced-motion:reduce) {.streakFlashed .streakIcon{animation:none;}}
+
+.streakStar {
+	display: grid;
+	place-items: center;
+}
+
+.streakIcon,
+.streakHalo {
+	grid-area: 1 / 1;
+}
+
+.streakIcon {
+	position: relative;
+	color: #fff;
+}
+
+.streakEarned .streakIcon { color: $fc-contrast; }
+:root[data-theme='light'] .streak:not(.streakEarned) .streakIcon { color: #000; }
+
+.streakHalo {
+	display: grid;
+	opacity: 0;
+	color: $fc-contrast;
+	pointer-events: none;
+
+	svg { filter: drop-shadow(0 0 .38rem currentColor) drop-shadow(0 0 .23rem currentColor); }
+}
+
+.streakPending .streakHalo {
+	opacity: .25;
+	animation: streakPulse 4s ease-in-out infinite alternate;
+}
+
+.streakFlashed .streakHalo { animation: streakGlow 1.25s ease-out; }
+
+@keyframes streakPulse {
+	from { opacity: .25; }
+	to { opacity: 1; }
+}
+
+@keyframes streakGlow {
+	0%, 100% { opacity: 0; }
+	35% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.streakPending .streakHalo,
+	.streakFlashed .streakHalo { animation: none; }
+}
 
 @media (max-width: 768px) {
 	.dayBar {

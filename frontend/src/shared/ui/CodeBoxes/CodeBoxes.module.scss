@@ -10,48 +10,27 @@
 .cells {
 	display: flex;
 	justify-content: center;
-	gap: .65rem;
+	width: 100%;
+	gap: clamp(.25rem, 1.5vw, .65rem);
 }
 
 .codeBox {
+	@include field-border;
 	display: grid;
 	place-items: center;
-	width: 3.35rem;
-	height: 3.65rem;
+	flex: 0 1 2rem;
+	min-width: 0;
+	height: $control-height;
 	box-sizing: border-box;
-	padding: .35rem;
-	border: 1px solid $quiet-line;
-	border-radius: .8rem;
+	padding: .25rem .15rem;
+	border-radius: .375rem;
 	background: $quiet-surface;
 	color: $fc-main;
-	font: 600 1.65rem/1 'Roboto', Arial, sans-serif;
+	font: 600 1.45rem/1 'Roboto', Arial, sans-serif;
 	font-variant-numeric: tabular-nums;
 	text-align: center;
-	transition: border-color .18s ease, background-color .18s ease;
-
-	&.active {
-		border-color: $fc-contrast;
-		background: $quiet-surface-raised;
-	}
-
-	&.invalid { border-color: $error-color; }
-	&.invalid.active { background: $quiet-surface-raised; }
-
-}
-
-.longCode .codeBox {
-	flex: 1 1 0;
-	min-width: 0;
-	width: auto;
-	max-width: 2.65rem;
-	height: 2.9rem;
-	padding-inline: .15rem;
-	font-size: 1.25rem;
-}
-
-.longCode .cells {
-	width: min(100%, 19rem);
-	gap: clamp(.25rem, 1.5vw, .5rem);
+	&.active { --field-border-color: #{$fc-contrast}; }
+	&.invalid { --field-border-color: #{$error-color}; }
 }
 
 .codeInput {
@@ -75,11 +54,4 @@
 	cursor: text;
 	outline: none;
 	&:disabled { background: transparent; cursor: default; }
-}
-
-@media (max-width: 30rem) {
-	.cells { gap: .5rem; }
-	.codeBox { width: 3rem; height: 3.25rem; font-size: 1.45rem; }
-	.longCode .cells { gap: .3rem; }
-	.longCode .codeBox { height: 2.55rem; font-size: 1.1rem; }
 }

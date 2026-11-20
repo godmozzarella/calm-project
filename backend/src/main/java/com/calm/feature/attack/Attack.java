@@ -23,6 +23,7 @@ import java.util.Set;
 @Document(collection = "attacks")
 @CompoundIndexes({
 	@CompoundIndex(name = "user_startDate", def = "{'userId': 1, 'startDate': 1}"),
+	@CompoundIndex(name = "ongoing_id", def = "{'ongoing': 1, '_id': 1}"),
 	@CompoundIndex(name = "user_ongoing",   def = "{'userId': 1, 'ongoing': 1}")
 })
 public class Attack {
@@ -37,6 +38,7 @@ public class Attack {
 
 	private LocalDate startDate;
 	private LocalTime startTime;
+	private String reminderStartTimezone;
     private String startTimeText;
     private String endTimeText;
 
@@ -71,6 +73,8 @@ public class Attack {
 	public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
 	public LocalTime getStartTime() { return startTime; }
 	public void setStartTime(LocalTime startTime) { this.startTime = startTime; this.startTimeText = startTime == null ? null : startTime.toString(); }
+	public String getReminderStartTimezone() { return reminderStartTimezone; }
+	public void setReminderStartTimezone(String timezone) { reminderStartTimezone = timezone; }
 	public LocalDate getEndDate() { return endDate; }
 	public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
 	public LocalTime getEndTime() { return endTime; }

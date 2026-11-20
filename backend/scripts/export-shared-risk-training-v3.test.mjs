@@ -134,6 +134,7 @@ test('exports detailed outcomes and frozen history under new consent without ide
 	assert.equal(row.binaryPrediction, null)
 	assert.equal(row.predictionMatched, null)
 	assert.equal(row.features.weatherScore, 45)
+	assert.equal(row.scoringVersion, 'personal-rules-v1')
 	assert.equal(row.features.humidityDelta24h, 5)
 	assert.equal(row.features.pressureMmHg, 756.1)
 	assert.equal(row.features.pressureDelta24hMmHg, -1.5)
@@ -145,6 +146,18 @@ test('exports detailed outcomes and frozen history under new consent without ide
 	assert.equal('note' in row.diaryOutcome.medications[0], false)
 	assert.equal('locationKey' in row, false)
 	assert.equal(source.attacks.rows[0].note, 'private note')
+})
+
+test('exports personal rules v2 scores and preserves the version on the row', async () => {
+	const { source, destination, context, target } = setup()
+	const snapshot = source.risk_training_input_snapshots.rows[0]
+	snapshot.scoringVersion = 'personal-rules-v2'
+	snapshot.baselineScore = 64
+
+	await runInNewContext(script, context)
+	const row = destination.training_examples.rows.find(example => example.targetDate === target)
+	assert.equal(row.baselineScore, 64)
+	assert.equal(row.scoringVersion, 'personal-rules-v2')
 })
 
 test('consent remains required but a missing or late snapshot does not exclude diary data', async () => {

@@ -7,9 +7,12 @@ import '@/app/styles/main.scss'
 import { initializeAppInstallation } from '@/shared/lib/appInstallation'
 
 initializeAppInstallation()
+if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual'
 
 try {
-	document.documentElement.dataset.theme = localStorage.getItem('calm_theme') === 'light' ? 'light' : 'dark'
+	const themePreference = localStorage.getItem('calm_theme')
+	const systemIsLight = window.matchMedia?.('(prefers-color-scheme: light)').matches
+	document.documentElement.dataset.theme = themePreference === 'light' || (themePreference === 'auto' && systemIsLight) ? 'light' : 'dark'
 } catch {
 	document.documentElement.dataset.theme = 'dark'
 }

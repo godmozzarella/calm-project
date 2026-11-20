@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Input } from '@/shared/ui/Input'
 
 import { adminApi, dictionaryApi } from '@/shared/api'
 import { emit } from '@/shared/lib/dataEvents'
-import { notifyError } from '@/shared/lib/notifyError'
-import ErrorNotice from '@/shared/ui/ErrorNotice/ErrorNotice'
+import { notifyRequestError } from '@/shared/lib/notifyError'
 
 import s from './Tab.module.scss'
 
@@ -12,18 +12,19 @@ const notifyChanged = () => emit('calm:dictionaries-changed')
 const DictionaryTab = ({ type, title, categories = null }) => {
 	const [entries, setEntries] = useState([])
 	const [loading, setLoading] = useState(false)
-	const [error, setError] = useState(null)
+	const [loadFailed, setLoadFailed] = useState(false)
 
 	const [value, setValue] = useState('')
+	const [fieldError, setFieldError] = useState(null)
 	const [label, setLabel] = useState('')
 	const [category, setCategory] = useState(categories?.[0]?.value ?? '')
 
 	const load = useCallback(() => {
 		setLoading(true)
-		setError(null)
+		setLoadFailed(false)
 		dictionaryApi.getByType(type)
 			.then(setEntries)
-			.catch(e => setError(e.message))
+			.catch(e => { setLoadFailed(true); notifyRequestError(e, 'Не удалось загрузить справочник') })
 			.finally(() => setLoading(false))
 	}, [type])
 
@@ -31,7 +32,11 @@ const DictionaryTab = ({ type, title, categories = null }) => {
 
 	const handleAdd = async e => {
 		e.preventDefault()
-		if (!value.trim() || !label.trim()) return
+		if (!/^[a-z][a-z0-9_]*$/.test(value.trim())) {
+			setFieldError({ field: 'value', text: 'Введите код латиницей. Допустимы строчные буквы, цифры и подчёркивание.' })
+			return
+		}
+		if (!label.trim()) { setFieldError({ field: 'label', text: 'Введите название.' }); return }
 		try {
 			const created = await adminApi.createEntry({
 				type,
@@ -44,7 +49,7 @@ const DictionaryTab = ({ type, title, categories = null }) => {
 			setLabel('')
 			notifyChanged()
 		} catch (e) {
-			notifyError(e.message)
+			notifyRequestError(e)
 		}
 	}
 
@@ -55,7 +60,7 @@ const DictionaryTab = ({ type, title, categories = null }) => {
 			setEntries(prev => prev.map(e => e.id === updated.id ? updated : e))
 			notifyChanged()
 		} catch (e) {
-			notifyError(e.message)
+			notifyRequestError(e)
 		}
 	}
 
@@ -66,7 +71,7 @@ const DictionaryTab = ({ type, title, categories = null }) => {
 			setEntries(prev => prev.map(e => e.id === updated.id ? updated : e))
 			notifyChanged()
 		} catch (e) {
-			notifyError(e.message)
+			notifyRequestError(e)
 		}
 	}
 
@@ -77,7 +82,7 @@ const DictionaryTab = ({ type, title, categories = null }) => {
 			setEntries(prev => prev.filter(e => e.id !== entry.id))
 			notifyChanged()
 		} catch (e) {
-			notifyError(e.message)
+			notifyRequestError(e)
 		}
 	}
 
@@ -85,41 +90,43 @@ const DictionaryTab = ({ type, title, categories = null }) => {
 		<div className={s.wrap}>
 			<h2 className={s.h2}>{title}</h2>
 
-			<form className={s.toolbar} onSubmit={handleAdd}>
-				<input
+			<form className={s.toolbar} onSubmit={handleAdd} noValidate>
+				<Input
 					type="text"
 					value={value}
-					onChange={e => setValue(e.target.value)}
-					placeholder="value (латиница)"
-					className={s.input}
+					onChange={e => { setValue(e.target.value); setFieldError(null) }}
+					error={fieldError?.field === 'value' ? fieldError.text : undefined}
+					placeholder="Код (латиницей)"
+					wrapperClassName={s.toolbarField}
 					pattern="[a-z][a-z0-9_]*"
 					title="Только латинские буквы в нижнем регистре, цифры и подчёркивание"
 				/>
-				<input
+				<Input
 					type="text"
 					value={label}
-					onChange={e => setLabel(e.target.value)}
+					onChange={e => { setLabel(e.target.value); setFieldError(null) }}
+					error={fieldError?.field === 'label' ? fieldError.text : undefined}
 					placeholder="Название по-русски"
-					className={s.input}
+					wrapperClassName={s.toolbarField}
 				/>
 				{categories && (
-					<select
-						className={s.input}
+					<Input as="select"
+						wrapperClassName={s.toolbarField} label="Категория"
 						value={category}
 						onChange={e => setCategory(e.target.value)}
 					>
 						{categories.map(c => (
 							<option key={c.value} value={c.value}>{c.label}</option>
 						))}
-					</select>
+					</Input>
 				)}
-				<button type="submit" className={s.btn}>+ Добавить</button>
+				<button title={"+ Добавить"} type="submit" className={s.btn}>+ Добавить</button>
 			</form>
 
-			<ErrorNotice message={error} title="Не удалось загрузить справочник" />
+			{!loading && loadFailed && <button title={"Повторить загрузку"} type="button" className={s.btnSmall} onClick={() => load()}>Повторить загрузку</button>}
 			{loading && <p className={s.muted}>Загрузка…</p>}
 
-			{!loading && !error && (
+			{!loading && !loadFailed && (
 				<table className={s.table}>
 					<thead>
 						<tr>
@@ -139,20 +146,20 @@ const DictionaryTab = ({ type, title, categories = null }) => {
 								</td>
 								{categories && (
 									<td>
-										<select
-											className={s.inputInline}
+										<Input as="select"
+											label="Категория"
 											value={e.category ?? ''}
 											onChange={ev => handleChangeCategory(e, ev.target.value)}
 										>
 											{categories.map(c => (
 												<option key={c.value} value={c.value}>{c.label}</option>
 											))}
-										</select>
+										</Input>
 									</td>
 								)}
 								<td className={s.muted}>{e.order}</td>
 								<td>
-									<button
+									<button title={"Удалить"}
 										type="button"
 										className={s.btnDanger}
 										onClick={() => handleDelete(e)}
@@ -189,7 +196,7 @@ const EditableCell = ({ value, onSave }) => {
 	}
 
 	return (
-		<input
+		<Input
 			type="text"
 			value={v}
 			onChange={e => setV(e.target.value)}
@@ -199,7 +206,7 @@ const EditableCell = ({ value, onSave }) => {
 				if (e.key === 'Escape') { setV(value); setEditing(false) }
 			}}
 			autoFocus
-			className={s.inputInline}
+			label="Название"
 		/>
 	)
 }

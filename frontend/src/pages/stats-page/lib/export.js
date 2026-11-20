@@ -87,10 +87,11 @@ const toZoneMap = pz => {
 }
 
 // Цвета зон для белого фона (пастельная заливка + насыщенная обводка)
+const REPORT_RED = '#c32238'
 const ZONE_COLORS = {
 	green:  { fill: '#dcfce7', stroke: '#16a34a' },
 	yellow: { fill: '#fef9c3', stroke: '#ca8a04' },
-	red:    { fill: '#fee2e2', stroke: '#dc2626' },
+	red:    { fill: '#fee2e2', stroke: REPORT_RED },
 	none:   { fill: '#f1f5f9', stroke: '#cbd5e1' },
 }
 const HEAD_FILL    = '#f0f4f8'
@@ -159,7 +160,7 @@ const C = {
 	rowAlt:      '#f9fafb',
 	white:       '#ffffff',
 	amber:       '#b45309',
-	red:         '#dc2626',
+	red:         REPORT_RED,
 }
 
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
@@ -252,7 +253,7 @@ const buildReportHtml = ({ attacks = [], medications = [], kpis, patterns, weath
 		<div style="display:flex;gap:14px;align-items:center;font-size:9px;color:${C.muted};margin-top:6px;">
 			<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a;margin-right:3px;vertical-align:middle;"></span>Слабая</span>
 			<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ca8a04;margin-right:3px;vertical-align:middle;"></span>Умеренная</span>
-			<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#dc2626;margin-right:3px;vertical-align:middle;"></span>Сильная</span>
+			<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${C.red};margin-right:3px;vertical-align:middle;"></span>Сильная</span>
 		</div>`
 
 	const zoneMapsHtml = attacksWithZones.length > 0 ? `
@@ -358,7 +359,7 @@ const buildReportHtml = ({ attacks = [], medications = [], kpis, patterns, weath
 export const printDashboard = (data, meta) => {
 	const html = buildReportHtml(data, meta)
 	const win = window.open('', '_blank', 'width=900,height=700')
-	if (!win) { alert('Разрешите всплывающие окна для печати'); return }
+	if (!win) throw new Error('Разрешите всплывающие окна для печати.')
 	win.document.write(`<!DOCTYPE html><html><head>
 		<meta charset="utf-8">
 		<title>Calm — Отчёт</title>

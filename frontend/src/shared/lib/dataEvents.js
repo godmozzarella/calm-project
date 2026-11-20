@@ -7,8 +7,8 @@
  */
 
 export const PROFILE_CHANGED = 'calm:profile-changed'
+export const CYCLE_CHANGED = 'calm:cycle-changed'
 export const SURVEY_COMPLETED = 'calm:survey-completed'
-export const SURVEY_CLOSED = 'calm:survey-closed'
 export const OPEN_DAILY_QUESTIONNAIRE = 'calm:open-daily-questionnaire'
 export const ATTACKS_CHANGED = 'calm:attacks-changed'
 export const MEDICATIONS_CHANGED = 'calm:medications-changed'

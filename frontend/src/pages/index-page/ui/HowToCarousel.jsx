@@ -189,13 +189,13 @@ const HowToCarousel = () => {
 								</article>
 							})}
 						</div>
-                        <button type="button" className={`${s.edgeControl} ${s.edgeLeft}`} aria-label="Предыдущий слайд" onClick={event => { event.stopPropagation(); move(-1) }} />
-                        <button type="button" className={`${s.edgeControl} ${s.edgeRight}`} aria-label="Следующий слайд" onClick={event => { event.stopPropagation(); move(1) }} />
+                        <button title="Предыдущий слайд" type="button" className={`${s.edgeControl} ${s.edgeLeft}`} aria-label="Предыдущий слайд" onClick={event => { event.stopPropagation(); move(-1) }} />
+                        <button title="Следующий слайд" type="button" className={`${s.edgeControl} ${s.edgeRight}`} aria-label="Следующий слайд" onClick={event => { event.stopPropagation(); move(1) }} />
 					</div>
 					<div className={s.controls}>
 						<div className={s.dots} role="group" aria-label="Выбрать шаг">
 							{slides.map((slide, index) => (
-								<button
+								<button title={`Шаг ${index + 1}: ${slide.title}`}
 									key={slide.title}
 									type="button"
 									className={`${s.dot} ${activeIndex === index ? s.activeDot : ''}`}

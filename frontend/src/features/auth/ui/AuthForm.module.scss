@@ -10,73 +10,29 @@
 	gap: 1.25rem;
 }
 
-/* ── таб-переключатель ── */
-.tabSwitcher {
+.form,
+.actions {
 	display: flex;
-	position: relative;
-	background-color: var(--auth-switch-bg);
-	border-radius: 0.75rem;
-	padding: 0.25rem;
-	gap: 0.25rem;
+	gap: 0.75rem;
+	flex-direction: column;
 }
 
-.tab {
-	flex: 1;
-	text-align: center;
-	@include fluid-text(14, 12);
-	font-family: 'Roboto', Arial, sans-serif;
-	font-weight: $fw-semibold;
-	padding: 0.55rem 1rem;
-	border-radius: inherit !important;
-	z-index: 2;
-	cursor: pointer;
-	background: none;
-	border: none;
-	outline: none;
-	color: $fc-secondary;
-	transition: color 0.25s ease;
-	position: relative;
-}
+.actions .changeEmail {
+	background: $quiet-surface;
+	color: $fc-contrast;
 
-.tabActive {
-	color: $fc-main;
-}
-
-.tabSlider {
-	position: absolute;
-	top: 0.25rem;
-	bottom: 0.25rem;
-	/* (100% - 2×padding − gap) / 2 */
-	width: calc(50% - 0.375rem);
-	left: 0.25rem;
-	background-color: var(--auth-switch-active);
-	border-radius: inherit;
-	transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-	z-index: 1;
-}
-
-.tabSliderRight {
-	/* padding + tab1-width + gap = 0.25 + (50%−0.375) + 0.25 */
-	left: calc(50% + 0.125rem);
-}
-
-/* ── область формы ── */
-.formArea {
-	animation: fadeSlide 0.2s ease;
-}
-
-@keyframes fadeSlide {
-	from {
-		opacity: 0;
-		transform: translateY(6px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
+	@media (hover: hover) and (pointer: fine) {
+		&:hover:not(:disabled) { background: $quiet-surface-raised; }
 	}
 }
 
-/* ── адаптив ── */
+.linkPage {
+	display: grid;
+	min-height: 100vh;
+	place-items: center;
+	padding: 1rem;
+}
+
 @media (max-width: 64rem) {
 	.authWrapper {
 		width: 60%;
@@ -96,3 +52,88 @@
 		padding: 1.25rem 1rem;
 	}
 }
+
+.floatingForm {
+	display: grid;
+	gap: 2rem;
+	width: min(100%, 32rem);
+	padding: clamp(1.5rem, 5vw, 3rem);
+	border-radius: 1.5rem;
+	background-color: color-mix(in srgb, var(--secondary-color) 48%, transparent);
+	-webkit-backdrop-filter: blur(26px) saturate(145%);
+	backdrop-filter: blur(26px) saturate(145%);
+}
+
+.formHeader {
+	display: grid;
+	gap: 0.625rem;
+	text-align: center;
+
+	h2 {
+		@include fluid-text(32, 24);
+		text-wrap: balance;
+	}
+
+	p { color: $fc-secondary; }
+}
+
+.emailForm {
+	display: grid;
+	gap: 1rem;
+}
+
+.submitButton {
+	width: 100%;
+	box-shadow: 0 .5rem 1.5rem rgb(0 0 0 / 16%);
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+}
+
+.codeDialog {
+	position: fixed;
+	inset: 0;
+	margin: auto;
+	width: min(calc(100% - 2rem), 30rem);
+	max-height: calc(100% - 2rem);
+	overflow: auto;
+	overscroll-behavior: contain;
+	padding: 0;
+	border: 0;
+	border-radius: 1.5rem;
+	background: $block-color;
+	color: $fc-main;
+	box-shadow: 0 1.25rem 4rem rgb(0 0 0 / 28%);
+
+	&::backdrop {
+		background: rgb(12 17 27 / 55%);
+	}
+}
+
+.dialogContent {
+	position: relative;
+	display: grid;
+	gap: 1rem;
+	padding: clamp(1.25rem, 5vw, 2rem);
+	overflow-wrap: anywhere;
+
+	h2 {
+		margin: 0;
+		padding-inline-end: 2rem;
+	}
+
+	p {
+		margin: 0;
+	}
+}
+
+.closeButton {
+	@include close-icon-button;
+	position: absolute;
+	inset-block-start: 0.75rem;
+	inset-inline-end: 0.75rem;
+}
+
+.sentAddress { color: $fc-contrast; }

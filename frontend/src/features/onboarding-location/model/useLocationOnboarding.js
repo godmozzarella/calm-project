@@ -1,8 +1,8 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 import { userApi, forecastApi } from '@/shared/api'
 import { getCurrentUser, setCurrentUser } from '@/entities/user'
-import { isCentralError } from '@/shared/lib/isCentralError'
+import { notifyError, notifyRequestError } from '@/shared/lib/notifyError'
 
 /**
  * Хук онбординга локации: поиск города (через бэк) + геолокация браузера +
@@ -15,36 +15,33 @@ import { isCentralError } from '@/shared/lib/isCentralError'
  * - save(loc)     — PATCH /users/me с lat/lon/city, обновляет локальный user через setUser
  */
 export const useLocationOnboarding = ({ setUser }) => {
-	const [query, setQuery] = useState('')
+	const searchVersion = useRef(0)
+	const [resultQuery, setResultQuery] = useState('')
 	const [results, setResults] = useState([])
 	const [searching, setSearching] = useState(false)
 	const [saving, setSaving] = useState(false)
 	const [geoLocating, setGeoLocating] = useState(false)
-	const [error, setError] = useState(null)
 
 	const search = useCallback(async q => {
-		setError(null)
+		const version = ++searchVersion.current
 		const trimmed = q.trim()
-		if (trimmed.length < 2) {
-			setResults([])
-			return
-		}
+		setResultQuery(trimmed)
+		setResults([])
+		if (trimmed.length < 2) { setSearching(false); return }
 		setSearching(true)
 		try {
 			const list = await forecastApi.geocode(trimmed, 6)
-			setResults(Array.isArray(list) ? list : [])
+			if (version === searchVersion.current) setResults(Array.isArray(list) ? list : [])
 		} catch (e) {
-			if (!isCentralError(e)) setError(e.message || 'Не удалось найти город')
-			setResults([])
+			if (version === searchVersion.current) notifyRequestError(e, 'Не удалось найти город')
 		} finally {
-			setSearching(false)
+			if (version === searchVersion.current) setSearching(false)
 		}
 	}, [])
 
 	const useGeolocation = () => new Promise((resolve, reject) => {
-		setError(null)
 		if (!('geolocation' in navigator)) {
-			setError('Геолокация недоступна в этом браузере')
+			notifyError('Выберите город вручную.', 'Геолокация недоступна в этом браузере')
 			reject(new Error('no-geolocation'))
 			return
 		}
@@ -66,7 +63,7 @@ export const useLocationOnboarding = ({ setUser }) => {
 				const msg = err.code === err.PERMISSION_DENIED
 					? 'Доступ к геолокации отклонён. Выбери город вручную.'
 					: 'Не удалось получить геолокацию. Выбери город вручную.'
-				setError(msg)
+				notifyError(msg, 'Не удалось определить местоположение')
 				reject(err)
 			},
 			{ timeout: 8000, maximumAge: 60000 }
@@ -75,7 +72,6 @@ export const useLocationOnboarding = ({ setUser }) => {
 
 	const save = async ({ latitude, longitude, name, country, locationMode = 'MANUAL' }) => {
 		setSaving(true)
-		setError(null)
 		try {
 			const cityLabel = country && name ? `${name}, ${country}` : (name || 'Моё местоположение')
 			const updated = await userApi.updateMe({
@@ -89,7 +85,7 @@ export const useLocationOnboarding = ({ setUser }) => {
 			setUser(updated)
 			return updated
 		} catch (e) {
-			if (!isCentralError(e)) setError(e.message || 'Не удалось сохранить локацию')
+			notifyRequestError(e, 'Не удалось сохранить город')
 			throw e
 		} finally {
 			setSaving(false)
@@ -97,12 +93,11 @@ export const useLocationOnboarding = ({ setUser }) => {
 	}
 
 	return {
-		query, setQuery,
+		resultQuery,
 		results,
 		searching,
 		saving,
 		geoLocating,
-		error,
 		search,
 		useGeolocation,
 		save,
