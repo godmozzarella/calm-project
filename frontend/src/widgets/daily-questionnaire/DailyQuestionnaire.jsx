@@ -196,19 +196,25 @@ export default function DailyQuestionnaire({ userId }) {
     const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const node=cardNode.current
     const animated=Boolean(node && typeof node.animate==='function' && !reduced)
+    const rearAnimations = []
     if(animated) {
       // The visible card leaves while the two cards behind it finish the same gesture.
-      for (const [behind, transform] of [[middleNode.current,'translateY(0) scale(1)'],[backNode.current,'translateY(28px) scale(.94)']]) {
+      const rearCards = [
+        [middleNode.current, 'translateY(28px) scale(.94)', 'translateY(0) scale(1)'],
+        [backNode.current, 'translateY(50px) scale(.88)', 'translateY(28px) scale(.94)'],
+      ]
+      for (const [behind, initial, target] of rearCards) {
         if (!behind) continue
-        behind.getBoundingClientRect()
-        behind.style.transition='transform 220ms ease-out'
-        behind.style.transform=transform
+        rearAnimations.push(behind.animate([
+          { transform: behind.style.transform || initial }, { transform: target },
+        ], { duration: 220, easing: 'ease-out', fill: 'forwards' }))
       }
       const from=node.style.transform || 'none'
       const to=direction==='left'?'translateX(-110vw) rotate(-18deg)':direction==='down'?'translateY(110vh)':'translateX(110vw) rotate(18deg)'
       node.animate([{transform:from,opacity:1},{transform:to,opacity:0}],{duration:220,easing:'ease-in',fill:'forwards'})
     }
     later(()=> {
+      rearAnimations.forEach(animation => animation.cancel())
       for (const behind of [middleNode.current,backNode.current]) if (behind) { behind.style.transition=''; behind.style.transform='' }
       setMotion('')
       onDismissed()
@@ -278,11 +284,9 @@ export default function DailyQuestionnaire({ userId }) {
   const moveRearCards = (dx,dy) => {
     const progress=Math.min(1,Math.max(Math.abs(dx),Math.max(0,dy))/150)
     if(middleNode.current) {
-      middleNode.current.style.transition='none'
       middleNode.current.style.transform=`translateY(${28*(1-progress)}px) scale(${.94+.06*progress})`
     }
     if(backNode.current) {
-      backNode.current.style.transition='none'
       backNode.current.style.transform=`translateY(${50-22*progress}px) scale(${.88+.06*progress})`
     }
   }
@@ -300,10 +304,13 @@ export default function DailyQuestionnaire({ userId }) {
     downCue.current?.classList.remove(s.unknownCueVisible)
   }
   const onPointerDown = e => {
-    if(e.target.closest('input,button,select,label,a,[data-wheel]') || busy || motion || attackFlow || completePending || cycleDateChoice) return
+    if(!e.isPrimary || e.button !== 0 || e.target.closest('input,button,select,label,a,[data-wheel]') || busy || motion || attackFlow || completePending || cycleDateChoice) return
     pointer.current={id:e.pointerId,x:e.clientX,y:e.clientY,dx:0,dy:0}
     cardNode.current=e.currentTarget
     e.currentTarget.style.transition='none'
+    for (const behind of [middleNode.current, backNode.current]) {
+      if (behind) behind.style.transition = 'none'
+    }
     e.currentTarget.setPointerCapture(e.pointerId)
   }
   const onPointerMove = e => {
@@ -316,7 +323,7 @@ export default function DailyQuestionnaire({ userId }) {
       const current=pointer.current
       if(!current || !cardNode.current) return
       const {dx,dy}=current
-      cardNode.current.style.transform=`translate(${dx}px, ${dy}px) rotate(${dx/28}deg)`
+      cardNode.current.style.transform=`translate3d(${dx}px, ${dy}px, 0) rotate(${dx/28}deg)`
       moveRearCards(dx,dy)
       leftCue.current?.classList.toggle(s.gestureCueVisible,dx < -12 && Math.abs(dx)>=dy)
       rightCue.current?.classList.toggle(s.gestureCueVisible,dx > 12 && Math.abs(dx)>=dy)
@@ -330,7 +337,7 @@ export default function DailyQuestionnaire({ userId }) {
     const dx=e.clientX-p.x, dy=Math.max(-25,e.clientY-p.y)
     const direction=swipeDirection(dx,dy)
     if(direction && cardNode.current) {
-      cardNode.current.style.transform=`translate(${dx}px, ${dy}px) rotate(${dx/28}deg)`
+      cardNode.current.style.transform=`translate3d(${dx}px, ${dy}px, 0) rotate(${dx/28}deg)`
       moveRearCards(dx,dy)
     }
     clearDragVisual(!direction,Boolean(direction))

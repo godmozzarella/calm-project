@@ -1,4 +1,4 @@
-export { http, getToken, setToken, clearToken, getRefreshToken, clearRefreshToken } from './httpClient'
+export { http, getToken } from './httpClient'
 export { authApi }       from './authApi'
 export { userApi }       from './userApi'
 export { attackApi }     from './attackApi'

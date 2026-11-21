@@ -35,7 +35,4 @@ public class AuthSession {
 
 	public String getId() { return id; }
 	public String getUserId() { return userId; }
-	public String getRefreshToken() { return refreshToken; }
-	public Instant getLastActivity() { return lastActivity; }
-	public Instant getExpiresAt() { return expiresAt; }
 }

@@ -60,6 +60,7 @@
 }
 .deck {position:relative;width:100%;height:var(--card-height);isolation:isolate;}
 .card,.deckMiddle,.deckBack {
+  will-change:transform;
   --card-tint:#339dff;
   &[data-card='today'] {--card-tint:#15beb9;}
   &[data-card='sleep'] {--card-tint:#6e78ff;}
@@ -152,10 +153,7 @@
     svg{font-size:1.25rem;color:$fc-contrast;}&:hover:not(:disabled){background:$quiet-surface-raised;}&:disabled{opacity:.4;cursor:default;}}}
 .answerUnknown {grid-column:1 / -1;}
 .step svg path {stroke:currentColor;stroke-width:.45px;stroke-linejoin:round;}
-.toast {position:absolute;left:50%;bottom:calc(100% + 6px);z-index:4;transform:translateX(-50%);width:max-content;max-width:min(100%,27rem);padding:.7rem .9rem;border:1px solid color-mix(in srgb,$fc-contrast 28%,$quiet-line);border-radius:.75rem;box-shadow:0 12px 36px #0003;background:var(--surface-strong);color:$fc-main;text-align:center;pointer-events:none;line-height:1.35;@include fluid-text(14,12);}
-.error {max-width:450px;line-height:1.5;text-align:center;color:$error-color;@include fluid-text(14,12);}
 .saving {text-align:center;color:$fc-secondary;@include fluid-text(13,11);}
-
 
 .timeInputs {--wheel-height:176px;display:flex;align-items:flex-start;justify-content:center;gap:.75rem;width:100%;}
 .timeSeparator {margin-top:calc((var(--wheel-height) - 1em) / 2);font-size:1.8rem;line-height:1;color:$fc-secondary;}
@@ -176,6 +174,7 @@
 .wheelNumbers {position:absolute;inset:0;perspective:450px;pointer-events:none;mask-image:linear-gradient(to bottom,transparent,#000 23%,#000 77%,transparent);
   span {position:absolute;inset:calc(50% - 22px) 0 auto;height:44px;line-height:44px;font-size:2rem;font-weight:$fw-medium;font-variant-numeric:tabular-nums;text-align:center;backface-visibility:hidden;will-change:transform;transition:transform .16s ease-out,opacity .16s ease-out;}}
 .wheel[data-turning='true'] .wheelNumbers span {transition:none;}
+.deckBack .wheelNumbers span,.deckMiddle .wheelNumbers span {will-change:auto;}
 .wheelInputWrap {position:absolute;top:50%;left:6px;width:calc(100% - 12px);transform:translateY(-50%);}
 .wheel .wheelInput {padding-inline:.25rem;border:0;background:transparent;font-size:1.75rem;text-align:center;font-variant-numeric:tabular-nums;cursor:text;-webkit-user-select:text;user-select:text;}
 .wheelUnit {color:$fc-secondary;@include fluid-text(12,10);}
@@ -231,11 +230,6 @@
   }
 }
 .scaleEnds {display:flex;justify-content:space-between;gap:.6rem;color:$fc-secondary;@include fluid-text(12,10);}
-.cycleDate {display:flex;flex-direction:column;align-items:center;gap:.45rem;width:100%;color:$fc-secondary;@include fluid-text(13,11);}
-.cycleWheels {display:flex;align-items:flex-start;justify-content:center;gap:.75rem;width:100%;}
-.cycleDateStatus {display:flex;align-items:center;gap:.5rem;min-height:1.2em;color:$fc-main;@include fluid-text(12,10);
-  button {padding:.1rem .25rem;border:0;background:none;color:$fc-contrast;font:inherit;cursor:pointer;
-    &:focus-visible {outline:2px solid $fc-contrast;outline-offset:2px;}}}
 .bounce {animation:bounce .4s;}
 @keyframes bounce {0%,100%{transform:translateX(0);}25%{transform:translateX(-15px) rotate(-2deg);}55%{transform:translateX(10px) rotate(1deg);}}
 
@@ -247,13 +241,6 @@
 @media(max-height:700px) {
   .card {padding:18px;grid-template-rows:20px 58px 24px minmax(0,1fr);h2{font-size:1.3rem;}}
   .deckMiddle,.deckBack {padding:18px;grid-template-rows:20px 58px 24px minmax(0,1fr);h2{font-size:1.3rem;}}
-  .cycleDate {justify-content:center;gap:.2rem;}
-  .cycleWheels {gap:.5rem;}
-  .cycleWheels .wheelColumn {gap:2px;}
-  .cycleWheels .wheel {width:90px;height:80px;}
-  .cycleWheels .wheelSelection {top:calc(50% - 20px);height:40px;}
-  .cycleWheels .wheelNumbers span {font-size:1.5rem;}
-  .cycleWheels .wheel .wheelInput {font-size:1.5rem;}
   .timeInputs {--wheel-height:112px;}
   .wheelNumbers span,.wheel .wheelInput {font-size:1.8rem;}
   .scale .moodValue {font-size:1.8rem;}

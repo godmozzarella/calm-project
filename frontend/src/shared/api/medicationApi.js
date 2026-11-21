@@ -24,11 +24,8 @@ export const medicationApi = {
   getPersonal:   ()             => http.get('/medications/personal'),
   addPersonal:   name           => http.post('/medications/personal', { name }),
   deletePersonal: id            => http.delete(`/medications/personal/${encodeURIComponent(id)}`),
-  getInRange:    (from, to)     => http.get(`/medications?from=${from}&to=${to}`),
   getOveruseDays: (year, month) => http.get(`/medications/overuse?year=${year}&month=${month}`)
                                       .then(r => r.days),
-
-  add: med => http.post('/medications', med).then(notify),
 
   update: (id, med) => http.put(`/medications/${id}`, medicationBody(med)).then(notify),
 

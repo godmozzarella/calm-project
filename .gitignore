@@ -14,10 +14,12 @@ frontend/node_modules/
 frontend/dist/
 frontend/dist-ssr/
 frontend/*.local
+.vite/
 
 # Backend artifacts
 backend/target/
-backend/scripts/__pycache__/
+__pycache__/
+*.pyc
 backend/.mvn/wrapper/maven-wrapper.jar
 backend/HELP.md
 /backend/generated/risk-training/shared-risk-training.csv

@@ -131,78 +131,7 @@
 }
 
 /* ── Preset groups ── */
-.presetGroups {
-	display: flex;
-	flex-direction: column;
-	gap: 0.6rem;
-}
-
-.presetGroup {
-	display: flex;
-	flex-direction: column;
-	gap: 0.35rem;
-}
-
-.presetGroupLabel {
-	@include fluid-text(10, 9);
-	font-weight: $fw-semibold;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: var(--fc-secondary);
-}
-
-.presetChips {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.35rem;
-}
-
-.presetChip {
-	padding: 0.3rem 0.7rem;
-	border-radius: 2rem;
-	border: 0;
-	background: none;
-	color: $fc-secondary;
-	@include fluid-text(12, 11);
-	cursor: pointer;
-	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-
-	&:hover {
-		background: var(--selection-hover);
-		color: $fc-main;
-	}
-}
-
-.presetChipActive {
-	background: var(--selected-control-bg);
-	border-color: transparent;
-	color: var(--selected-control-fg);
-}
-
-.presetChipActive:hover {
-	background: var(--selected-control-bg);
-	color: var(--selected-control-fg);
-}
-
 /* ── Text input ── */
-.textInput {
-	background: var(--surface-hover);
-	border: 1px solid $quiet-line;
-	border-radius: 0.625rem;
-	color: $fc-main;
-	padding: 0.5rem 0.75rem;
-	@include fluid-text(14, 12);
-	width: 100%;
-	transition: border-color 0.15s ease;
-
-	&::placeholder { color: color-mix(in srgb, var(--fc-secondary) 55%, transparent); }
-
-	&:focus {
-		outline: none;
-		border-color: color-mix(in srgb, var(--fc-contrast) 40%, transparent);
-	}
-}
-
 /* ── Time ── */
 .timeRow {
 	width: 100%;
@@ -217,55 +146,11 @@
 	width: 100%;
 }
 
-.timeInput {
-	background: var(--surface-hover);
-	border: 0;
-	border-radius: 0.625rem;
-	color: $fc-main;
-	padding: 0.5rem 0.75rem;
-	@include fluid-text(14, 12);
-	width: 100%;
-	max-width: 100%;
-	height: 2.75rem;
-	display: block;
-	min-width: 0;
-	box-sizing: border-box;
-	font-size: 16px;
-	font-family: inherit;
-	font-weight: $fw-semibold;
-	box-shadow: none;
-	cursor: pointer;
-	transition: background-color 0.15s ease;
-	color-scheme: inherit;
-
-	&:focus {
-		outline: none;
-		background: var(--selection-surface);
-		box-shadow: none;
-	}
-}
-
 @supports (-webkit-touch-callout: none) {
 	@media (max-width: 640px) {
 		.timeRow, .timeField { width: 100%; min-width: 0; align-self: stretch; }
-		.timeInput {
-			-webkit-appearance: none;
-			appearance: none;
-			display: flex;
-			align-items: center;
-			width: 100%;
-			text-align: left;
-		}
-		.timeInput::-webkit-date-and-time-value {
-			min-width: 0;
-			width: 100%;
-			line-height: 1.25;
-			text-align: left;
-		}
-		.timeInput::-webkit-datetime-edit { padding: 0; }
 	}
 }
-
 
 /* ── Attack select ── */
 .select {
@@ -398,48 +283,6 @@
 }
 
 .selectStep { flex: 1; min-height: 0; }
-
-.searchBox {
-	display: flex;
-	align-items: center;
-	gap: 0.55rem;
-	flex: 0 0 auto;
-	height: 2.75rem;
-	box-sizing: border-box;
-	padding: 0 0.7rem;
-	border: 1px solid var(--surface-hover);
-	border-radius: 0.75rem;
-	background: var(--surface-hover);
-	color: $fc-secondary;
-	box-shadow: none;
-	transition: border-color 0.15s ease;
-
-	input {
-		flex: 1;
-		min-width: 0;
-		border: 0;
-		outline: 0;
-		box-shadow: none;
-		background: transparent;
-		color: $fc-main;
-		font: inherit;
-		font-size: 16px;
-		&::placeholder { color: $fc-secondary; }
-		&::-webkit-search-cancel-button { display: none; }
-	}
-	button {
-		display: grid;
-		place-items: center;
-		width: 1.75rem;
-		height: 1.75rem;
-		padding: 0;
-		border: 0;
-		background: transparent;
-		color: $fc-secondary;
-		cursor: pointer;
-	}
-	&:focus-within { outline: none; border-color: color-mix(in srgb, var(--fc-contrast) 30%, transparent); box-shadow: none; }
-}
 
 /* ── Scrollable catalog (step 1) ── */
 .catalogList {
@@ -684,10 +527,6 @@
 }
 
 @media (max-width: 640px) {
-	.textInput, .timeInput, .select, .textarea { font-size: 16px; }
-}
-
-@media (hover: none) {
-	.chip:hover { background: $quiet-surface; color: $fc-secondary; }
-	.chipActive:hover { background: var(--selected-control-bg); color: var(--selected-control-fg); }
+	.select,
+	.textarea { font-size: 16px; }
 }

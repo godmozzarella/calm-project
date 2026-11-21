@@ -29,6 +29,12 @@ if(args[0]==='image'&&args[1]==='inspect')process.exit(0)
 if(args[0]==='export'){process.stdout.write('synthetic-root-filesystem');process.exit(0)}
 if(args[0]==='import')process.exit(0)
 if(args.includes('ps')&&args.some(x=>['-q','-aq','-qa'].includes(x))){if(process.env.NO_PREVIOUS_CONTAINERS!=='YES')console.log(args.at(-1)+'-container');process.exit(0)}
+if(args.includes('build')) {
+ const path=root+'/build-count';
+ const count=fs.existsSync(path)?Number(fs.readFileSync(path,'utf8'))+1:1;
+ fs.writeFileSync(path,String(count));
+ if(count<=Number(process.env.FAIL_BUILD_ATTEMPTS||0))process.exit(42);
+}
 if(args.includes('run')) {
  if(args.some(x=>x.includes('mongodump'))){
   if(process.env.DRAIN_DOCKER_STDIN==='YES')fs.writeFileSync(root+'/docker-stdin',fs.readFileSync(0));
@@ -75,7 +81,8 @@ const {spawnSync}=require('child_process');
 const result=spawnSync('bash',['-c',process.argv.at(-1)],{stdio:'inherit'});
 process.exit(result.status ?? 1);
 `)
-    for (const name of ['git', 'docker', 'ssh']) chmodSync(join(root, 'bin', name), 0o700)
+    writeFileSync(join(root, 'bin/sleep'), '#!/bin/sh\nexit 0\n')
+    for (const name of ['git', 'docker', 'ssh', 'sleep']) chmodSync(join(root, 'bin', name), 0o700)
     const args = transport === 'ssh' ? [deployViaSsh] : transport === 'stdin' ? ['-s', '--', sha] : [deploy, sha]
     const result = spawnSync('bash', args, { cwd: root, encoding: 'utf8',
       input: transport === 'stdin' ? readFileSync(deploy) : undefined,
@@ -85,12 +92,35 @@ process.exit(result.status ?? 1);
     const commands = readFileSync(join(root, 'commands'), 'utf8').split('\n').filter(Boolean)
     const output = result.stdout + result.stderr
     assert.doesNotMatch(output, /private-test-value/)
-    const backup = join(root, '.release-backups', readdirSync(join(root, '.release-backups'))[0])
-    const rollbackFile = join(backup, 'rollback-images.yml')
-    const rollbackConfig = existsSync(rollbackFile) ? readFileSync(rollbackFile, 'utf8') : ''
+    const backups = join(root, '.release-backups')
+    const backup = existsSync(backups) ? readdirSync(backups)[0] : undefined
+    const rollbackFile = backup && join(backups, backup, 'rollback-images.yml')
+    const rollbackConfig = rollbackFile && existsSync(rollbackFile) ? readFileSync(rollbackFile, 'utf8') : ''
     return { result, commands, output, root, rollbackConfig, cleanup: () => rmSync(root, { recursive: true, force: true }) }
   } catch (e) { rmSync(root, { recursive: true, force: true }); throw e }
 }
+
+test('a transient Docker build failure is retried before services are stopped', () => {
+  const run = runRelease({ FAIL_BUILD_ATTEMPTS: '1' })
+  try {
+    assert.equal(run.result.status, 0, run.output)
+    const builds = run.commands.filter(line => line.includes('"build"'))
+    assert.equal(builds.length, 2)
+    const firstStop = run.commands.findIndex(line => line.includes('"stop"'))
+    assert(firstStop > run.commands.lastIndexOf(builds[1]))
+    assert.match(run.output, /Retrying in 15s/)
+  } finally { run.cleanup() }
+})
+
+test('exhausted Docker build retries leave running services and database alone', () => {
+  const run = runRelease({ FAIL_BUILD_ATTEMPTS: '3' })
+  try {
+    assert.equal(run.result.status, 42, run.output)
+    assert.equal(run.commands.filter(line => line.includes('"build"')).length, 3)
+    assert(run.commands.every(line => !/"(?:stop|up|run)"/.test(line)))
+    assert.match(run.output, /Docker build failed after 3 attempts/)
+  } finally { run.cleanup() }
+})
 
 test('release backs up and checks source before starting updated services and rebuilding all history', () => {
   const run = runRelease()

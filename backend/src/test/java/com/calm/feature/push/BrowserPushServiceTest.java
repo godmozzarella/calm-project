@@ -3,6 +3,7 @@ package com.calm.feature.push;
 import java.security.KeyPairGenerator;
 import java.security.spec.ECGenParameterSpec;
 import java.util.Base64;
+import nl.martijndwars.webpush.Urgency;
 import org.bouncycastle.jce.interfaces.ECPrivateKey;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -29,10 +30,11 @@ class BrowserPushServiceTest {
 		service.validateKeys(browserKey, auth);
 		for (String endpoint : new String[]{"https://web.push.apple.com/test", "https://fcm.googleapis.com/fcm/send/test"}) {
 			var request = service.notificationRequest(new DevicePushSubscription("id", "user", endpoint, browserKey, auth, null),
-					BrowserPushService.FORECAST_MESSAGE, java.time.Duration.ofHours(4));
+					BrowserPushService.FORECAST_MESSAGE, java.time.Duration.ofHours(4), Urgency.HIGH);
 			assertThat(request.uri().toString()).isEqualTo(endpoint);
 			assertThat(request.method()).isEqualTo("POST");
 			assertThat(request.headers().firstValue("Content-Encoding")).hasValue("aes128gcm");
+			assertThat(request.headers().firstValue("Urgency")).hasValue("high");
 			assertThat(request.headers().firstValue("Authorization").orElseThrow()).startsWith("vapid ");
 			assertThat(request.bodyPublisher().orElseThrow().contentLength()).isGreaterThan(100);
 		}

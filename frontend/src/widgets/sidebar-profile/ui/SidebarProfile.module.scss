@@ -471,12 +471,6 @@
 	gap: 0.75rem;
 }
 
-.passwordSection {
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
-}
-
 .saveBtn {
 	width: 100%;
 	margin-top: .25rem;
@@ -580,50 +574,6 @@
 	box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, .4);
 }
 
-.verificationHeader {
-	display: flex;
-	align-items: flex-start;
-	gap: .75rem;
-
-	> div { min-width: 0; flex: 1; }
-	h2 { margin: 0; color: $fc-main; @include fluid-text(19, 17); }
-	p { margin: .35rem 0 0; color: $fc-secondary; overflow-wrap: anywhere; @include fluid-text(13, 12); }
-}
-
-.verificationHint {
-	margin: 0;
-	color: $fc-secondary;
-	line-height: 1.5;
-	@include fluid-text(13, 12);
-}
-
-.verificationForm {
-	display: flex;
-	flex-direction: column;
-	gap: .65rem;
-
-	label { color: $fc-main; font-weight: $fw-semibold; @include fluid-text(13, 12); }
-}
-
-.verificationCodeHint {
-	min-height: 1rem;
-	color: var(--fc-subtle);
-	@include fluid-text(11, 10);
-}
-
-.verificationSendButton,
-.verificationConfirmButton {
-	min-height: 2.85rem;
-	padding: .65rem .85rem;
-	border-radius: .75rem;
-	font: inherit;
-	font-weight: $fw-semibold;
-	cursor: pointer;
-	-webkit-tap-highlight-color: transparent;
-	&:focus-visible { outline: 2px solid $fc-secondary; outline-offset: 2px; }
-	&:disabled { opacity: .5; cursor: not-allowed; }
-}
-
 .logoutConfirmActions {
 	display: flex;
 	justify-content: flex-end;
@@ -660,19 +610,6 @@
 .logoutConfirmStayButton {
 	@include contrast-button;
 }
-
-.verificationSendButton {
-	border: 0;
-	background: $quiet-surface-raised;
-	color: $fc-main;
-	&:hover:not(:disabled) { background: $quiet-surface; }
-}
-
-.verificationConfirmButton {
-	@include contrast-button;
-	margin-top: .25rem;
-}
-
 
 /* ── Footer block: socials + copyright ── */
 .footerBlock {

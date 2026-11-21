@@ -1,13 +1,8 @@
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded'
-import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
-import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded'
-import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded'
-import InstallDesktopIcon from '@mui/icons-material/InstallDesktop'
 import InstallMobileIcon from '@mui/icons-material/InstallMobile'
 import PersonIcon from '@mui/icons-material/PersonOutlineOutlined'
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonthOutlined'
 import MedicalInformationIcon from '@mui/icons-material/MedicalInformationOutlined'
-import ForwardToInboxIcon from '@mui/icons-material/ForwardToInboxOutlined'
 import TelegramIcon from '@mui/icons-material/Telegram'
 import ThreadsIcon from './ThreadsIcon'
 import GitHubIcon from '@mui/icons-material/GitHub'
@@ -15,18 +10,10 @@ import LanguageIcon from '@mui/icons-material/Language'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
 import StopCircleIcon from '@mui/icons-material/StopCircleOutlined'
-import CircleIcon from '@mui/icons-material/PanoramaFishEye'
 import SecurityIcon from '@mui/icons-material/Security'
-import ConnectIcon from '@mui/icons-material/ConnectWithoutContact'
 import AnalyticsIcon from '@mui/icons-material/AnalyticsOutlined'
 import MenuIcon from '@mui/icons-material/MenuOutlined'
 import CloseIcon from '@mui/icons-material/Close'
-import AddIcon from '@mui/icons-material/AddCircle'
-import UploadIcon from '@mui/icons-material/Upload'
-import VisibilityIcon from '@mui/icons-material/Visibility'
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
-import CheckCircleIcon from '@mui/icons-material/CheckCircleOutlined'
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import BackIcon from './BackIcon'
@@ -37,32 +24,20 @@ import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone'
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import MedicationIcon from '@mui/icons-material/Medication'
-import LocalPharmacyIcon from '@mui/icons-material/LocalPharmacy'
-import WaterDropIcon from '@mui/icons-material/WaterDrop'
-import AirIcon from '@mui/icons-material/Air'
-import HealingIcon from '@mui/icons-material/Healing'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import PrintIcon from '@mui/icons-material/Print'
 import FileDownloadIcon from '@mui/icons-material/FileDownload'
 import LocationOnIcon from '@mui/icons-material/LocationOnOutlined'
 import SearchIcon from '@mui/icons-material/Search'
-import ThermostatIcon from '@mui/icons-material/Thermostat'
-import SpeedIcon from '@mui/icons-material/Speed'
-import EmailIcon from '@mui/icons-material/EmailOutlined'
 import EditLocationIcon from '@mui/icons-material/EditLocationOutlined'
 
 export {
 	ArrowBackRoundedIcon,
-	ArrowForwardRoundedIcon,
-	ArrowDownwardRoundedIcon,
-	ReplayRoundedIcon,
-	InstallDesktopIcon,
 	InstallMobileIcon,
 	PersonIcon,
 	CalendarMonthIcon,
 	MedicalInformationIcon,
-	ForwardToInboxIcon,
 	TelegramIcon,
 	ThreadsIcon,
 	GitHubIcon,
@@ -70,18 +45,10 @@ export {
 	DeleteIcon,
 	EditIcon,
 	StopCircleIcon,
-	CircleIcon,
 	SecurityIcon,
-	ConnectIcon,
 	AnalyticsIcon,
 	MenuIcon,
 	CloseIcon,
-	AddIcon,
-	UploadIcon,
-	VisibilityIcon,
-	VisibilityOffIcon,
-	CheckCircleIcon,
-	ErrorOutlineIcon,
 	ChevronRightIcon,
 	ChevronLeftIcon,
 	BackIcon,
@@ -92,18 +59,11 @@ export {
 	DarkModeOutlinedIcon,
 	LightModeOutlinedIcon,
 	MedicationIcon,
-	LocalPharmacyIcon,
-	WaterDropIcon,
-	AirIcon,
-	HealingIcon,
 	ArrowForwardIcon,
 	OpenInNewIcon,
 	PrintIcon,
 	FileDownloadIcon,
 	LocationOnIcon,
 	SearchIcon,
-	ThermostatIcon,
-	SpeedIcon,
-	EmailIcon,
 	EditLocationIcon,
 }

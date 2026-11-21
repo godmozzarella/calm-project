@@ -75,8 +75,21 @@ if [[ -n "$previous_backend_image" && -n "$previous_frontend_image" ]]; then
   preserve_rollback_image "$previous_backend" "$previous_backend_image" "$rollback_backend_image" backend
   preserve_rollback_image "$previous_frontend" "$previous_frontend_image" "$rollback_frontend_image" frontend
 fi
-# Build before stopping writers to keep the backup window short.
-"${compose[@]}" build backend frontend
+# Build before stopping writers. Registry timeouts can succeed on a fresh request.
+for attempt in 1 2 3; do
+  if "${compose[@]}" build backend frontend; then
+    break
+  else
+    build_status=$?
+  fi
+  if (( attempt == 3 )); then
+    echo 'Docker build failed after 3 attempts. Running services were left online.' >&2
+    exit "$build_status"
+  fi
+  retry_delay=$((attempt * 15))
+  echo "Docker build attempt $attempt of 3 failed. Retrying in ${retry_delay}s." >&2
+  sleep "$retry_delay"
+done
 umask 077
 mkdir -p "$PWD/.release-backups"
 backup_dir="$(mktemp -d "$PWD/.release-backups/$(date -u '+%Y%m%dT%H%M%SZ')-$target_sha-XXXXXX")"
