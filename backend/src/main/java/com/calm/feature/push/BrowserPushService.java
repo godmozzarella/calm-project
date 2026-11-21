@@ -13,6 +13,7 @@ import java.util.Locale;
 import nl.martijndwars.webpush.AbstractPushService;
 import nl.martijndwars.webpush.Encoding;
 import nl.martijndwars.webpush.Notification;
+import nl.martijndwars.webpush.Urgency;
 import nl.martijndwars.webpush.Utils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
@@ -90,20 +91,25 @@ public class BrowserPushService {
 	}
 
 	public Delivery sendForecast(DevicePushSubscription subscription) {
-		return send(subscription, FORECAST_MESSAGE, Duration.ofHours(4));
+		return send(subscription, FORECAST_MESSAGE, Duration.ofHours(4), Urgency.NORMAL);
 	}
 
 	public Delivery send(DevicePushSubscription subscription, Message message) {
-		return send(subscription, message, Duration.ofHours(2));
+		return send(subscription, message, Duration.ofHours(2), Urgency.HIGH);
 	}
 
-	private Delivery send(DevicePushSubscription subscription, Message message, Duration ttl) {
+	private Delivery send(DevicePushSubscription subscription, Message message, Duration ttl, Urgency urgency) {
 		if (!available()) return Delivery.FAILED;
 		try {
-			int status = http.send(notificationRequest(subscription, message, ttl), HttpResponse.BodyHandlers.discarding()).statusCode();
-			if (status >= 200 && status < 300) return Delivery.SENT;
+			HttpRequest request = notificationRequest(subscription, message, ttl, urgency);
+			int status = http.send(request, HttpResponse.BodyHandlers.discarding()).statusCode();
+			String provider = request.uri().getHost();
+			if (status >= 200 && status < 300) {
+				log.debug("Сервис Web Push {} принял уведомление, HTTP {}", provider, status);
+				return Delivery.SENT;
+			}
 			if (status == 404 || status == 410) return Delivery.EXPIRED;
-			log.warn("Сервис Web Push отклонил уведомление, HTTP {}", status);
+			log.warn("Сервис Web Push {} отклонил уведомление, HTTP {}", provider, status);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		} catch (Exception e) {
@@ -112,11 +118,12 @@ public class BrowserPushService {
 		return Delivery.FAILED;
 	}
 
-	HttpRequest notificationRequest(DevicePushSubscription subscription, Message message, Duration ttl)
+	HttpRequest notificationRequest(DevicePushSubscription subscription, Message message, Duration ttl, Urgency urgency)
 			throws GeneralSecurityException, java.io.IOException, org.jose4j.lang.JoseException {
 		URI endpoint = pushEndpoint(subscription.endpoint());
-		var notification = new Notification(subscription.endpoint(), subscription.p256dh(),
-				subscription.auth(), JSON.writeValueAsBytes(message), Math.toIntExact(ttl.toSeconds()));
+		var notification = Notification.builder().endpoint(subscription.endpoint())
+				.userPublicKey(subscription.p256dh()).userAuth(subscription.auth())
+				.payload(JSON.writeValueAsBytes(message)).ttl(Math.toIntExact(ttl.toSeconds())).urgency(urgency).build();
 		var prepared = sender.encryptRequest(notification);
 		var request = HttpRequest.newBuilder(endpoint).timeout(Duration.ofSeconds(8))
 				.POST(HttpRequest.BodyPublishers.ofByteArray(prepared.getBody()));

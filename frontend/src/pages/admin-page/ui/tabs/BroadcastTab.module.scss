@@ -14,19 +14,6 @@
 	strong { color: $fc-main; font-weight: $fw-semibold; }
 }
 
-.messageInput {
-	min-height: 10rem;
-	resize: vertical;
-	line-height: 1.5;
-	white-space: pre-wrap;
-}
-
-.counter {
-	align-self: flex-end;
-	color: $fc-secondary;
-	@include fluid-text(11, 10);
-}
-
 .result {
 	margin: 0;
 	padding: .8rem 1rem;

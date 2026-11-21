@@ -11,7 +11,7 @@ let sessionRevision = 0
 export const getToken          = ()    => localStorage.getItem(TOKEN_KEY)
 export const setToken          = token => localStorage.setItem(TOKEN_KEY, token)
 export const clearToken        = ()    => { sessionRevision += 1; localStorage.removeItem(TOKEN_KEY) }
-export const getRefreshToken   = ()    => localStorage.getItem(REFRESH_TOKEN_KEY)
+const getRefreshToken   = ()    => localStorage.getItem(REFRESH_TOKEN_KEY)
 export const clearRefreshToken = ()    => localStorage.removeItem(REFRESH_TOKEN_KEY)
 
 // Access tokens rotate, but a login session keeps the same sessionId.

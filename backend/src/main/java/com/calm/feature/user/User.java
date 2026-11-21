@@ -7,7 +7,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Document(collection = "users")
 public class User {
@@ -104,17 +103,8 @@ public class User {
 	public String getName() { return name; }
 	public void setName(String name) { this.name = name; }
 	public String getPasswordHash() { return passwordHash; }
-	public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
 	public boolean isEmailVerified() { return emailVerified; }
 	public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
-	public String getEmailVerificationCodeHash() { return emailVerificationCodeHash; }
-	public void setEmailVerificationCodeHash(String hash) { this.emailVerificationCodeHash = hash; }
-	public Instant getEmailVerificationExpiresAt() { return emailVerificationExpiresAt; }
-	public void setEmailVerificationExpiresAt(Instant expiresAt) { this.emailVerificationExpiresAt = expiresAt; }
-	public Instant getEmailVerificationSentAt() { return emailVerificationSentAt; }
-	public void setEmailVerificationSentAt(Instant sentAt) { this.emailVerificationSentAt = sentAt; }
-	public int getEmailVerificationAttempts() { return emailVerificationAttempts; }
-	public void setEmailVerificationAttempts(int attempts) { this.emailVerificationAttempts = attempts; }
 	public String getPendingEmailChangeStage() { return pendingEmailChangeStage; }
 	public void setPendingEmailChangeStage(String stage) { pendingEmailChangeStage = stage; }
 	public String getPendingEmailChangeAddress() { return pendingEmailChangeAddress; }
@@ -131,32 +121,6 @@ public class User {
 	public void setPendingEmailChangeCancelTokenHash(String value) { this.pendingEmailChangeCancelTokenHash = value; }
 	public Instant getPendingEmailChangeCancelExpiresAt() { return pendingEmailChangeCancelExpiresAt; }
 	public void setPendingEmailChangeCancelExpiresAt(Instant value) { this.pendingEmailChangeCancelExpiresAt = value; }
-	public void clearPendingEmailChange() {
-		pendingEmailChangeAddress = null;
-		pendingEmailChangeCodeHash = null;
-		pendingEmailChangeExpiresAt = null;
-		pendingEmailChangeSentAt = null;
-		pendingEmailChangeAttempts = 0;
-		pendingEmailChangeCancelTokenHash = null;
-		pendingEmailChangeCancelExpiresAt = null;
-	}
-	public String getPasswordResetTokenHash() { return passwordResetTokenHash; }
-	public void setPasswordResetTokenHash(String value) { passwordResetTokenHash = value; }
-	public String getPasswordResetCodeHash() { return passwordResetCodeHash; }
-	public void setPasswordResetCodeHash(String value) { this.passwordResetCodeHash = value; }
-	public Instant getPasswordResetExpiresAt() { return passwordResetExpiresAt; }
-	public void setPasswordResetExpiresAt(Instant value) { this.passwordResetExpiresAt = value; }
-	public Instant getPasswordResetSentAt() { return passwordResetSentAt; }
-	public void setPasswordResetSentAt(Instant value) { this.passwordResetSentAt = value; }
-	public int getPasswordResetAttempts() { return passwordResetAttempts; }
-	public void setPasswordResetAttempts(int value) { this.passwordResetAttempts = value; }
-	public void clearPasswordReset() {
-		passwordResetCodeHash = null;
-		passwordResetTokenHash = null;
-		passwordResetExpiresAt = null;
-		passwordResetSentAt = null;
-		passwordResetAttempts = 0;
-	}
 	public boolean isRegistrationPending() { return registrationPending; }
 	public void setRegistrationPending(boolean registrationPending) { this.registrationPending = registrationPending; }
 	public String getAvatarUrl() { return avatarUrl; }
@@ -178,18 +142,6 @@ public class User {
 
 	public Instant getCreatedAt() { return createdAt; }
 	public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-
-	public String getRefreshToken() { return refreshToken; }
-	public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
-	public Instant getRefreshTokenExpiry() { return refreshTokenExpiry; }
-	public void setRefreshTokenExpiry(Instant refreshTokenExpiry) { this.refreshTokenExpiry = refreshTokenExpiry; }
-
-	/** Выдаёт новый refresh-токен со сроком 30 дней и сохраняет в объекте. */
-	public String rotateRefreshToken() {
-		this.refreshToken = UUID.randomUUID().toString();
-		this.refreshTokenExpiry = Instant.now().plusSeconds(30L * 24 * 3600);
-		return this.refreshToken;
-	}
 
 	/** Готов ли пользователь к рассылке: задана локация и не отключены уведомления. */
 	public boolean canReceiveForecastEmails() {

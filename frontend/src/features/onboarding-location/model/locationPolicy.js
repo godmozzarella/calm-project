@@ -1,4 +1,4 @@
-export function locationDistanceKm(a, b) {
+function locationDistanceKm(a, b) {
     if ([a.latitude, a.longitude, b.latitude, b.longitude].some(value => value == null)) return Infinity
     const radians = value => value * Math.PI / 180
     const lat = radians(b.latitude - a.latitude)

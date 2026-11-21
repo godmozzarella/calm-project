@@ -7,7 +7,6 @@ const browserTimezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone |
 export const attackApi = {
   getByDate:  date           => http.get(`/attacks?from=${date}&to=${date}`),
   getAll:     ()             => http.get('/attacks'),
-  getInRange: (from, to)     => http.get(`/attacks?from=${from}&to=${to}`),
 
   add: attack => http.post('/attacks', { ...attack, timezone: browserTimezone() }).then(notify),
 

@@ -8,7 +8,6 @@ import {
 	emit,
 	ATTACKS_CHANGED,
 	MEDICATIONS_CHANGED,
-	OUTCOMES_CHANGED,
 } from '@/shared/lib/dataEvents'
 
 import BarChart from './BarChart'
@@ -45,7 +44,6 @@ const ChartSection = ({ showPatterns = true, statsLink = false, onInitialReady }
 	}, [load, onInitialReady])
 	useEffect(() => subscribe(ATTACKS_CHANGED,     load), [load])
 	useEffect(() => subscribe(MEDICATIONS_CHANGED, load), [load])
-	useEffect(() => subscribe(OUTCOMES_CHANGED, load), [load])
 
 	const handleBarClick = dateKey => {
 		if (!dateKey) return

@@ -253,33 +253,6 @@
 	line-height: 1;
 }
 
-.timeInput {
-	background: var(--surface-hover);
-	border: 0;
-	border-radius: 0.625rem;
-	color: $fc-main;
-	padding: 0.5rem 0.75rem;
-	@include fluid-text(14, 12);
-	width: 100%;
-	height: 2.75rem;
-	display: block;
-	min-width: 0;
-	box-sizing: border-box;
-	font-size: 16px;
-	font-family: inherit;
-	font-weight: $fw-semibold;
-	cursor: pointer;
-	transition: background-color 0.15s ease;
-
-	&:focus {
-		outline: none;
-		background: var(--selection-surface);
-	}
-
-	/* Chrome time picker dark */
-	color-scheme: inherit;
-}
-
 .ongoingToggle {
 	display: flex;
 	align-items: center;
@@ -333,39 +306,12 @@
 @media (max-width: 480px) {
 	.timeRow { gap: .5rem; }
 	.timeField { min-width: 0; align-items: stretch; }
-	.timeInput {
-		width: 100% !important;
-		max-width: 100%;
-		min-width: 0;
-		align-self: stretch;
-	}
 	.ongoingToggle { width: 100%; min-height: 2.75rem; }
 }
 
 @media (max-width: 390px) {
 	.timeRow { flex-direction: column; }
 }
-
-@supports (-webkit-touch-callout: none) {
-	@media (max-width: 480px) {
-		.timeInput {
-			-webkit-appearance: none;
-			appearance: none;
-			display: flex;
-			align-items: center;
-			text-align: left;
-		}
-
-		.timeInput::-webkit-date-and-time-value {
-			min-width: 0;
-			width: 100%;
-			line-height: 1.25;
-			text-align: left;
-		}
-		.timeInput::-webkit-datetime-edit { padding: 0; }
-	}
-}
-
 
 /* ── Note ── */
 .textarea {
@@ -405,7 +351,7 @@
 }
 
 @media (max-width: 640px) {
-	.timeInput, .textarea { font-size: 16px; }
+	.textarea { font-size: 16px; }
 }
 
 @media (hover: none) {

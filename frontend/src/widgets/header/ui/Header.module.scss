@@ -69,11 +69,6 @@ a {
 	display: none;
 }
 
-.inTextLogo {
-		font-weight: $fw-medium;
-    font-family: 'LilyScriptOne', cursive;
-}
-
 @media (max-width: 48rem) {
 	.header {
 		padding: 0.5rem 0.75rem;
@@ -168,5 +163,4 @@ a {
 @media (prefers-reduced-motion: reduce) {
 	.header { transition: none; }
 }
-
 

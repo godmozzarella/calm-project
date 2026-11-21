@@ -182,11 +182,6 @@ public class ForecastService {
 		return providers.active().reverseGeocode(lat, lon);
 	}
 
-	/** Видимая методам пакета — для использования планировщиком уведомлений. */
-	List<ForecastDayDto> rawDays(double lat, double lon) {
-		return getForecast(lat, lon).days();
-	}
-
 	// ── core scoring ──
 
 	static ForecastDayDto toDayDto(RawForecastDay r) {
