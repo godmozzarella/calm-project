@@ -94,6 +94,7 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar, currentDate }) => {
 	const [historyExpanded, setHistoryExpanded] = useState(false)
 	const monthListRef = useRef(null)
 	const historyAnchor = useRef(null)
+	const marksRequest = useRef(0)
 	const months = useMemo(() => {
 		const todayMonth = monthIndex(new Date(`${todayKey}T12:00:00`))
         const currentDiaryMonth = monthIndex(new Date(`${currentDateKey}T12:00:00`))
@@ -105,11 +106,28 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar, currentDate }) => {
 		})
 	}, [todayKey, currentDateKey, historyExpanded])
 
-	const loadMarks = useCallback(() => {
-		Promise.all([attackApi.getAll(), medicationApi.getAll()])
-			.then(([attacks, medications]) => setMarks(marksFromEntries(attacks, medications)))
-			.catch(() => {})
-	}, [])
+	const marksFrom = dateKey(months[0].date)
+	const lastMonth = months.at(-1).date
+	const marksTo = dateKey(new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0))
+	useEffect(() => {
+		if (!openCalendar) return
+		const loadMarks = () => {
+			const request = ++marksRequest.current
+			Promise.all([attackApi.getInRange(marksFrom, marksTo), medicationApi.getInRange(marksFrom, marksTo)])
+				.then(([attacks, medications]) => {
+					if (request === marksRequest.current) setMarks(marksFromEntries(attacks, medications))
+				})
+				.catch(() => {})
+		}
+		loadMarks()
+		const unsubscribeAttacks = subscribe(ATTACKS_CHANGED, loadMarks)
+		const unsubscribeMedications = subscribe(MEDICATIONS_CHANGED, loadMarks)
+		return () => {
+			marksRequest.current += 1
+			unsubscribeAttacks()
+			unsubscribeMedications()
+		}
+	}, [marksFrom, marksTo, openCalendar])
 	const loadCycle = useCallback(async () => {
 		const [profile, markers, overview] = await Promise.allSettled([
 			questionnaireApi.getProfile(), questionnaireApi.cycleMarks(), questionnaireApi.cycleOverview(),
@@ -125,7 +143,6 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar, currentDate }) => {
 			.then(dates => setSurveyDates(new Set(dates)))
 			.catch(() => {})
 	}, [])
-	useEffect(() => { if (openCalendar) loadMarks() }, [openCalendar, loadMarks])
 	useEffect(() => { if (openCalendar) loadCycle() }, [openCalendar, loadCycle])
 	useEffect(() => { if (openCalendar) loadSurveyDates() }, [openCalendar, loadSurveyDates])
 	useEffect(() => {
@@ -153,8 +170,6 @@ const SidebarCalendar = ({ openCalendar, setOpenCalendar, currentDate }) => {
 		if (month) list.scrollTop += month.getBoundingClientRect().top - list.getBoundingClientRect().top - anchor.offset
 		else if (list) list.scrollTop = 0
 	}, [historyExpanded])
-	useEffect(() => subscribe(ATTACKS_CHANGED, loadMarks), [loadMarks])
-	useEffect(() => subscribe(MEDICATIONS_CHANGED, loadMarks), [loadMarks])
 	useEffect(() => subscribe(PROFILE_CHANGED, loadCycle), [loadCycle])
 	useEffect(() => subscribe(CYCLE_CHANGED, loadCycle), [loadCycle])
 	useEffect(() => subscribe(SURVEY_COMPLETED, loadSurveyDates), [loadSurveyDates])

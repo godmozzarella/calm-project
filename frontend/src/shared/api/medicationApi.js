@@ -2,6 +2,7 @@ import { http } from './httpClient'
 import { emit, MEDICATIONS_CHANGED } from '@/shared/lib/dataEvents'
 
 const notify = result => { emit(MEDICATIONS_CHANGED); return result }
+const getInRange = (from, to) => http.get(`/medications?from=${from}&to=${to}`)
 
 const medicationBody = med => ({
   intakeId:         med.intakeId         ?? null,
@@ -19,7 +20,8 @@ const medicationBody = med => ({
 })
 
 export const medicationApi = {
-  getByDate:     date           => http.get(`/medications?from=${date}&to=${date}`),
+  getByDate:     date           => getInRange(date, date),
+  getInRange,
   getAll:        ()             => http.get('/medications'),
   getPersonal:   ()             => http.get('/medications/personal'),
   addPersonal:   name           => http.post('/medications/personal', { name }),

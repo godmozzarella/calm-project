@@ -20,6 +20,7 @@ import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.function.BooleanSupplier;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -82,23 +83,24 @@ public class DiaryReminderScheduler {
 		for (int page = 0; !Thread.currentThread().isInterrupted(); page++) {
 			List<Attack> batch = attacks.findByOngoingTrue(page(page));
 			for (Attack attack : batch) {
-				safely(() -> users.findById(attack.getUserId()).ifPresent(user -> remindAboutAttack(attack, user, now)));
+				safely(() -> remindAboutAttack(attack, now));
 			}
 			if (batch.size() < BATCH_SIZE) return;
 		}
 	}
 
-	private void remindAboutAttack(Attack attack, User user, Instant now) {
-		Instant start = attackStart(attack, user);
-		long period = attackPeriod(start, now);
+	private void remindAboutAttack(Attack attack, Instant now) {
+		Instant addedAt = attackAddedAt(attack);
+		long period = attackPeriod(addedAt, now);
 		if (period < 1) return;
 
-		String key = "attack:" + attack.getId() + ":" + start.getEpochSecond() + ":" + period;
+		String key = "attack:" + attack.getId() + ":" + addedAt.getEpochSecond() + ":" + period;
 		Message message = new Message("Напоминание от Calm",
 				"Приступ закончился? Если да, отметьте его завершение в дневнике Calm.",
 				"/profile?reminder=attack", "calm-attack-reminder-" + attack.getId());
-		deliver(user, key, message, now, () -> attacks.findById(attack.getId())
-				.filter(Attack::isOngoing).map(item -> attackStart(item, user)).filter(start::equals).isPresent());
+		users.findById(attack.getUserId()).ifPresent(user -> deliver(user, key, message, now,
+				() -> attacks.findById(attack.getId()).filter(Attack::isOngoing)
+						.map(DiaryReminderScheduler::attackAddedAt).filter(addedAt::equals).isPresent()));
 	}
 
 	private void sendMorningReminders(Instant now) {
@@ -167,8 +169,8 @@ public class DiaryReminderScheduler {
 		mongo.remove(Query.query(Criteria.where("userId").is(event.userId())), ReminderAttempt.class);
 	}
 
-	static long attackPeriod(Instant start, Instant now) {
-		return start == null || now.isBefore(start) ? 0 : Duration.between(start, now).dividedBy(ATTACK_INTERVAL);
+	static long attackPeriod(Instant addedAt, Instant now) {
+		return addedAt == null || now.isBefore(addedAt) ? 0 : Duration.between(addedAt, now).dividedBy(ATTACK_INTERVAL);
 	}
 
 	static LocalDate morningDate(Instant now, ZoneId zone) {
@@ -176,12 +178,11 @@ public class DiaryReminderScheduler {
 		return local.getHour() == 8 && local.getMinute() < 10 ? local.toLocalDate() : null;
 	}
 
-	Instant attackStart(Attack attack, User user) {
-		if (attack.getStartDate() == null || attack.getStartTime() == null) return null;
-		ZoneId zone = userZone(user);
-		if (attack.getEventLocation() != null) zone = zoneOr(attack.getEventLocation().timezone(), zone);
-		zone = zoneOr(attack.getReminderStartTimezone(), zone);
-		return attack.getStartDate().atTime(attack.getStartTime()).atZone(zone).toInstant();
+	private static Instant attackAddedAt(Attack attack) {
+		if (attack.getCreatedAt() != null) return attack.getCreatedAt();
+		// Older records can still carry their creation time in their MongoDB identifier.
+		String id = attack.getId();
+		return id != null && ObjectId.isValid(id) ? new ObjectId(id).getDate().toInstant() : null;
 	}
 
 	private ZoneId userZone(User user) {

@@ -3,9 +3,11 @@ import { emit, ATTACKS_CHANGED } from '@/shared/lib/dataEvents'
 
 const notify = result => { emit(ATTACKS_CHANGED); return result }
 const browserTimezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+const getInRange = (from, to) => http.get(`/attacks?from=${from}&to=${to}`)
 
 export const attackApi = {
-  getByDate:  date           => http.get(`/attacks?from=${date}&to=${date}`),
+  getByDate:  date           => getInRange(date, date),
+  getInRange,
   getAll:     ()             => http.get('/attacks'),
 
   add: attack => http.post('/attacks', { ...attack, timezone: browserTimezone() }).then(notify),

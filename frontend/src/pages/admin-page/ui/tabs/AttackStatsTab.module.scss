@@ -1,0 +1,156 @@
+@use 'app/styles/globals.scss' as *;
+
+.section {
+	display: grid;
+	gap: 1rem;
+	min-width: 0;
+}
+
+.heading {
+	margin: 0;
+	color: $fc-main;
+	@include fluid-text(18, 16);
+}
+
+.periods,
+.scales {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .35rem;
+
+	button {
+		padding: .45rem .75rem;
+		border: 0;
+		border-radius: .5rem;
+		background: $quiet-surface-raised;
+		color: $fc-secondary;
+		font-family: inherit;
+		@include fluid-text(13, 12);
+		cursor: pointer;
+
+		&[aria-pressed='true'] { background: $contrast-color; color: $fc-dark; }
+		&:disabled { opacity: .6; cursor: wait; }
+	}
+}
+
+.chartControls,
+.axisControls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .5rem 1rem;
+	margin-block: .65rem .15rem;
+}
+
+.chartControls { justify-content: space-between; }
+
+.axisLabel {
+	align-self: center;
+	margin-inline-end: .2rem;
+	color: $fc-secondary;
+	@include fluid-text(13, 12);
+}
+
+.scales {
+	button { background: $quiet-surface; }
+}
+
+.filters {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: .75rem;
+}
+
+.periods button { min-height: $control-height; }
+
+.dateFilters {
+	display: flex;
+	align-items: flex-start;
+	justify-content: flex-end;
+	flex: 1 1 auto;
+	min-width: 0;
+	gap: .75rem;
+
+	&:has(.dateRange) { flex-basis: 26rem; }
+}
+
+.dateRange {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+	flex: 1;
+	min-width: 0;
+	gap: .75rem;
+}
+
+.refresh {
+	@include contrast-button;
+	display: grid;
+	place-items: center;
+	flex: 0 0 $control-height;
+	width: $control-height;
+	height: $control-height;
+	padding: 0;
+
+	@media (prefers-reduced-motion: no-preference) {
+		&[aria-busy='true'] svg { animation: refresh-spin 1s linear infinite; }
+	}
+}
+
+@keyframes refresh-spin {
+	to { transform: rotate(360deg); }
+}
+
+.figure {
+	margin: 0;
+	min-width: 0;
+	padding: .85rem 1rem .5rem;
+	border-radius: .75rem;
+	background: $quiet-surface-raised;
+}
+
+.summary {
+	display: flex;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: .35rem 1rem;
+	color: $fc-secondary;
+	@include fluid-text(13, 12);
+
+	strong { color: $fc-main; }
+}
+
+.chartScroll { min-width: 0; }
+
+.chart {
+	display: block;
+	width: 100%;
+	touch-action: pan-y;
+	user-select: none;
+	color: $fc-secondary;
+	-webkit-tap-highlight-color: transparent;
+	outline: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.chart:focus-visible { outline: 1px solid $fc-contrast; outline-offset: -1px; }
+}
+
+.pannable {
+	cursor: grab;
+	&:active { cursor: grabbing; }
+}
+
+.axis { fill: currentColor; font-size: 9px; }
+.dateTick { stroke: currentColor; opacity: .45; }
+.grid, .minorGrid { stroke: $quiet-line; }
+.minorGrid { opacity: .45; }
+.selectedDay { stroke: currentColor; opacity: .35; stroke-dasharray: 3 4; }
+.line { fill: none; stroke-width: 3; stroke-linecap: round; }
+.marker { stroke: $quiet-surface-raised; stroke-width: 1.5; }
+.low { stop-color: var(--success-color); }
+.medium { stop-color: #eab308; }
+.high { stop-color: $error-color; }
+
+@media (max-width: 640px) {
+	.figure { padding-inline: .7rem; }
+}

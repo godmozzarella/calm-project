@@ -5,6 +5,7 @@ import com.calm.feature.email.EmailSendResult;
 import com.calm.feature.medication.MedicationRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.bson.Document;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +16,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -464,6 +468,46 @@ class FirstReleaseFlowTest {
                 .andExpect(status().isConflict());
         assertThat(users.findByEmail(next)).isEmpty();
         assertThat(users.findByEmail(current)).isPresent();
+    }
+
+    @Test
+    void adminAttackStatsCountCreationsAcrossUsersAndLocalDayBoundaries() throws Exception {
+        String address = address("admin-attack-stats");
+        JsonNode account = register(address);
+        String endpoint = "/admin/stats/attacks?from=2020-02-01&to=2020-02-03&timezone=Europe/Moscow";
+        mvc.perform(get(endpoint)).andExpect(status().isUnauthorized());
+        mvc.perform(get(endpoint).header("Authorization", "Bearer " + account.get("token").asText()))
+                .andExpect(status().isForbidden());
+
+        users.updateRole(account.at("/user/id").asText(), com.calm.feature.user.Role.ADMIN);
+        setChallengeTime(address, "sentAt", Instant.now().minusSeconds(61));
+        String auth = "Bearer " + register(address).get("token").asText();
+        var collection = mongo.getCollection("attacks");
+        var fixtures = List.of(
+                new Document("userId", "fixture-user-a").append("createdAt", Date.from(Instant.parse("2020-01-31T20:59:59Z"))),
+                new Document("userId", "fixture-user-a").append("createdAt", Date.from(Instant.parse("2020-01-31T21:00:00Z"))),
+                new Document("userId", "fixture-user-b").append("createdAt", Date.from(Instant.parse("2020-02-01T12:00:00Z"))),
+                new Document("userId", "fixture-user-b").append("createdAt", Date.from(Instant.parse("2020-02-03T20:59:59Z"))),
+                new Document("userId", "fixture-user-b").append("createdAt", Date.from(Instant.parse("2020-02-03T21:00:00Z"))),
+                new Document("userId", "fixture-user-a"));
+        collection.insertMany(fixtures.stream().map(attack -> attack.append("startDate", "2019-12-31")).toList());
+        try {
+            mvc.perform(get(endpoint).header("Authorization", auth)).andExpect(status().isOk())
+                    .andExpect(content().json("""
+                            [{"date":"2020-02-01","count":2},{"date":"2020-02-02","count":0},{"date":"2020-02-03","count":1}]
+                            """, org.springframework.test.json.JsonCompareMode.STRICT));
+            mvc.perform(get("/admin/stats/attacks?to=2020-02-03&timezone=Europe/Moscow").header("Authorization", auth))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].date").value("2020-01-31"))
+                    .andExpect(jsonPath("$[0].count").value(1));
+            mvc.perform(get("/admin/stats/attacks?to=2019-12-31").header("Authorization", auth))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json("[{\"date\":\"2019-12-31\",\"count\":0}]", org.springframework.test.json.JsonCompareMode.STRICT));
+            mvc.perform(get("/admin/stats/attacks?from=2020-02-03&to=2020-02-01").header("Authorization", auth))
+                    .andExpect(status().isBadRequest());
+        } finally {
+            collection.deleteMany(new Document("_id", new Document("$in", fixtures.stream().map(attack -> attack.get("_id")).toList())));
+        }
     }
 
     @Test

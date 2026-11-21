@@ -13,9 +13,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DuplicateKeyException;
@@ -59,30 +61,49 @@ class DiaryReminderSchedulerTest {
 	}
 
 	@Test
-	void remindsTwoHoursAfterStartAndStopsAfterCompletion() {
+	void remindsTwoHoursAfterEntryWasAddedAndStopsAfterCompletion() {
 		user.setNotificationsEnabled(true);
 		var attack = new Attack();
 		attack.setId("attack");
 		attack.setUserId("user");
 		attack.setOngoing(true);
 		attack.setStartDate(LocalDate.of(2026, 11, 19));
-		attack.setStartTime(LocalTime.of(14, 15));
+		attack.setStartTime(LocalTime.of(7, 0));
 		attack.setReminderStartTimezone("Europe/Moscow");
+		attack.setCreatedAt(Instant.parse("2026-11-19T16:15:00Z"));
 		when(attacks.findByOngoingTrue(any())).thenReturn(List.of(attack));
 		when(attacks.findById("attack")).thenReturn(Optional.of(attack));
 
-		scheduler.dispatchAt(Instant.parse("2026-11-19T13:14:59Z"));
+		scheduler.dispatchAt(Instant.parse("2026-11-19T16:15:00Z"));
+		scheduler.dispatchAt(Instant.parse("2026-11-19T18:14:59Z"));
 		verifyNoInteractions(mail);
 		verify(push, never()).send(any(), any());
 
-		scheduler.dispatchAt(Instant.parse("2026-11-19T13:15:00Z"));
-		scheduler.dispatchAt(Instant.parse("2026-11-19T13:16:00Z"));
-		scheduler.dispatchAt(Instant.parse("2026-11-19T15:15:00Z"));
+		scheduler.dispatchAt(Instant.parse("2026-11-19T18:15:00Z"));
+		attack.setStartTime(LocalTime.of(6, 50));
+		scheduler.dispatchAt(Instant.parse("2026-11-19T18:16:00Z"));
+		scheduler.dispatchAt(Instant.parse("2026-11-19T20:15:00Z"));
 		attack.setOngoing(false);
-		scheduler.dispatchAt(Instant.parse("2026-11-19T17:15:00Z"));
+		scheduler.dispatchAt(Instant.parse("2026-11-19T22:15:00Z"));
 
 		verify(mail, times(2)).send(eq(user.getEmail()), any(), contains("Приступ закончился?"), contains("reminder=attack"));
 		verify(push, times(2)).send(eq(device), argThat(message -> message.path().equals("/profile?reminder=attack")));
+	}
+
+	@Test
+	void legacyEntryUsesCreationTimeFromItsMongoId() {
+		Instant addedAt = Instant.parse("2026-11-19T16:15:00Z");
+		var attack = new Attack();
+		attack.setId(new ObjectId(Date.from(addedAt)).toHexString());
+		attack.setUserId("user");
+		attack.setOngoing(true);
+		when(attacks.findByOngoingTrue(any())).thenReturn(List.of(attack));
+		when(attacks.findById(attack.getId())).thenReturn(Optional.of(attack));
+
+		scheduler.dispatchAt(addedAt.plusSeconds(7_199));
+		verify(push, never()).send(any(), any());
+		scheduler.dispatchAt(addedAt.plusSeconds(7_200));
+		verify(push).send(eq(device), argThat(message -> message.path().equals("/profile?reminder=attack")));
 	}
 
 	@Test

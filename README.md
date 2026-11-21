@@ -180,4 +180,5 @@ Calm развивается одним автором. Сейчас особен
 - [Контракт исследовательских данных](docs/training-data-contract.md).
 - [История местоположений и дополнение погоды](docs/location-history-and-weather-backfill.md).
 - [Интеграция training-worker на сервере](docs/server-training-integration.md).
+- [Подготовка к переходу на микросервисы](docs/microservices-migration-plan.md).
 - [Архив README курсового проекта](docs/archive/coursework/README.md) — прежнее описание сохранено без изменений; часть сценариев и команд отражает старую версию приложения.
