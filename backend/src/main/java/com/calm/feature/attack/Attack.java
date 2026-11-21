@@ -4,6 +4,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
@@ -60,6 +61,7 @@ public class Attack {
 	private String note;
 
 	@CreatedDate
+	@Indexed
 	private Instant createdAt;
 	@org.springframework.data.annotation.LastModifiedDate
 	private Instant updatedAt;

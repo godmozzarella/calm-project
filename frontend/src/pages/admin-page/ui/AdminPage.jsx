@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { BackIcon } from '@/shared/ui/icons'
 
 import UsersTab from './tabs/UsersTab'
+import AttackStatsTab from './tabs/AttackStatsTab'
 import DictionaryTab from './tabs/DictionaryTab'
 import BroadcastTab from './tabs/BroadcastTab'
 import SettingsTab from './tabs/SettingsTab'
@@ -11,6 +12,7 @@ import s from './AdminPage.module.scss'
 
 const TABS = [
 	{ key: 'users',     label: 'Пользователи' },
+	{ key: 'attack-stats', label: 'Статистика приступов' },
 	{ key: 'symptoms',  label: 'Симптомы' },
 	{ key: 'triggers',  label: 'Триггеры' },
 	{ key: 'meds',      label: 'Препараты' },
@@ -50,6 +52,7 @@ const AdminPage = () => {
 			</nav>
 
 			<main className={s.content}>
+				<div hidden={tab !== 'attack-stats'}><AttackStatsTab /></div>
 				{tab === 'users' && <UsersTab />}
 				{tab === 'symptoms' && <DictionaryTab type="SYMPTOM" title="Симптомы" />}
 				{tab === 'triggers' && <DictionaryTab type="TRIGGER" title="Триггеры" />}

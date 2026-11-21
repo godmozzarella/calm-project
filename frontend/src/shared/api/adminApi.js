@@ -1,6 +1,12 @@
 import { http } from './httpClient'
 
 export const adminApi = {
+  getAttackCounts: (from, to, timezone) => {
+    const query = new URLSearchParams({ to, timezone })
+    if (from !== null) query.set('from', from)
+    return http.get(`/admin/stats/attacks?${query}`)
+  },
+
   // ── Пользователи ──
   listUsers: q => http.get(`/admin/users${q ? `?q=${encodeURIComponent(q)}` : ''}`),
   changeRole: (id, role) => http.patch(`/admin/users/${id}/role`, { role }),

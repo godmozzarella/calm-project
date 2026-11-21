@@ -1,9 +1,11 @@
 package com.calm.feature.attack;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.domain.Pageable;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -14,6 +16,15 @@ public interface AttackRepository extends MongoRepository<Attack, String> {
 
 	long deleteByUserId(String userId);
 	List<Attack> findByOngoingTrue(Pageable page);
+
+	@Aggregation(pipeline = {
+			"{ $match: { createdAt: { $gte: ?0, $lt: ?1 } } }",
+			"{ $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: ?2 } }, count: { $sum: 1 } } }",
+			"{ $project: { _id: 0, date: '$_id', count: 1 } }"
+	})
+	List<DailyCount> countAddedByDay(Instant from, Instant until, String timezone);
+
+	record DailyCount(String date, long count) {}
 
 	/**
 	 * Все приступы пользователя, чей диапазон пересекает [from, to].
